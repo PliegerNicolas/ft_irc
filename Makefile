@@ -6,7 +6,7 @@
 #    By: nicolas <marvin@42.fr>                     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/10/13 03:16:24 by nicolas           #+#    #+#              #
-#    Updated: 2023/10/13 18:53:09 by nicolas          ###   ########.fr        #
+#    Updated: 2023/10/13 19:19:30 by nicolas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,7 +27,9 @@ SRCS_EXTENSION	=			.cpp
 SRCS_PATH		=			srcs
 MAIN_NAME		=			main
 
-SRCS_NAMES		=			socket/Socket
+SRCS_NAMES		=			socket/Socket \
+							socket/ServerSocket \
+							socket/ClientSocket \
 
 #* ************************************************************************** *#
 #* *                               INCLUDES                                 * *#
