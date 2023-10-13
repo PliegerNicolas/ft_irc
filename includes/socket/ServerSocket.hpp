@@ -6,14 +6,14 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/13 19:22:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 01:23:02 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
-#include "socket/Socket.hpp"
+#include "socket/ASocket.hpp"
 
-class	ServerSocket: public Socket
+class	ServerSocket: public ASocket
 {
 	public:
 		/* Attributs */

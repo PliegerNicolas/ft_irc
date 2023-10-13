@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/13 19:25:08 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 01:23:53 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSocket.hpp"
@@ -15,7 +15,7 @@
 
 	/* Public */
 ServerSocket::ServerSocket(void):
-	Socket()
+	ASocket()
 {
 	if (DEBUG)
 	{
@@ -26,7 +26,7 @@ ServerSocket::ServerSocket(void):
 }
 
 ServerSocket::ServerSocket(const ServerSocket &other):
-	Socket(other)
+	ASocket(other)
 {
 	if (DEBUG)
 	{
@@ -48,7 +48,7 @@ ServerSocket	&ServerSocket::operator=(const ServerSocket &other)
 
 	if (this != &other)
 	{
-		Socket::operator=(other);
+		ASocket::operator=(other);
 	}
 
 	return (*this);

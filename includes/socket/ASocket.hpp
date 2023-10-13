@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Socket.hpp                                         :+:      :+:    :+:   */
+/*   ASocket.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/13 19:11:52 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 01:31:45 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -34,7 +34,7 @@
 #define MAX_PORT 65535
 #define MIN_PORT 0
 
-class	Socket
+class	ASocket
 {
 	public:
 		/* Typedefs */
@@ -50,15 +50,25 @@ class	Socket
 		static const t_soconfig	buildSocketConfig(const int &domain, const int &service,
 			const int &protocol, const std::string &interface, const int &port);
 
+		typedef struct SocketOption
+		{
+			int	level;
+			int	option;
+			int	value;
+		}	t_sooption;
+
+		static const t_sooption	buildSocketOption(const int &level, const int &option,
+			const int &value);
+
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Socket(void);
+		ASocket(void);
 
-		Socket(const Socket &other);
-		Socket	&operator=(const Socket &other);
+		ASocket(const ASocket &other);
+		ASocket	&operator=(const ASocket &other);
 
-		virtual ~Socket(void);
+		virtual ~ASocket(void);
 
 		/* Member functions */
 
@@ -81,6 +91,7 @@ class	Socket
 
 		/* Member functions */
 		void					handleSocketErrors(const int &statusCode);
+		virtual void			setSocketOptions(const t_sooption *socketOptions) = 0;
 
 	private:
 		/* Attributs */
