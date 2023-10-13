@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 01:23:59 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 01:49:42 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSocket.hpp"
@@ -71,6 +71,24 @@ ClientSocket::~ClientSocket(void)
 	/* Public */
 	/* Protected */
 	/* Private */
+
+void	ClientSocket::setSocketOptions(void)
+{
+	t_sooption	socketOptions[CLIENTOPTSIZE];
+	size_t		i = 0;
+
+	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_REUSEADDR, 1);
+	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_RCVBUF, 8192);
+	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_SNDBUF, 8192);
+	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_KEEPALIVE, 1);
+	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_QUICKACK, 1);
+	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
+
+	for (i = 0; i < CLIENTOPTSIZE; i++)
+		if (setsockopt(getSocketFd(), socketOptions[i].level, socketOptions[i].value,
+			&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
+			throw std::runtime_error("Error: couldn't set socket option (socket).");
+}
 
 /* Getters */
 

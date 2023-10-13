@@ -6,12 +6,18 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:16:24 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 01:23:08 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 01:49:27 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
+// INCLUDES
+
 #include "socket/ASocket.hpp"
+
+// MACROS
+
+#define CLIENTOPTSIZE 6
 
 class	ClientSocket: public ASocket
 {
@@ -45,5 +51,5 @@ class	ClientSocket: public ASocket
 		/* Constructors & Destructors */
 
 		/* Member functions */
-
+		void	setSocketOptions(void);
 };

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 01:31:45 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 01:46:09 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -91,7 +91,7 @@ class	ASocket
 
 		/* Member functions */
 		void					handleSocketErrors(const int &statusCode);
-		virtual void			setSocketOptions(const t_sooption *socketOptions) = 0;
+		virtual void			setSocketOptions(void) = 0;
 
 	private:
 		/* Attributs */
