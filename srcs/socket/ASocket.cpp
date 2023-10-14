@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 18:43:54 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 01:28:28 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 11:43:39 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ASocket.hpp"
@@ -82,9 +82,10 @@ void	ASocket::handleSocketErrors(const int &statusCode)
 	if (statusCode >= 0)
 		return ;
 
+	int					errCode = errno;
 	std::ostringstream	errorMessage;
 
-	errorMessage << "Error: " << strerror(statusCode) << " (socket).";
+	errorMessage << "Error: " << strerror(errCode) << " (socket).";
 	throw std::runtime_error(errorMessage.str());
 }
 
@@ -99,9 +100,9 @@ const struct pollfd	&ASocket::getPoll(void) const
 	return (_poll);
 }
 
-const struct sockaddr	*ASocket::getAddress(void) const
+struct sockaddr	*ASocket::getAddress(void)
 {
-	return (reinterpret_cast<const struct sockaddr*>(&_address));
+	return (reinterpret_cast<struct sockaddr*>(&_address));
 }
 
 const int	&ASocket::getSocketFd(void) const

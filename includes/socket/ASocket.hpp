@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 01:46:09 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 11:44:00 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -21,6 +21,7 @@
 
 #include <unistd.h>
 #include <cstring>
+#include <cerrno>
 
 #include <sys/socket.h>
 #include <sys/poll.h>
@@ -73,12 +74,12 @@ class	ASocket
 		/* Member functions */
 
 		// Getter
-		const struct pollfd		&getPoll(void) const;
-		const struct sockaddr	*getAddress(void) const;
+		const struct pollfd	&getPoll(void) const;
+		struct sockaddr		*getAddress(void);
 
-		const int				&getSocketFd(void) const;
-		std::string				getIP(void) const;
-		uint16_t				getPort(void) const;
+		const int			&getSocketFd(void) const;
+		std::string			getIP(void) const;
+		uint16_t			getPort(void) const;
 
 		// Setter
 

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 01:49:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 11:47:13 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSocket.hpp"
@@ -14,15 +14,20 @@
 /* Constructors & Destructors */
 
 	/* Public */
-ClientSocket::ClientSocket(void):
+
+ClientSocket::ClientSocket(const ServerSocket &server):
 	ASocket()
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: default constructor called.";
+		std::cout << "ClientSocket: parameter constructor called.";
 		std::cout << WHITE;
 	}
+
+	socklen_t	addrLen = sizeof(*this->getAddress());
+	_poll.fd = accept(server.getSocketFd(), this->getAddress(), &addrLen);
+	_poll.events = POLLIN;
 }
 
 ClientSocket::ClientSocket(const ClientSocket &other):
@@ -34,7 +39,6 @@ ClientSocket::ClientSocket(const ClientSocket &other):
 		std::cout << "Socket: copy constructor called.";
 		std::cout << WHITE;
 	}
-	(void)other;
 }
 
 ClientSocket	&ClientSocket::operator=(const ClientSocket &other)
@@ -63,8 +67,21 @@ ClientSocket::~ClientSocket(void)
 		std::cout << WHITE;
 	}
 }
+
 	/* Protected */
 	/* Private */
+
+ClientSocket::ClientSocket(void):
+	ASocket()
+{
+	if (DEBUG)
+	{
+		std::cout << GRAY;
+		std::cout << "ClientSocket: default constructor called.";
+		std::cout << WHITE;
+	}
+	_poll.events = POLLIN;
+}
 
 /* Member functions */
 

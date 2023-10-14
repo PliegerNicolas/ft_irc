@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 01:59:30 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 11:34:34 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -18,7 +18,6 @@
 // MACROS
 
 #define SERVOPTSIZE 6
-#define SERVBACKLOG 15
 
 class	ServerSocket: public ASocket
 {
@@ -27,6 +26,8 @@ class	ServerSocket: public ASocket
 
 		/* Constructors & Destructors */
 		ServerSocket(void);
+		ServerSocket(const int &domain, const int &service, const int &protocol,
+			const std::string &interface, const int &port);
 
 		ServerSocket(const ServerSocket &other);
 		ServerSocket	&operator=(const ServerSocket &other);
