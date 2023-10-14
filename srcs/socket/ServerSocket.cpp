@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 01:48:54 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 01:59:59 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSocket.hpp"
@@ -23,6 +23,18 @@ ServerSocket::ServerSocket(void):
 		std::cout << "ServerSocket: default constructor called.";
 		std::cout << WHITE;
 	}
+
+	// Set socket options
+	setSocketOptions();
+
+	// Set event to which Server listens too in poll
+	_poll.events = POLLIN;
+
+	// bind to network
+	ASocket::handleSocketErrors(bindToNetwork());
+
+	// listen to network communication
+	ASocket::handleSocketErrors(listenToNetwork());
 }
 
 ServerSocket::ServerSocket(const ServerSocket &other):
@@ -88,6 +100,16 @@ void	ServerSocket::setSocketOptions(void)
 		if (setsockopt(getSocketFd(), socketOptions[i].level, socketOptions[i].value,
 			&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
 			throw std::runtime_error("Error: couldn't set socket option (socket).");
+}
+
+int	ServerSocket::bindToNetwork(void)
+{
+	return (bind(this->getSocketFd(), this->getAddress(), sizeof(*this->getAddress())));
+}
+
+int	ServerSocket::listenToNetwork(void)
+{
+	return (listen(this->getSocketFd(), SERVBACKLOG));
 }
 
 /* Getters */
