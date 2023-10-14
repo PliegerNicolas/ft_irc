@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:16:24 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 11:40:06 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 17:35:03 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -26,6 +26,7 @@ class	ClientSocket: public ASocket
 		/* Attributs */
 
 		/* Constructors & Destructors */
+		ClientSocket(void);
 		ClientSocket(const ServerSocket &server);
 
 		ClientSocket(const ClientSocket &other);
@@ -50,7 +51,6 @@ class	ClientSocket: public ASocket
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		ClientSocket(void);
 
 		/* Member functions */
 		void	setSocketOptions(void);

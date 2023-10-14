@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 11:44:00 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 18:05:14 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -78,7 +78,7 @@ class	ASocket
 		struct sockaddr		*getAddress(void);
 
 		const int			&getSocketFd(void) const;
-		std::string			getIP(void) const;
+		const std::string	getIP(void) const;
 		uint16_t			getPort(void) const;
 
 		// Setter

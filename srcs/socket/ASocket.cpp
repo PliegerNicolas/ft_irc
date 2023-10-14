@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 18:43:54 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 11:43:39 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 18:05:03 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ASocket.hpp"
@@ -110,7 +110,7 @@ const int	&ASocket::getSocketFd(void) const
 	return (_poll.fd);
 }
 
-std::string	ASocket::getIP(void) const
+const std::string	ASocket::getIP(void) const
 {
 	char		ipString[INET_ADDRSTRLEN];
 

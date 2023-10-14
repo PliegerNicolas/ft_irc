@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 11:47:01 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 17:08:52 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSocket.hpp"
@@ -111,7 +111,7 @@ ServerSocket::ServerSocket(const ServerSocket &other):
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "Socket: copy constructor called.";
+		std::cout << "ServerSocket: copy constructor called.";
 		std::cout << WHITE;
 	}
 }

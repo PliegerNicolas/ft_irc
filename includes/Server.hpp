@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 11:56:05 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 18:10:06 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -16,9 +16,11 @@
 #include "socket/ServerSocket.hpp"
 #include "Client.hpp"
 
-#include <list>
+#include <deque>
 
 // MACROS
+
+class	Client;
 
 class	Server
 {
@@ -37,6 +39,7 @@ class	Server
 		/* Member functions */
 
 		// Getter
+		const ServerSocket	&getSocket(void) const;
 
 		// Setter
 
@@ -50,12 +53,13 @@ class	Server
 	private:
 		/* Attributs */
 		ServerSocket				_socket;
-		std::list<struct pollfd>	_pollFds;
+		std::deque<struct pollfd>	_pollFds;
 
-		std::list<Client>			_clients;
+		std::deque<Client>			_clients;
 
 		/* Constructors & Destructors */
 		Server(void);
 
 		/* Member functions */
+		void				eventLoop(void);
 };

@@ -6,16 +6,10 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 11:18:04 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 17:47:40 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include <iostream>
-#include <sstream>
-
-#include "colors.hpp"
-
-#include "socket/ServerSocket.hpp"
-#include "socket/ClientSocket.hpp"
+#include "Server.hpp"
 
 static void	putExpectedUsage(void)
 {
@@ -73,7 +67,7 @@ int	main(int argc, char **argv)
 	{
 		port = convertPortToInt(argv[1]);
 		(void)port;
-		ServerSocket	s(AF_INET, SOCK_STREAM, IPPROTO_TCP, "0.0.0.0", port);
+		Server			serv(AF_INET, SOCK_STREAM, IPPROTO_TCP, "0.0.0.0", port);
 	}
 	catch (const std::exception &e)
 	{

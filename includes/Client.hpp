@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 11:57:34 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 17:59:14 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -14,8 +14,11 @@
 // INCLUDES
 
 #include "socket/ClientSocket.hpp"
+#include "Server.hpp"
 
 // MACROS
+
+class	Server;
 
 class	Client
 {
@@ -23,7 +26,7 @@ class	Client
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Client(void);
+		Client(const Server &server);
 
 		Client(const Client &other);
 		Client	&operator=(const Client &other);
@@ -33,6 +36,7 @@ class	Client
 		/* Member functions */
 
 		// Getter
+		const ClientSocket	&getSocket(void) const;
 
 		// Setter
 
@@ -48,6 +52,7 @@ class	Client
 		ClientSocket	_socket;
 
 		/* Constructors & Destructors */
+		Client(void);
 
 		/* Member functions */
 };
