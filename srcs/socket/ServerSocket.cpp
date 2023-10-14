@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 01:59:59 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/14 02:08:20 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSocket.hpp"
@@ -24,8 +24,28 @@ ServerSocket::ServerSocket(void):
 		std::cout << WHITE;
 	}
 
-	// Set socket options
+	t_soconfig	socketConfig;
+
+	// Set socket options and configuration struct
 	setSocketOptions();
+	socketConfig = buildSocketConfig(AF_INET, SOCK_STREAM, 0, "0.0.0.0", 0);
+
+	if (socketConfig.port < MIN_PORT || socketConfig.port > MAX_PORT)
+		throw std::runtime_error("Error: port out of bounds (socket).");
+
+	// Set sockaddr_in
+	_address.sin_family = socketConfig.domain;
+	_address.sin_port = htons(socketConfig.port);
+	_address.sin_addr.s_addr = inet_addr(socketConfig.interface.c_str());
+
+	if (_address.sin_port == INADDR_NONE)
+		throw std::runtime_error("Error: invalid port (socket).");
+	if (_address.sin_addr.s_addr == INADDR_NONE)
+		throw std::runtime_error("Error: invalid IP address (socket).");
+
+	// Build socket
+	_poll.fd = socket(socketConfig.domain, socketConfig.service, socketConfig.protocol);
+	ASocket::handleSocketErrors(_poll.fd);
 
 	// Set event to which Server listens too in poll
 	_poll.events = POLLIN;
