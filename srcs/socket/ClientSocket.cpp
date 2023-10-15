@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/15 02:23:15 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 05:30:25 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSocket.hpp"
@@ -23,7 +23,7 @@ ClientSocket::ClientSocket(void):
 		std::cout << "ClientSocket: default constructor called.";
 		std::cout << WHITE;
 	}
-	_poll.events = POLLIN;
+	_poll.events = POLLIN | POLLHUP | POLLERR;
 }
 
 ClientSocket::ClientSocket(const ServerSocket &server):
@@ -38,7 +38,7 @@ ClientSocket::ClientSocket(const ServerSocket &server):
 
 	socklen_t	addrLen = sizeof(*this->getAddress());
 	_poll.fd = accept(server.getSocketFd(), this->getAddress(), &addrLen);
-	_poll.events = POLLIN;
+	_poll.events = POLLIN | POLLHUP | POLLERR;
 }
 
 ClientSocket::ClientSocket(const ClientSocket &other):
