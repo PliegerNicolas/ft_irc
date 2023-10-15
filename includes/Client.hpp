@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 17:59:14 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 05:17:07 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -26,7 +26,7 @@ class	Client
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Client(const Server &server);
+		Client(Server &server);
 
 		Client(const Client &other);
 		Client	&operator=(const Client &other);
@@ -36,7 +36,7 @@ class	Client
 		/* Member functions */
 
 		// Getter
-		const ClientSocket	&getSocket(void) const;
+		ClientSocket	&getSocket(void);
 
 		// Setter
 

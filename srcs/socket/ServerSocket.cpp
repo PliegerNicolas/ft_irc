@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 17:08:52 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 01:08:16 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSocket.hpp"
@@ -59,8 +59,7 @@ ServerSocket::ServerSocket(void):
 	ASocket::handleSocketErrors(listenToNetwork());
 }
 
-ServerSocket::ServerSocket(const int &domain, const int &service, const int &protocol,
-	const std::string &interface, const int &port):
+ServerSocket::ServerSocket(const t_soconfig &socketConfig):
 	ASocket()
 {
 	if (DEBUG)
@@ -69,11 +68,6 @@ ServerSocket::ServerSocket(const int &domain, const int &service, const int &pro
 		std::cout << "ServerSocket: parameter constructor called.";
 		std::cout << WHITE;
 	}
-
-	t_soconfig	socketConfig;
-
-	// Set configuration struct
-	socketConfig = buildSocketConfig(domain, service, protocol, interface, port);
 
 	if (socketConfig.port < MIN_PORT || socketConfig.port > MAX_PORT)
 		throw std::runtime_error("Error: port out of bounds (socket).");

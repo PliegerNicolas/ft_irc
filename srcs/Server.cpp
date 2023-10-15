@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 18:26:10 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 05:25:49 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -15,9 +15,8 @@
 
 	/* Public */
 
-Server::Server(const int &domain, const int &service, const int &protocol,
-	const std::string &interface, const int &port):
-	_socket(ServerSocket(domain, service, protocol, interface, port))
+Server::Server(const ASocket::t_soconfig &config):
+	_socket(ServerSocket(config))
 {
 	if (DEBUG)
 	{
@@ -31,8 +30,8 @@ Server::Server(const int &domain, const int &service, const int &protocol,
 
 Server::Server(const Server &other):
 	_socket(other._socket),
-	_pollFds(other._pollFds),
-	_clients(other._clients)
+	_clients(other._clients),
+	_pollFds(other._pollFds)
 {
 	if (DEBUG)
 	{
@@ -54,8 +53,8 @@ Server	&Server::operator=(const Server &other)
 	if (this != &other)
 	{
 		_socket = other._socket;
-		_pollFds = other._pollFds;
 		_clients = other._clients;
+		_pollFds = other._pollFds;
 	}
 
 	return (*this);
@@ -69,6 +68,9 @@ Server::~Server(void)
 		std::cout << "Server: default destructor called.";
 		std::cout << WHITE;
 	}
+
+	for (ClientsIterator it = _clients.begin(); it < _clients.end(); it++)
+		delete *it;
 }
 	/* Protected */
 	/* Private */
@@ -83,7 +85,7 @@ Server::Server(void):
 		std::cout << WHITE;
 	}
 
-	_pollFds.push_back(_socket.getPoll());
+	_pollFds.push_back(getSocket().getPoll());
 }
 
 /* Member functions */
@@ -94,54 +96,79 @@ Server::Server(void):
 
 void	Server::eventLoop(void)
 {
-	int	activity;
-
-	// Insert the server's socketFd at the beginning of the _pollFds list.
-	_pollFds.push_back(_socket.getPoll());
+	// Set as front element of _pollFds, server pollfd.
+	_pollFds.push_back(getSocket().getPoll());
 
 	while (true)
 	{
-		// Await updates on any pollFd of the list.
-		activity = poll(&_pollFds[0], _pollFds.size(), -1);
+		// Wait for event on any socket (revent on pollfd).
+		int activity = poll(_pollFds.data(), _pollFds.size(), -1);
 
 		if (activity < 0)
 			throw std::runtime_error("Error: poll error (server).");
 
-		// By only using .push_back(), serverPollFd will always be at front.
-		if (_pollFds.front().revents & POLLIN)
+		for (size_t i = 0; i < _clients.size(); i++)
 		{
-			// On user connection
-			_clients.push_back(Client(*this));
-			_pollFds.push_back(_clients.back().getSocket().getPoll());
+			struct pollfd	&pollFd = _pollFds[i + 1];
+			Client			*client = *(_clients.begin() + i);
+
+			handleClientDataTransfers(client, pollFd);
 		}
 
-		for (size_t i = 1; i < _pollFds.size(); i++)
-		{
-			struct pollfd	&pollFd = _pollFds[i];
-
-			if (pollFd.revents & POLLIN)
-			{
-				// on client data reception
-				std::cout << "A client is doing something, youhou !" << std::endl;
-
-				pollFd.revents = 0;
-			}
-			else if (pollFd.revents & POLLHUP)
-			{
-				// On client disconnection.
-				_clients.erase(_clients.begin() + i);
-				_pollFds.erase(_pollFds.begin() + i);
-				i--;
-			}
-		}
+		handleClientConnections(_pollFds.front());
 	}
+}
+
+void	Server::handleClientConnections(struct pollfd &pollFd)
+{
+	if (!(pollFd.revents & POLLIN))
+		return ;
+
+	// Clear revent flag.
+	pollFd.revents &= ~ POLLIN;
+
+	_clients.push_back(new Client(*this));
+	_pollFds.push_back(_clients.back()->getSocket().getPoll());
+}
+
+void	Server::handleClientDataTransfers(Client *client, struct pollfd &pollFd)
+{
+	if (!(pollFd.revents & POLLIN))
+		return ;
+
+	// Clear revent flag.
+	pollFd.revents &= ~ POLLIN;
+
+	// TEMP
+	char	buffer[1024];
+	int		bytesRead = recv(pollFd.fd, buffer, sizeof(buffer), 0);
+
+	if (bytesRead > 0)
+	{
+		std::cout << "Client (fd = " << client->getSocket().getSocketFd() << "): ";
+		std::cout << std::string(buffer, bytesRead);
+	}
+	// TEMP_END
+}
+
+void	Server::handleClientDisconnections(struct pollfd &pollFd, size_t &index)
+{
+	if (!(pollFd.revents & POLLHUP))
+		return ;
+
+	// Clear revent flag.
+	pollFd.revents &= ~ POLLHUP;
+
+	_pollFds.erase(_pollFds.begin() + (index - 1));
+	_clients.erase(_clients.begin() + index);
+	index--;
 }
 
 /* Getters */
 
 	/* Public */
 
-const ServerSocket	&Server::getSocket(void) const
+ServerSocket	&Server::getSocket(void)
 {
 	return (_socket);
 }

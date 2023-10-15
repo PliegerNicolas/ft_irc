@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 11:34:34 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 01:07:20 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -26,8 +26,9 @@ class	ServerSocket: public ASocket
 
 		/* Constructors & Destructors */
 		ServerSocket(void);
-		ServerSocket(const int &domain, const int &service, const int &protocol,
-			const std::string &interface, const int &port);
+		ServerSocket(const t_soconfig &socketConfig);
+		//ServerSocket(const int &domain, const int &service, const int &protocol,
+		//	const std::string &interface, const int &port);
 
 		ServerSocket(const ServerSocket &other);
 		ServerSocket	&operator=(const ServerSocket &other);

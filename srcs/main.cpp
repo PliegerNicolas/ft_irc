@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 17:47:40 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 01:56:51 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -58,6 +58,7 @@ static int	convertPortToInt(char *strPort)
 // argv[2] == 'password'
 int	main(int argc, char **argv)
 {
+	ASocket::t_soconfig	serverConfig;
 	int	port;
 
 	if (verifyArguments(argc, argv))
@@ -66,8 +67,9 @@ int	main(int argc, char **argv)
 	try
 	{
 		port = convertPortToInt(argv[1]);
-		(void)port;
-		Server			serv(AF_INET, SOCK_STREAM, IPPROTO_TCP, "0.0.0.0", port);
+		serverConfig = ASocket::buildSocketConfig(AF_INET, SOCK_STREAM,
+			IPPROTO_TCP, "127.0.0.1", port);
+		Server			serv(serverConfig);
 	}
 	catch (const std::exception &e)
 	{
@@ -76,4 +78,3 @@ int	main(int argc, char **argv)
 
 	return (0);
 }
-

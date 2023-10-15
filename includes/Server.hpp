@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 18:10:06 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 05:23:57 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -16,7 +16,7 @@
 #include "socket/ServerSocket.hpp"
 #include "Client.hpp"
 
-#include <deque>
+#include <vector>
 
 // MACROS
 
@@ -28,8 +28,7 @@ class	Server
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Server(const int &domain, const int &service, const int &protocol,
-			const std::string &interface, const int &port);
+		Server(const ASocket::t_soconfig &config);
 
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
@@ -39,7 +38,7 @@ class	Server
 		/* Member functions */
 
 		// Getter
-		const ServerSocket	&getSocket(void) const;
+		ServerSocket	&getSocket(void);
 
 		// Setter
 
@@ -51,15 +50,27 @@ class	Server
 		/* Member functions */
 
 	private:
-		/* Attributs */
-		ServerSocket				_socket;
-		std::deque<struct pollfd>	_pollFds;
+		/* Typedefs */
+		typedef std::vector<Client*>		Clients;
+		typedef std::vector<struct pollfd>	PollFds;
 
-		std::deque<Client>			_clients;
+		typedef Clients::iterator			ClientsIterator;
+		typedef PollFds::iterator			PollFdsIterator;
+
+		/* Attributs */
+		ServerSocket	_socket;
+
+		Clients			_clients;
+		PollFds			_pollFds;
 
 		/* Constructors & Destructors */
 		Server(void);
 
 		/* Member functions */
 		void				eventLoop(void);
+
+		void				handleClientConnections(struct pollfd &pollFd);
+		void				handleClientDataTransfers(Client *client, struct pollfd &pollFd);
+		void				handleClientDisconnections(struct pollfd &pollFd, size_t &index);
+
 };
