@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/15 05:16:54 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 12:01:31 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -92,11 +92,32 @@ ClientSocket	&Client::getSocket(void)
 	return (_socket);
 }
 
+const std::string	Client::getMessage(const char delimiter)
+{
+	size_t	pos = _buffer.find(delimiter);
+
+	if (pos != std::string::npos)
+	{
+		const std::string	message = _buffer.substr(0, pos);
+		_buffer.erase(0, pos + 1);
+		return (message);
+	}
+
+	const std::string	emptyMessage;
+	return (emptyMessage);
+}
+
 	/* Protected */
 	/* Private */
 
 /* Setters */
 
 	/* Public */
+
+void	Client::addToBuffer(const char *buffer, const size_t readBytes)
+{
+		_buffer.append(buffer, readBytes);
+}
+
 	/* Protected */
 	/* Private */

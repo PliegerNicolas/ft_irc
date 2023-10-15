@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/15 05:25:49 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 12:51:03 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -96,10 +96,11 @@ Server::Server(void):
 
 void	Server::eventLoop(void)
 {
+	bool	end = false;
 	// Set as front element of _pollFds, server pollfd.
 	_pollFds.push_back(getSocket().getPoll());
 
-	while (true)
+	while (end == false)
 	{
 		// Wait for event on any socket (revent on pollfd).
 		int activity = poll(_pollFds.data(), _pollFds.size(), -1);
@@ -112,7 +113,7 @@ void	Server::eventLoop(void)
 			struct pollfd	&pollFd = _pollFds[i + 1];
 			Client			*client = *(_clients.begin() + i);
 
-			handleClientDataTransfers(client, pollFd);
+			end |= handleClientDataTransfers(client, pollFd);
 		}
 
 		handleClientConnections(_pollFds.front());
@@ -131,24 +132,42 @@ void	Server::handleClientConnections(struct pollfd &pollFd)
 	_pollFds.push_back(_clients.back()->getSocket().getPoll());
 }
 
-void	Server::handleClientDataTransfers(Client *client, struct pollfd &pollFd)
+bool	Server::handleClientDataTransfers(Client *client, struct pollfd &pollFd)
 {
-	if (!(pollFd.revents & POLLIN))
-		return ;
-
-	// Clear revent flag.
-	pollFd.revents &= ~ POLLIN;
-
-	// TEMP
-	char	buffer[1024];
-	int		bytesRead = recv(pollFd.fd, buffer, sizeof(buffer), 0);
-
-	if (bytesRead > 0)
+	if (pollFd.revents & POLLIN)
 	{
-		std::cout << "Client (fd = " << client->getSocket().getSocketFd() << "): ";
-		std::cout << std::string(buffer, bytesRead);
+		// Clear revent flag.
+		pollFd.revents &= ~ POLLIN;
+
+		char		buffer[1024];
+		const char	delimiter = '\n';
+
+		try
+		{
+			int	readBytes = recv(pollFd.fd, buffer, sizeof(buffer), 0);
+
+			client->addToBuffer(buffer, readBytes);
+
+			const std::string	message = client->getMessage(delimiter);
+
+			if (!message.empty())
+			{
+				// TEMP
+				if (message == "EXIT")
+					return (true);
+				// END_TEMP
+
+				std::cout << "nº" << client->getSocket().getSocketFd() << ": ";
+				std::cout << message << std::endl;
+			}
+		}
+		catch (const std::exception &e)
+		{
+			std::cerr << "Error: " << e.what() << "(server)." << std::endl;
+			return (true);
+		}
 	}
-	// TEMP_END
+	return (false);
 }
 
 void	Server::handleClientDisconnections(struct pollfd &pollFd, size_t &index)

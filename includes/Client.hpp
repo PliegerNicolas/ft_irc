@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/15 05:17:07 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/15 11:56:52 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -36,9 +36,12 @@ class	Client
 		/* Member functions */
 
 		// Getter
-		ClientSocket	&getSocket(void);
+		ClientSocket		&getSocket(void);
+
+		const std::string	getMessage(const char delimiter);
 
 		// Setter
+		void				addToBuffer(const char *buffer, const size_t readBytes);
 
 	protected:
 		/* Attributs */
@@ -49,7 +52,15 @@ class	Client
 
 	private:
 		/* Attributs */
-		ClientSocket	_socket;
+		ClientSocket		_socket;
+
+		std::string			_nickname;
+		std::string			_username;
+		std::string			_realname;
+
+		std::string			_password; // encryption :(
+
+		std::string			_buffer;
 
 		/* Constructors & Destructors */
 		Client(void);
