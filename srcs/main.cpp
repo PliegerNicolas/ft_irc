@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 11:51:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 20:29:15 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -40,32 +40,16 @@ static bool	verifyArguments(int argc, char **argv)
 	return (false);
 }
 
-static int	convertPortToInt(char *strPort)
-{
-	std::istringstream	iss(strPort);
-	int					port;
-
-	if (!(iss >> port))
-		throw std::runtime_error("Error: couldn't convert port to string.");
-	return (port);
-}
-
 // argv[1] == 'port'
 // argv[2] == 'password'
 int	main(int argc, char **argv)
 {
-	ASocket::t_soconfig	serverConfig;
-	int	port;
-
 	if (verifyArguments(argc, argv))
 		return (1);
 
 	try
 	{
-		port = convertPortToInt(argv[1]);
-		serverConfig = ASocket::buildSocketConfig(AF_INET, SOCK_STREAM | SOCK_NONBLOCK,
-			IPPROTO_TCP, "127.0.0.1", port);
-		Server			serv(serverConfig);
+		ServerSocket		serv;
 	}
 	catch (const std::exception &e)
 	{

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 12:09:59 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 20:06:28 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -21,6 +21,7 @@
 
 #include <unistd.h>
 #include <cstring>
+#include <cstdlib>
 #include <cerrno>
 
 #include <sys/socket.h>
@@ -31,6 +32,8 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
+#include <vector>
+
 // MACROS
 
 #define MAX_PORT 65535
@@ -40,18 +43,6 @@ class	ASocket
 {
 	public:
 		/* Typedefs */
-		typedef struct SocketConfig
-		{
-			int			domain;		// communication domain (IPv4, IPv6, AF_UNIX, ...)
-			int			service;	// communication semantics (stream, dgream, raw, ...)
-			int			protocol;	// transmission protocol (TCP, UDP, HTTP, ...)
-			std::string	interface;	// IP address
-			int			port;		// Port
-		} t_soconfig;
-
-		static const t_soconfig	buildSocketConfig(const int &domain, const int &service,
-			const int &protocol, const std::string &interface, const int &port);
-
 		typedef struct SocketOption
 		{
 			int	level;
@@ -61,6 +52,10 @@ class	ASocket
 
 		static const t_sooption	buildSocketOption(const int &level, const int &option,
 			const int &value);
+
+		typedef std::vector<struct pollfd>	PollFds;
+		typedef PollFds::iterator			PollFdsIt;
+		typedef PollFds::const_iterator		PollFdsConstIt;
 
 		/* Attributs */
 
@@ -75,12 +70,8 @@ class	ASocket
 		/* Member functions */
 
 		// Getter
-		const struct pollfd	&getPoll(void) const;
-		struct sockaddr		*getAddress(void);
-
-		const int			&getSocketFd(void) const;
-		const std::string	getIP(void) const;
-		uint16_t			getPort(void) const;
+		const std::string		getIP(void) const;
+		uint16_t				getPort(void) const;
 
 		// Setter
 
@@ -88,9 +79,10 @@ class	ASocket
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		struct pollfd		_poll;
-		struct addrinfo		_hints;
-		struct addrinfo		*_socketInfo;
+		PollFds					_pollFds;
+
+		struct addrinfo			_hints;
+		struct addrinfo			*_addrInfo;
 
 		/* Member functions */
 		void					handleSocketErrors(const int &statusCode);
@@ -102,5 +94,5 @@ class	ASocket
 		/* Constructors & Destructors */
 
 		/* Member functions */
-		void					socketInfoDeepCopy(const ASocket &other);
+		struct addrinfo			*addrInfoDeepCopy(const ASocket &other);
 };

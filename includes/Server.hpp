@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 11:41:16 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 19:31:14 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -30,7 +30,7 @@ class	Server
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Server(const ASocket::t_soconfig &config);
+		Server(const ServerSocket::t_serverconfig &serverConfig);
 
 		Server(const Server &other);
 		Server	&operator=(const Server &other);

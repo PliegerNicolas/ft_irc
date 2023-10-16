@@ -6,7 +6,7 @@
 #    By: nicolas <marvin@42.fr>                     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/10/13 03:16:24 by nicolas           #+#    #+#              #
-#    Updated: 2023/10/14 11:50:32 by nicolas          ###   ########.fr        #
+#    Updated: 2023/10/16 19:29:27 by nicolas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,9 +29,9 @@ MAIN_NAME		=			main
 
 SRCS_NAMES		=			socket/ASocket \
 							socket/ServerSocket \
-							socket/ClientSocket \
-							Server \
-							Client \
+							#socket/ClientSocket \
+							#Server \
+							#Client \
 
 #* ************************************************************************** *#
 #* *                               INCLUDES                                 * *#

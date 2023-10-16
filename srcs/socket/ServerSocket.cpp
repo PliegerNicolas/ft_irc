@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 11:51:32 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 20:32:51 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSocket.hpp"
@@ -20,83 +20,28 @@ ServerSocket::ServerSocket(void):
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ServerSocket: default constructor called.";
+		std::cout << "ServerSocket: Default constructor called.";
 		std::cout << WHITE;
 	}
 
-	t_soconfig	socketConfig;
+	// Set default server configurations
+	t_serverconfig	serverConfig = buildServerConfig(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP,
+		"127.0.0.1", "6667");
 
-	// Set configuration struct
-	socketConfig = buildSocketConfig(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0, "0.0.0.0", 0);
-
-	if (socketConfig.port < MIN_PORT || socketConfig.port > MAX_PORT)
-		throw std::runtime_error("Error: port out of bounds (socket).");
-
-	// Set sockaddr_in
-	_address.sin_family = socketConfig.domain;
-	_address.sin_port = htons(socketConfig.port);
-	_address.sin_addr.s_addr = inet_addr(socketConfig.interface.c_str());
-
-	if (_address.sin_port == INADDR_NONE)
-		throw std::runtime_error("Error: invalid port (socket).");
-	if (_address.sin_addr.s_addr == INADDR_NONE)
-		throw std::runtime_error("Error: invalid IP address (socket).");
-
-	// Build socket
-	_poll.fd = socket(socketConfig.domain, socketConfig.service, socketConfig.protocol);
-	ASocket::handleSocketErrors(_poll.fd);
-
-	// Set event to which Server listens too in poll
-	_poll.events = POLLIN;
-
-	// Set socket options
-	setSocketOptions();
-
-	// bind to network
-	ASocket::handleSocketErrors(bindToNetwork());
-
-	// listen to network communication
-	ASocket::handleSocketErrors(listenToNetwork());
+	launchServerSockets(serverConfig);
 }
 
-ServerSocket::ServerSocket(const t_soconfig &socketConfig):
+ServerSocket::ServerSocket(const t_serverconfig &serverConfig):
 	ASocket()
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ServerSocket: parameter constructor called.";
+		std::cout << "ServerSocket: Parameter constructor called.";
 		std::cout << WHITE;
 	}
 
-	if (socketConfig.port < MIN_PORT || socketConfig.port > MAX_PORT)
-		throw std::runtime_error("Error: port out of bounds (socket).");
-
-	// Set sockaddr_in
-	_address.sin_family = socketConfig.domain;
-	_address.sin_port = htons(socketConfig.port);
-	_address.sin_addr.s_addr = inet_addr(socketConfig.interface.c_str());
-
-	if (_address.sin_port == INADDR_NONE)
-		throw std::runtime_error("Error: invalid port (socket).");
-	if (_address.sin_addr.s_addr == INADDR_NONE)
-		throw std::runtime_error("Error: invalid IP address (socket).");
-
-	// Build socket
-	_poll.fd = socket(socketConfig.domain, socketConfig.service, socketConfig.protocol);
-	ASocket::handleSocketErrors(_poll.fd);
-
-	// Set event to which Server listens too in poll
-	_poll.events = POLLIN;
-
-	// Set socket options
-	setSocketOptions();
-
-	// bind to network
-	ASocket::handleSocketErrors(bindToNetwork());
-
-	// listen to network communication
-	ASocket::handleSocketErrors(listenToNetwork());
+	launchServerSockets(serverConfig);
 }
 
 ServerSocket::ServerSocket(const ServerSocket &other):
@@ -105,7 +50,7 @@ ServerSocket::ServerSocket(const ServerSocket &other):
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ServerSocket: copy constructor called.";
+		std::cout << "ServerSocket: Copy constructor called.";
 		std::cout << WHITE;
 	}
 }
@@ -115,7 +60,7 @@ ServerSocket	&ServerSocket::operator=(const ServerSocket &other)
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ServerSocket: assignment operator called.";
+		std::cout << "ServerSocket: Assignment operator called.";
 		std::cout << WHITE;
 	}
 
@@ -132,7 +77,7 @@ ServerSocket::~ServerSocket(void)
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ServerSocket: default destructor called.";
+		std::cout << "ServerSocket: Default destructor called.";
 		std::cout << WHITE;
 	}
 }
@@ -144,6 +89,51 @@ ServerSocket::~ServerSocket(void)
 	/* Public */
 	/* Protected */
 	/* Private */
+
+void	ServerSocket::launchServerSockets(const t_serverconfig &serverConfig)
+{
+	// Verify if passed port is valid.
+	{
+		std::istringstream	iss(serverConfig.port);
+		int	port;
+
+		if (!(iss >> port) || !iss.eof())
+			throw std::runtime_error("Error: Passed port should be an integer (socket).");
+		if (port < MIN_PORT || port > MAX_PORT)
+			throw std::runtime_error("Error: Port out of bounds (socket).");
+	}
+
+	// Retrieve with getaddrinfo() all matching internet addresses (and more).
+	{
+		_hints.ai_family = serverConfig.domain;
+		_hints.ai_socktype = serverConfig.service;
+		_hints.ai_flags = AI_PASSIVE | AI_CANONNAME;
+
+		int	status = getaddrinfo(serverConfig.interface, serverConfig.port, &_hints, &_addrInfo);
+		if (status != 0)
+			throw std::runtime_error(std::string("Error: ") + gai_strerror(status) + " (socket).");
+	}
+
+	// Try to open a socket and bind it for every matching address.
+	for (struct addrinfo *af = _addrInfo; af != NULL; af = af->ai_next)
+	{
+		struct pollfd	newPollFd;
+
+		// Generate pollFd (create socket and set POLL events to listen too).
+		newPollFd.fd = socket(af->ai_family, af->ai_socktype, af->ai_protocol);
+		newPollFd.events = POLLIN | POLLHUP | POLLERR;
+
+		// Save the PollFd
+		_pollFds.push_back(newPollFd);
+
+		// Verify socket has correctly been created and set socket options.
+		ASocket::handleSocketErrors(newPollFd.fd);
+		setSocketOptions();
+
+		// Verify we can bind to it.
+		ASocket::handleSocketErrors(bind(newPollFd.fd, af->ai_addr, af->ai_addrlen));
+	}
+}
 
 void	ServerSocket::setSocketOptions(void)
 {
@@ -158,19 +148,10 @@ void	ServerSocket::setSocketOptions(void)
 	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
 
 	for (i = 0; i < SERVOPTSIZE; i++)
-		if (setsockopt(getSocketFd(), socketOptions[i].level, socketOptions[i].option,
-			&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
-			throw std::runtime_error("Error: couldn't set socket option (socket).");
-}
-
-int	ServerSocket::bindToNetwork(void)
-{
-	return (bind(this->getSocketFd(), this->getAddress(), sizeof(*this->getAddress())));
-}
-
-int	ServerSocket::listenToNetwork(void)
-{
-	return (listen(this->getSocketFd(), SOMAXCONN));
+		for (PollFdsConstIt it = _pollFds.begin(); it != _pollFds.end(); it++)
+			if (setsockopt(it->fd, socketOptions[i].level, socketOptions[i].option,
+				&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
+				throw std::runtime_error("Error: couldn't set socket option (socket).");
 }
 
 /* Getters */
@@ -184,3 +165,27 @@ int	ServerSocket::listenToNetwork(void)
 	/* Public */
 	/* Protected */
 	/* Private */
+
+/* Static */
+
+	/* Public */
+
+const ServerSocket::t_serverconfig
+ServerSocket::buildServerConfig(const int &domain, const int &service, const int &protocol,
+	const char *interface, const char *port)
+{
+	t_serverconfig	serverConfig;
+
+	serverConfig.domain = domain;
+	serverConfig.service = service;
+	serverConfig.protocol = protocol;
+
+	serverConfig.interface = interface;
+	serverConfig.port = port;
+
+	return (serverConfig);
+}
+
+	/* Protected */
+	/* Private */
+
