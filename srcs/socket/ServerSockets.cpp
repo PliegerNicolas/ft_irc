@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 23:09:31 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 23:19:28 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -92,30 +92,21 @@ ServerSockets::~ServerSockets(void)
 
 void	ServerSockets::launchServerSockets(const t_serverconfig &serverConfig)
 {
-	// Verify if passed port is valid.
-	{
-		std::istringstream	iss(serverConfig.port);
-		int	port;
+	struct addrinfo	hints;
+	struct addrinfo	*addrInfo;
 
-		if (!(iss >> port) || !iss.eof())
-			throw std::runtime_error("Error: Passed port should be an integer (socket).");
-		if (port < MIN_PORT || port > MAX_PORT)
-			throw std::runtime_error("Error: Port out of bounds (socket).");
-	}
-
-	struct addrinfo		hints;
-	struct addrinfo		*addrInfo;
+	verifyPort(serverConfig.port);
 
 	memset(&hints, 0, sizeof(hints));
 	memset(&addrInfo, 0, sizeof(addrInfo));
 
+	hints.ai_family = serverConfig.domain;
+	hints.ai_socktype = serverConfig.service;
+	hints.ai_flags = AI_PASSIVE | AI_CANONNAME;
+
 	// Retrieve with getaddrinfo() all matching internet addresses (and more).
 	{
-		hints.ai_family = serverConfig.domain;
-		hints.ai_socktype = serverConfig.service;
-		hints.ai_flags = AI_PASSIVE | AI_CANONNAME;
-
-		int	status = getaddrinfo(serverConfig.interface, serverConfig.port, &hints, &addrInfo);
+		int status = getaddrinfo(serverConfig.interface, serverConfig.port, &hints, &addrInfo);
 		if (status != 0)
 			throw std::runtime_error(std::string("Error: ") + gai_strerror(status) + " (socket).");
 	}
@@ -174,6 +165,17 @@ void	ServerSockets::handleServerErrors(const int &statusCode, struct addrinfo *a
 
 	errorMessage << "Error: " << strerror(errCode) << " (socket).";
 	throw std::runtime_error(errorMessage.str());
+}
+
+void	ServerSockets::verifyPort(const char *strPort)
+{
+	std::istringstream	iss(strPort);
+	int					port;
+
+	if (!(iss >> port) || !iss.eof())
+		throw std::runtime_error("Error: Passed port should be an integer (server).");
+	if (port < MIN_PORT || port > MAX_PORT)
+		throw std::runtime_error("Error: Port out of bounds (server).");
 }
 
 /* Getters */

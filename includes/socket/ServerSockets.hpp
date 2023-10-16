@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 23:08:11 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 23:17:27 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -68,6 +68,7 @@ class	ServerSockets: public ASockets
 		/* Member functions */
 		void	launchServerSockets(const t_serverconfig &serverConfig);
 		void	setSocketOptions(void);
+		void	verifyPort(const char *strPort);
 
 		void	handleServerErrors(const int &statusCode, struct addrinfo *addrInfo);
 };
