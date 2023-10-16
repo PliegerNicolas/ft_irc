@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/15 12:23:21 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 11:51:32 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSocket.hpp"
@@ -27,7 +27,7 @@ ServerSocket::ServerSocket(void):
 	t_soconfig	socketConfig;
 
 	// Set configuration struct
-	socketConfig = buildSocketConfig(AF_INET, SOCK_STREAM, 0, "0.0.0.0", 0);
+	socketConfig = buildSocketConfig(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0, "0.0.0.0", 0);
 
 	if (socketConfig.port < MIN_PORT || socketConfig.port > MAX_PORT)
 		throw std::runtime_error("Error: port out of bounds (socket).");

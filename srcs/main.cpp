@@ -6,23 +6,19 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/15 01:56:51 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 11:51:43 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
 
 static void	putExpectedUsage(void)
 {
-	std::cout << CYAN;
 	std::cout << "Expected usage: ./ircserv <port> <password>." << std::endl;
-	std::cout << WHITE;
 }
 
 static void	putErrorMessage(const std::string str)
 {
-	std::cerr << RED;
 	std::cerr << "Error : " << str << "." << std::endl;
-	std::cerr << WHITE;
 }
 
 static bool	verifyArguments(int argc, char **argv)
@@ -67,7 +63,7 @@ int	main(int argc, char **argv)
 	try
 	{
 		port = convertPortToInt(argv[1]);
-		serverConfig = ASocket::buildSocketConfig(AF_INET, SOCK_STREAM,
+		serverConfig = ASocket::buildSocketConfig(AF_INET, SOCK_STREAM | SOCK_NONBLOCK,
 			IPPROTO_TCP, "127.0.0.1", port);
 		Server			serv(serverConfig);
 	}

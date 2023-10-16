@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/15 12:36:47 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 11:41:16 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -19,6 +19,8 @@
 #include <vector>
 
 // MACROS
+
+#define MSG_BUFFER_SIZE 256
 
 class	Client;
 
@@ -70,7 +72,7 @@ class	Server
 		void				eventLoop(void);
 
 		void				handleClientConnections(struct pollfd &pollFd);
-		bool				handleClientDataTransfers(Client *client, struct pollfd &pollFd);
+		void				handleClientDataReception(Client *client, struct pollfd &pollFd);
 		void				handleClientDisconnections(struct pollfd &pollFd, size_t &index);
 
 };
