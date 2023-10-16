@@ -1,25 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ServerSocket.hpp                                   :+:      :+:    :+:   */
+/*   ServerSockets.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 20:28:03 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 23:08:11 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
 // INCLUDES
 
-#include "socket/ASocket.hpp"
+#include "socket/ASockets.hpp"
 
 // MACROS
 
 #define SERVOPTSIZE 6
 
-class	ServerSocket: public ASocket
+class	ServerSockets: public ASockets
 {
 	public:
 		/* Typedefs */
@@ -36,22 +36,16 @@ class	ServerSocket: public ASocket
 		static const t_serverconfig	buildServerConfig(const int &domain, const int &service,
 			const int &protocol, const char *interface, const char *port);
 
-		typedef std::vector<struct pollfd>	PollFds;
-		typedef PollFds::iterator			PollFdsIt;
-		typedef PollFds::const_iterator		PollFdsConstIt;
-
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		ServerSocket(void);
-		ServerSocket(const t_serverconfig &serverConfig);
-		//ServerSocket(const int &domain, const int &service, const int &protocol,
-		//	const std::string &interface, const int &port);
+		ServerSockets(void);
+		ServerSockets(const t_serverconfig &serverConfig);
 
-		ServerSocket(const ServerSocket &other);
-		ServerSocket	&operator=(const ServerSocket &other);
+		ServerSockets(const ServerSockets &other);
+		ServerSockets	&operator=(const ServerSockets &other);
 
-		virtual ~ServerSocket(void);
+		virtual ~ServerSockets(void);
 
 		/* Member functions */
 
@@ -74,4 +68,6 @@ class	ServerSocket: public ASocket
 		/* Member functions */
 		void	launchServerSockets(const t_serverconfig &serverConfig);
 		void	setSocketOptions(void);
+
+		void	handleServerErrors(const int &statusCode, struct addrinfo *addrInfo);
 };

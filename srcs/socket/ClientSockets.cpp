@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ClientSocket.cpp                                   :+:      :+:    :+:   */
+/*   ClientSockets.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -9,30 +9,30 @@
 /*   Updated: 2023/10/15 05:30:25 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include "socket/ClientSocket.hpp"
+#include "socket/ClientSockets.hpp"
 
 /* Constructors & Destructors */
 
 	/* Public */
-ClientSocket::ClientSocket(void):
-	ASocket()
+ClientSockets::ClientSockets(void):
+	ASockets()
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: default constructor called.";
+		std::cout << "ClientSockets: default constructor called.";
 		std::cout << WHITE;
 	}
 	_poll.events = POLLIN | POLLHUP | POLLERR;
 }
 
-ClientSocket::ClientSocket(const ServerSocket &server):
-	ASocket()
+ClientSockets::ClientSockets(const ServerSocket &server):
+	ASockets()
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: parameter constructor called.";
+		std::cout << "ClientSockets: parameter constructor called.";
 		std::cout << WHITE;
 	}
 
@@ -41,40 +41,40 @@ ClientSocket::ClientSocket(const ServerSocket &server):
 	_poll.events = POLLIN | POLLHUP | POLLERR;
 }
 
-ClientSocket::ClientSocket(const ClientSocket &other):
-	ASocket(other)
+ClientSockets::ClientSockets(const ClientSockets &other):
+	ASockets(other)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: copy constructor called.";
+		std::cout << "ClientSockets: copy constructor called.";
 		std::cout << WHITE;
 	}
 }
 
-ClientSocket	&ClientSocket::operator=(const ClientSocket &other)
+ClientSockets	&ClientSockets::operator=(const ClientSockets &other)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: assignment operator called.";
+		std::cout << "ClientSockets: assignment operator called.";
 		std::cout << WHITE;
 	}
 
 	if (this != &other)
 	{
-		ASocket::operator=(other);
+		ASockets::operator=(other);
 	}
 
 	return (*this);
 }
 
-ClientSocket::~ClientSocket(void)
+ClientSockets::~ClientSockets(void)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: default destructor called.";
+		std::cout << "ClientSockets: default destructor called.";
 		std::cout << WHITE;
 	}
 }
@@ -88,17 +88,17 @@ ClientSocket::~ClientSocket(void)
 	/* Protected */
 	/* Private */
 
-void	ClientSocket::setSocketOptions(void)
+void	ClientSockets::setSocketOptions(void)
 {
 	t_sooption	socketOptions[CLIENTOPTSIZE];
 	size_t		i = 0;
 
-	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_REUSEADDR, 1);
-	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_RCVBUF, 8192);
-	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_SNDBUF, 8192);
-	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_KEEPALIVE, 1);
-	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_QUICKACK, 1);
-	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
+	socketOptions[i++] = ASockets::buildSocketOption(SOL_SOCKET, SO_REUSEADDR, 1);
+	socketOptions[i++] = ASockets::buildSocketOption(SOL_SOCKET, SO_RCVBUF, 8192);
+	socketOptions[i++] = ASockets::buildSocketOption(SOL_SOCKET, SO_SNDBUF, 8192);
+	socketOptions[i++] = ASockets::buildSocketOption(SOL_SOCKET, SO_KEEPALIVE, 1);
+	socketOptions[i++] = ASockets::buildSocketOption(IPPROTO_TCP, TCP_QUICKACK, 1);
+	socketOptions[i++] = ASockets::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
 
 	for (i = 0; i < CLIENTOPTSIZE; i++)
 		if (setsockopt(getSocketFd(), socketOptions[i].level, socketOptions[i].value,

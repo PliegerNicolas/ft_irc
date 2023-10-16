@@ -6,14 +6,14 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 00:17:26 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 21:21:31 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
 // INCLUDES
 
-#include "socket/ClientSocket.hpp"
+#include "socket/ClientSockets.hpp"
 #include "Server.hpp"
 
 // MACROS
@@ -36,7 +36,7 @@ class	Client
 		/* Member functions */
 
 		// Getter
-		ClientSocket	&getSocket(void);
+		ClientSockets	&getSocket(void);
 
 		std::string		getMessage(const char delimiter);
 
@@ -52,7 +52,7 @@ class	Client
 
 	private:
 		/* Attributs */
-		ClientSocket	_socket;
+		ClientSockets	_socket;
 
 		std::string		_nickname;
 		std::string		_username;

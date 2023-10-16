@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 20:29:15 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 21:22:25 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -49,7 +49,7 @@ int	main(int argc, char **argv)
 
 	try
 	{
-		ServerSocket		serv;
+		ServerSockets		serv;
 	}
 	catch (const std::exception &e)
 	{

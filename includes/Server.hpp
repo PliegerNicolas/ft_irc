@@ -6,14 +6,14 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 19:31:14 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 21:22:11 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
 // INCLUDES
 
-#include "socket/ServerSocket.hpp"
+#include "socket/ServerSockets.hpp"
 #include "Client.hpp"
 
 #include <vector>
@@ -30,7 +30,7 @@ class	Server
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Server(const ServerSocket::t_serverconfig &serverConfig);
+		Server(const ServerSockets::t_serverconfig &serverConfig);
 
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
@@ -40,7 +40,7 @@ class	Server
 		/* Member functions */
 
 		// Getter
-		ServerSocket	&getSocket(void);
+		ServerSockets	&getSocket(void);
 
 		// Setter
 
@@ -60,7 +60,7 @@ class	Server
 		typedef PollFds::iterator			PollFdsIterator;
 
 		/* Attributs */
-		ServerSocket	_socket;
+		ServerSockets	_socket;
 
 		Clients			_clients;
 		PollFds			_pollFds;
