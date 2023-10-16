@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 18:43:54 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 18:05:03 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 12:39:47 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ASocket.hpp"
@@ -23,14 +23,15 @@ ASocket::ASocket(void)
 		std::cout << WHITE;
 	}
 
-	// initialize struct sockaddr_in _address && struct pollfd
-	memset(&_address, 0, sizeof(_address));
+	// initialize struct addrinfo _hints, _socketInfo && struct pollfd
 	memset(&_poll, 0, sizeof(_poll));
+	memset(&_hints, 0, sizeof(_hints));
+	memset(&_socketInfo, 0, sizeof(_socketInfo));
 }
 
 ASocket::ASocket(const ASocket &other):
-	_address(other._address),
-	_poll(other._poll)
+	_poll(other._poll),
+	_hints(other._hints)
 {
 	if (DEBUG)
 	{
@@ -38,6 +39,8 @@ ASocket::ASocket(const ASocket &other):
 		std::cout << "ASocket: copy constructor called.";
 		std::cout << WHITE;
 	}
+
+	socketInfoDeepCopy(other);
 }
 
 ASocket	&ASocket::operator=(const ASocket &other)
@@ -51,8 +54,9 @@ ASocket	&ASocket::operator=(const ASocket &other)
 
 	if (this != &other)
 	{
-		_address = other._address;
 		_poll = other._poll;
+		_hints = other._hints;
+		socketInfoDeepCopy(other);
 	}
 
 	return (*this);
@@ -67,6 +71,8 @@ ASocket::~ASocket(void)
 		std::cout << WHITE;
 	}
 
+	if (_socketInfo)
+		freeaddrinfo(_socketInfo);
 	close(_poll.fd);
 }
 	/* Protected */
@@ -102,7 +108,10 @@ const struct pollfd	&ASocket::getPoll(void) const
 
 struct sockaddr	*ASocket::getAddress(void)
 {
-	return (reinterpret_cast<struct sockaddr*>(&_address));
+	if (_socketInfo != NULL)
+		return (_socketInfo->ai_addr);
+	return (NULL);
+	//return (reinterpret_cast<struct sockaddr*>(&_address));
 }
 
 const int	&ASocket::getSocketFd(void) const
@@ -112,19 +121,96 @@ const int	&ASocket::getSocketFd(void) const
 
 const std::string	ASocket::getIP(void) const
 {
-	char		ipString[INET_ADDRSTRLEN];
+	char		ipString[INET6_ADDRSTRLEN];
+	memset(ipString, 0, sizeof(ipString));
 
-	inet_ntop(AF_INET, &(_address.sin_addr), ipString, INET_ADDRSTRLEN);
+	if (_socketInfo != NULL)
+	{
+		void	*addr = NULL;
+
+		if (_socketInfo->ai_family == AF_INET
+			&& _socketInfo->ai_addrlen >= sizeof(struct sockaddr_in))
+		{
+			// IPv4
+			struct sockaddr_in	*ipv4 = reinterpret_cast<struct sockaddr_in*>(_socketInfo->ai_addr);
+			addr = &(ipv4->sin_addr);
+		}
+		else if (_socketInfo->ai_family == AF_INET6
+			&& _socketInfo->ai_addrlen >= sizeof(struct sockaddr_in6))
+		{
+			//IPv6
+			struct sockaddr_in6 *ipv6 = reinterpret_cast<struct sockaddr_in6*>(_socketInfo->ai_addr);
+			addr = &(ipv6->sin6_addr);
+		}
+
+		if (addr != NULL)
+			inet_ntop(_socketInfo->ai_family, addr, ipString, sizeof(ipString));
+	}
+
 	return (ipString);
 }
 
 uint16_t	ASocket::getPort(void) const
 {
-	return (ntohs(_address.sin_port));
+	if (_socketInfo != NULL)
+	{
+		void	*port = NULL;
+
+		if (_socketInfo->ai_family == AF_INET
+			&& _socketInfo->ai_addrlen >= sizeof(struct sockaddr_in))
+		{
+			struct sockaddr_in *ipv4 = reinterpret_cast<struct sockaddr_in*>(_socketInfo->ai_addr);
+			port = &(ipv4->sin_port);
+		}
+		else if (_socketInfo->ai_family == AF_INET6
+			&& _socketInfo->ai_addrlen >= sizeof(struct sockaddr_in6))
+		{
+			struct sockaddr_in6 *ipv6 = reinterpret_cast<struct sockaddr_in6*>(_socketInfo->ai_addr);
+			port = &(ipv6->sin6_port);
+		}
+
+		if (port != NULL)
+		{
+			uint16_t	portValue;
+			memcpy(&portValue, port, sizeof(uint16_t));
+			return (ntohs(portValue));
+		}
+	}
+	return (0);
 }
 
 	/* Protected */
 	/* Private */
+
+void	ASocket::socketInfoDeepCopy(const ASocket &other)
+{
+	if (_socketInfo != NULL)
+	{
+		freeaddrinfo(_socketInfo);
+		_socketInfo = NULL;
+	}
+
+	if (other._socketInfo != NULL)
+	{
+		struct addrinfo *current = other._socketInfo;
+		struct addrinfo *previous = NULL;
+
+		while (current != NULL)
+		{
+			struct addrinfo *newAddrInfo = new struct addrinfo;
+			memcpy(newAddrInfo, current, sizeof(struct addrinfo));
+			newAddrInfo->ai_next = NULL;
+
+			if (previous == NULL)
+				_socketInfo = newAddrInfo;
+			else
+				previous->ai_next = newAddrInfo;
+
+			previous = newAddrInfo;
+			current = current->ai_next;
+		}
+	}
+}
 
 /* Setters */
 

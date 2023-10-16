@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 01:39:22 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/16 12:09:59 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -25,6 +25,7 @@
 
 #include <sys/socket.h>
 #include <sys/poll.h>
+#include <netdb.h>
 
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -87,8 +88,9 @@ class	ASocket
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		struct sockaddr_in	_address;
 		struct pollfd		_poll;
+		struct addrinfo		_hints;
+		struct addrinfo		*_socketInfo;
 
 		/* Member functions */
 		void					handleSocketErrors(const int &statusCode);
@@ -100,5 +102,5 @@ class	ASocket
 		/* Constructors & Destructors */
 
 		/* Member functions */
-
+		void					socketInfoDeepCopy(const ASocket &other);
 };
