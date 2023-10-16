@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 23:17:27 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 01:32:52 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -50,6 +50,7 @@ class	ServerSockets: public ASockets
 		/* Member functions */
 
 		// Getter
+		const ASockets::Sockets	&getSockets(void) const;
 
 		// Setter
 
@@ -62,6 +63,7 @@ class	ServerSockets: public ASockets
 
 	private:
 		/* Attributs */
+		Sockets		_sockets;
 
 		/* Constructors & Destructors */
 

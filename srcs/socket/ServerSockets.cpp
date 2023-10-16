@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 23:19:28 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 01:37:50 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -45,7 +45,8 @@ ServerSockets::ServerSockets(const t_serverconfig &serverConfig):
 }
 
 ServerSockets::ServerSockets(const ServerSockets &other):
-	ASockets(other)
+	ASockets(other),
+	_sockets(other._sockets)
 {
 	if (DEBUG)
 	{
@@ -67,6 +68,7 @@ ServerSockets	&ServerSockets::operator=(const ServerSockets &other)
 	if (this != &other)
 	{
 		ASockets::operator=(other);
+		_sockets = other._sockets;
 	}
 
 	return (*this);
@@ -80,6 +82,10 @@ ServerSockets::~ServerSockets(void)
 		std::cout << "ServerSockets: Default destructor called.";
 		std::cout << WHITE;
 	}
+
+	for (SocketsIt it = _sockets.begin(); it != _sockets.end(); it++)
+		close(it->first);
+	_sockets.clear();
 }
 	/* Protected */
 	/* Private */
@@ -159,6 +165,9 @@ void	ServerSockets::handleServerErrors(const int &statusCode, struct addrinfo *a
 
 	if (addrInfo)
 		freeaddrinfo(addrInfo);
+	for (SocketsIt it = _sockets.begin(); it != _sockets.end(); it++)
+		close(it->first);
+	_sockets.clear();
 
 	int					errCode = errno;
 	std::ostringstream	errorMessage;
@@ -181,6 +190,12 @@ void	ServerSockets::verifyPort(const char *strPort)
 /* Getters */
 
 	/* Public */
+
+const ASockets::Sockets	&ServerSockets::getSockets(void) const
+{
+	return (_sockets);
+}
+
 	/* Protected */
 	/* Private */
 

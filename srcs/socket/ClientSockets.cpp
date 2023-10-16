@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/15 05:30:25 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 01:40:15 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSockets.hpp"
@@ -23,10 +23,9 @@ ClientSockets::ClientSockets(void):
 		std::cout << "ClientSockets: default constructor called.";
 		std::cout << WHITE;
 	}
-	_poll.events = POLLIN | POLLHUP | POLLERR;
 }
 
-ClientSockets::ClientSockets(const ServerSocket &server):
+ClientSockets::ClientSockets(const ASockets::SocketPair &serverSocketPair):
 	ASockets()
 {
 	if (DEBUG)
@@ -36,13 +35,16 @@ ClientSockets::ClientSockets(const ServerSocket &server):
 		std::cout << WHITE;
 	}
 
-	socklen_t	addrLen = sizeof(*this->getAddress());
-	_poll.fd = accept(server.getSocketFd(), this->getAddress(), &addrLen);
-	_poll.events = POLLIN | POLLHUP | POLLERR;
+	ASockets::SocketPair	client
+
+	connect(serverSocketPair.first, );
+	//socklen_t	addrLen = sizeof(*this->getAddress());
+	//_poll.fd = accept(server.getSocketFd(), this->getAddress(), &addrLen);
 }
 
 ClientSockets::ClientSockets(const ClientSockets &other):
-	ASockets(other)
+	ASockets(other),
+	_socket(other._socket)
 {
 	if (DEBUG)
 	{
@@ -64,6 +66,7 @@ ClientSockets	&ClientSockets::operator=(const ClientSockets &other)
 	if (this != &other)
 	{
 		ASockets::operator=(other);
+		_socket = other._socket;
 	}
 
 	return (*this);
@@ -100,10 +103,10 @@ void	ClientSockets::setSocketOptions(void)
 	socketOptions[i++] = ASockets::buildSocketOption(IPPROTO_TCP, TCP_QUICKACK, 1);
 	socketOptions[i++] = ASockets::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
 
-	for (i = 0; i < CLIENTOPTSIZE; i++)
-		if (setsockopt(getSocketFd(), socketOptions[i].level, socketOptions[i].value,
+	for (i = 0; i < SERVOPTSIZE; i++)
+		if (setsockopt(_socket.first, socketOptions[i].level, socketOptions[i].option,
 			&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
-			throw std::runtime_error("Error: couldn't set socket option (socket).");
+			throw std::runtime_error("Error: couldn't set socket option (client).");
 }
 
 /* Getters */

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 21:22:25 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 00:50:32 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -49,7 +49,17 @@ int	main(int argc, char **argv)
 
 	try
 	{
-		ServerSockets		serv;
+		ServerSockets::t_serverconfig	serverConfig1;
+		ServerSockets::t_serverconfig	serverConfig2;
+		serverConfig1 = ServerSockets::buildServerConfig(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP,
+			"127.0.0.1", "6667");
+		serverConfig2 = ServerSockets::buildServerConfig(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP,
+			"::1", "6667");
+
+		(void)serverConfig1;
+		(void)serverConfig2;
+
+		ServerSockets		serv(serverConfig2);
 	}
 	catch (const std::exception &e)
 	{

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 22:33:33 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 01:32:44 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -71,11 +71,9 @@ class	ASockets
 		/* Member functions */
 
 		// Getter
-		const std::string	getIP(const int &fd) const;
-		const std::string	getPort(const int &fd) const;
 
-		//const std::string		getIP(void) const;
-		//uint16_t				getPort(void) const;
+		const std::string	getIP(const struct addrinfo &addrInfo) const;
+		const std::string	getPort(const struct addrinfo &addrInfo) const;
 
 		// Setter
 
@@ -83,7 +81,6 @@ class	ASockets
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Sockets				_sockets;
 
 		/* Member functions */
 		virtual void			setSocketOptions(void) = 0;
