@@ -6,17 +6,15 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 11:41:16 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 19:39:46 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
 // INCLUDES
 
-#include "socket/ServerSocket.hpp"
+#include "socket/ServerSockets.hpp"
 #include "Client.hpp"
-
-#include <vector>
 
 // MACROS
 
@@ -30,7 +28,7 @@ class	Server
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Server(const ASocket::t_soconfig &config);
+		Server(const ServerSockets::t_serverconfig &serverConfig);
 
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
@@ -40,7 +38,6 @@ class	Server
 		/* Member functions */
 
 		// Getter
-		ServerSocket	&getSocket(void);
 
 		// Setter
 
@@ -60,7 +57,7 @@ class	Server
 		typedef PollFds::iterator			PollFdsIterator;
 
 		/* Attributs */
-		ServerSocket	_socket;
+		ServerSockets	_serverSockets;
 
 		Clients			_clients;
 		PollFds			_pollFds;
@@ -70,9 +67,4 @@ class	Server
 
 		/* Member functions */
 		void				eventLoop(void);
-
-		void				handleClientConnections(struct pollfd &pollFd);
-		void				handleClientDataReception(Client *client, struct pollfd &pollFd);
-		void				handleClientDisconnections(struct pollfd &pollFd, size_t &index);
-
 };

@@ -6,7 +6,7 @@
 #    By: nicolas <marvin@42.fr>                     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/10/13 03:16:24 by nicolas           #+#    #+#              #
-#    Updated: 2023/10/14 11:50:32 by nicolas          ###   ########.fr        #
+#    Updated: 2023/10/17 20:09:42 by nicolas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,7 +28,7 @@ SRCS_PATH		=			srcs
 MAIN_NAME		=			main
 
 SRCS_NAMES		=			socket/ASocket \
-							socket/ServerSocket \
+							socket/ServerSockets \
 							socket/ClientSocket \
 							Server \
 							Client \

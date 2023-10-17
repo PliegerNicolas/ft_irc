@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 18:43:54 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 18:05:03 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 16:09:52 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ASocket.hpp"
@@ -19,25 +19,21 @@ ASocket::ASocket(void)
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ASocket: default constructor called.";
+		std::cout << "ASocket: Default constructor called.";
 		std::cout << WHITE;
 	}
-
-	// initialize struct sockaddr_in _address && struct pollfd
-	memset(&_address, 0, sizeof(_address));
-	memset(&_poll, 0, sizeof(_poll));
 }
 
-ASocket::ASocket(const ASocket &other):
-	_address(other._address),
-	_poll(other._poll)
+ASocket::ASocket(const ASocket &other)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ASocket: copy constructor called.";
+		std::cout << "ASocket: Copy constructor called.";
 		std::cout << WHITE;
 	}
+
+	(void)other;
 }
 
 ASocket	&ASocket::operator=(const ASocket &other)
@@ -45,14 +41,13 @@ ASocket	&ASocket::operator=(const ASocket &other)
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ASocket: assignment operator called.";
+		std::cout << "ASocket: Assignment operator called.";
 		std::cout << WHITE;
 	}
 
 	if (this != &other)
 	{
-		_address = other._address;
-		_poll = other._poll;
+		(void)other;
 	}
 
 	return (*this);
@@ -63,11 +58,9 @@ ASocket::~ASocket(void)
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ASocket: default destructor called.";
+		std::cout << "ASocket: Default destructor called.";
 		std::cout << WHITE;
 	}
-
-	close(_poll.fd);
 }
 	/* Protected */
 	/* Private */
@@ -95,36 +88,106 @@ void	ASocket::handleSocketErrors(const int &statusCode)
 
 	/* Public */
 
-const struct pollfd	&ASocket::getPoll(void) const
+/*
+const std::string	ASocket::getIP(const struct addrinfo &addrInfo) const
 {
-	return (_poll);
-}
+	char		ipString[INET6_ADDRSTRLEN];
+	memset(ipString, 0, sizeof(ipString));
 
-struct sockaddr	*ASocket::getAddress(void)
-{
-	return (reinterpret_cast<struct sockaddr*>(&_address));
-}
+	void	*addr = NULL;
 
-const int	&ASocket::getSocketFd(void) const
-{
-	return (_poll.fd);
-}
+	if (addrInfo.ai_family == AF_INET
+		&& addrInfo.ai_addrlen >= sizeof(struct sockaddr_in))
+	{
+		// IPv4
+		struct sockaddr_in	*ipv4 = reinterpret_cast<struct sockaddr_in*>(addrInfo.ai_addr);
+		addr = &(ipv4->sin_addr);
+	}
+	else if (addrInfo.ai_family == AF_INET6
+		&& addrInfo.ai_addrlen >= sizeof(struct sockaddr_in6))
+	{
+		//IPv6
+		struct sockaddr_in6 *ipv6 = reinterpret_cast<struct sockaddr_in6*>(addrInfo.ai_addr);
+		addr = &(ipv6->sin6_addr);
+	}
 
-const std::string	ASocket::getIP(void) const
-{
-	char		ipString[INET_ADDRSTRLEN];
+	if (addr != NULL)
+	{
+		// retrieve IP address
+		inet_ntoa(ipString, *reinterpret_cast<struct in_addr*>(addr));
+	}
 
-	inet_ntop(AF_INET, &(_address.sin_addr), ipString, INET_ADDRSTRLEN);
 	return (ipString);
 }
 
-uint16_t	ASocket::getPort(void) const
+const std::string	ASocket::getPort(const struct addrinfo &addrInfo) const
 {
-	return (ntohs(_address.sin_port));
+	std::string	portString;
+
+	void	*port = NULL;
+
+	if (addrInfo.ai_family == AF_INET
+		&& addrInfo.ai_addrlen >= sizeof(struct sockaddr_in))
+	{
+		struct sockaddr_in *ipv4 = reinterpret_cast<struct sockaddr_in*>(addrInfo.ai_addr);
+		port = &(ipv4->sin_port);
+	}
+	else if (addrInfo.ai_family == AF_INET6
+		&& addrInfo.ai_addrlen >= sizeof(struct sockaddr_in6))
+	{
+		struct sockaddr_in6 *ipv6 = reinterpret_cast<struct sockaddr_in6*>(addrInfo.ai_addr);
+		port = &(ipv6->sin6_port);
+	}
+
+	if (port != NULL)
+	{
+		uint16_t portValue = ntohs(*reinterpret_cast<uint16_t*>(portPtr));
+		std::stringstream ss;
+		ss << portValue;
+		portString = ss.str();
+	}
+
+	return (portString);
 }
+*/
 
 	/* Protected */
 	/* Private */
+
+/*
+struct addrinfo	*ASocket::addrInfoDeepCopy(const ASocket &other)
+{
+	struct addrinfo	*cpy;
+
+	if (_addrInfo != NULL)
+	{
+		freeaddrinfo(_addrInfo);
+		_addrInfo = NULL;
+	}
+
+	if (other._addrInfo != NULL)
+	{
+		struct addrinfo *current = other._addrInfo;
+		struct addrinfo *previous = NULL;
+
+		while (current != NULL)
+		{
+			struct addrinfo *newAddrInfo = new struct addrinfo;
+			memcpy(newAddrInfo, current, sizeof(struct addrinfo));
+			newAddrInfo->ai_next = NULL;
+
+			if (previous == NULL)
+				cpy = newAddrInfo;
+			else
+				previous->ai_next = newAddrInfo;
+
+			previous = newAddrInfo;
+			current = current->ai_next;
+		}
+	}
+	return (cpy);
+}
+*/
 
 /* Setters */
 
@@ -135,21 +198,6 @@ uint16_t	ASocket::getPort(void) const
 /* Static */
 
 	/* Public */
-
-const ASocket::t_soconfig
-ASocket::buildSocketConfig(const int &domain, const int &service, const int &protocol,
-	const std::string &interface, const int &port)
-{
-	t_soconfig	socketConfig;
-
-	socketConfig.domain = domain;
-	socketConfig.service = service;
-	socketConfig.protocol = protocol;
-	socketConfig.interface = interface;
-	socketConfig.port = port;
-
-	return (socketConfig);
-}
 
 const ASocket::t_sooption
 ASocket::buildSocketOption(const int &level, const int &option, const int &value)

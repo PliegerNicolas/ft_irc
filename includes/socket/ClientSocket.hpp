@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:16:24 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/14 17:35:03 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 20:14:45 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -14,7 +14,7 @@
 // INCLUDES
 
 #include "socket/ASocket.hpp"
-#include "socket/ServerSocket.hpp"
+#include "socket/ServerSockets.hpp"
 
 // MACROS
 
@@ -27,7 +27,7 @@ class	ClientSocket: public ASocket
 
 		/* Constructors & Destructors */
 		ClientSocket(void);
-		ClientSocket(const ServerSocket &server);
+		ClientSocket(const ASocket::t_socket &serverSocket);
 
 		ClientSocket(const ClientSocket &other);
 		ClientSocket	&operator=(const ClientSocket &other);
@@ -37,6 +37,7 @@ class	ClientSocket: public ASocket
 		/* Member functions */
 
 		// Getter
+		const ASocket::t_socket	getSocket(void) const;
 
 		// Setter
 
@@ -49,6 +50,7 @@ class	ClientSocket: public ASocket
 
 	private:
 		/* Attributs */
+		ASocket::t_socket	_socket;
 
 		/* Constructors & Destructors */
 
