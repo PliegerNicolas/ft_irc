@@ -1,47 +1,47 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ASockets.cpp                                       :+:      :+:    :+:   */
+/*   ASocket.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 18:43:54 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 01:34:52 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 16:09:52 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include "socket/ASockets.hpp"
+#include "socket/ASocket.hpp"
 
 /* Constructors & Destructors */
 
 	/* Public */
-ASockets::ASockets(void)
+ASocket::ASocket(void)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ASockets: Default constructor called.";
+		std::cout << "ASocket: Default constructor called.";
 		std::cout << WHITE;
 	}
 }
 
-ASockets::ASockets(const ASockets &other)
+ASocket::ASocket(const ASocket &other)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ASockets: Copy constructor called.";
+		std::cout << "ASocket: Copy constructor called.";
 		std::cout << WHITE;
 	}
 
 	(void)other;
 }
 
-ASockets	&ASockets::operator=(const ASockets &other)
+ASocket	&ASocket::operator=(const ASocket &other)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ASockets: Assignment operator called.";
+		std::cout << "ASocket: Assignment operator called.";
 		std::cout << WHITE;
 	}
 
@@ -53,12 +53,12 @@ ASockets	&ASockets::operator=(const ASockets &other)
 	return (*this);
 }
 
-ASockets::~ASockets(void)
+ASocket::~ASocket(void)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ASockets: Default destructor called.";
+		std::cout << "ASocket: Default destructor called.";
 		std::cout << WHITE;
 	}
 }
@@ -70,7 +70,7 @@ ASockets::~ASockets(void)
 	/* Public */
 	/* Protected */
 
-void	ASockets::handleSocketErrors(const int &statusCode)
+void	ASocket::handleSocketErrors(const int &statusCode)
 {
 	if (statusCode >= 0)
 		return ;
@@ -88,20 +88,8 @@ void	ASockets::handleSocketErrors(const int &statusCode)
 
 	/* Public */
 
-const std::string	ASockets::getIP(const struct addrinfo &addrInfo) const
-{
-	(void)addrInfo;
-	return ("");
-}
-
-const std::string	ASockets::getPort(const struct addrinfo &addrInfo) const
-{
-	(void)addrInfo;
-	return ("");
-}
-
 /*
-const std::string	ASockets::getIP(const struct addrinfo &addrInfo) const
+const std::string	ASocket::getIP(const struct addrinfo &addrInfo) const
 {
 	char		ipString[INET6_ADDRSTRLEN];
 	memset(ipString, 0, sizeof(ipString));
@@ -132,7 +120,7 @@ const std::string	ASockets::getIP(const struct addrinfo &addrInfo) const
 	return (ipString);
 }
 
-const std::string	ASockets::getPort(const struct addrinfo &addrInfo) const
+const std::string	ASocket::getPort(const struct addrinfo &addrInfo) const
 {
 	std::string	portString;
 
@@ -167,7 +155,7 @@ const std::string	ASockets::getPort(const struct addrinfo &addrInfo) const
 	/* Private */
 
 /*
-struct addrinfo	*ASockets::addrInfoDeepCopy(const ASockets &other)
+struct addrinfo	*ASocket::addrInfoDeepCopy(const ASocket &other)
 {
 	struct addrinfo	*cpy;
 
@@ -211,8 +199,8 @@ struct addrinfo	*ASockets::addrInfoDeepCopy(const ASockets &other)
 
 	/* Public */
 
-const ASockets::t_sooption
-ASockets::buildSocketOption(const int &level, const int &option, const int &value)
+const ASocket::t_sooption
+ASocket::buildSocketOption(const int &level, const int &option, const int &value)
 {
 	t_sooption	socketOption;
 

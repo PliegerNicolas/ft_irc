@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 01:37:50 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:22:26 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -15,7 +15,7 @@
 
 	/* Public */
 ServerSockets::ServerSockets(void):
-	ASockets()
+	ASocket()
 {
 	if (DEBUG)
 	{
@@ -32,7 +32,7 @@ ServerSockets::ServerSockets(void):
 }
 
 ServerSockets::ServerSockets(const t_serverconfig &serverConfig):
-	ASockets()
+	ASocket()
 {
 	if (DEBUG)
 	{
@@ -45,7 +45,7 @@ ServerSockets::ServerSockets(const t_serverconfig &serverConfig):
 }
 
 ServerSockets::ServerSockets(const ServerSockets &other):
-	ASockets(other),
+	ASocket(other),
 	_sockets(other._sockets)
 {
 	if (DEBUG)
@@ -67,7 +67,7 @@ ServerSockets	&ServerSockets::operator=(const ServerSockets &other)
 
 	if (this != &other)
 	{
-		ASockets::operator=(other);
+		ASocket::operator=(other);
 		_sockets = other._sockets;
 	}
 
@@ -84,7 +84,7 @@ ServerSockets::~ServerSockets(void)
 	}
 
 	for (SocketsIt it = _sockets.begin(); it != _sockets.end(); it++)
-		close(it->first);
+		close(it->fd);
 	_sockets.clear();
 }
 	/* Protected */
@@ -120,19 +120,22 @@ void	ServerSockets::launchServerSockets(const t_serverconfig &serverConfig)
 	// Try to open a socket and bind it for every matching address.
 	for (struct addrinfo *ai = addrInfo; ai != NULL; ai = ai->ai_next)
 	{
-		int				socketFd;
-		struct addrinfo	current = *ai;
-		current.ai_next = NULL;
+		t_socket		newSocket;
+
+		newSocket.info = *ai;
+		newSocket.info.ai_next = NULL;
 
 		// Generate socket file descriptor.
-		socketFd = socket(current.ai_family, current.ai_socktype, current.ai_protocol);
-		handleServerErrors(socketFd, addrInfo);
+		newSocket.fd = socket(newSocket.info.ai_family, newSocket.info.ai_socktype,
+			newSocket.info.ai_protocol);
+		handleServerErrors(newSocket.fd, addrInfo);
 		setSocketOptions();
 
-		_sockets.push_back(ASockets::SocketPair(socketFd, current));
+		_sockets.push_back(newSocket);
 
 		// Verify we can bind to it.
-		handleServerErrors(bind(socketFd, current.ai_addr, current.ai_addrlen), addrInfo);
+		handleServerErrors(bind(newSocket.fd, newSocket.info.ai_addr, newSocket.info.ai_addrlen),
+			addrInfo);
 	}
 
 	if (addrInfo)
@@ -144,16 +147,16 @@ void	ServerSockets::setSocketOptions(void)
 	t_sooption	socketOptions[SERVOPTSIZE];
 	size_t		i = 0;
 
-	socketOptions[i++] = ASockets::buildSocketOption(SOL_SOCKET, SO_REUSEADDR, 1);
-	socketOptions[i++] = ASockets::buildSocketOption(SOL_SOCKET, SO_RCVBUF, 8192);
-	socketOptions[i++] = ASockets::buildSocketOption(SOL_SOCKET, SO_SNDBUF, 8192);
-	socketOptions[i++] = ASockets::buildSocketOption(SOL_SOCKET, SO_KEEPALIVE, 1);
-	socketOptions[i++] = ASockets::buildSocketOption(IPPROTO_TCP, TCP_QUICKACK, 1);
-	socketOptions[i++] = ASockets::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
+	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_REUSEADDR, 1);
+	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_RCVBUF, 8192);
+	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_SNDBUF, 8192);
+	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_KEEPALIVE, 1);
+	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_QUICKACK, 1);
+	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
 
 	for (i = 0; i < SERVOPTSIZE; i++)
 		for (SocketsConstIt it = _sockets.begin(); it != _sockets.end(); it++)
-			if (setsockopt(it->first, socketOptions[i].level, socketOptions[i].option,
+			if (setsockopt(it->fd, socketOptions[i].level, socketOptions[i].option,
 				&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
 				throw std::runtime_error("Error: couldn't set socket option (socket).");
 }
@@ -166,7 +169,7 @@ void	ServerSockets::handleServerErrors(const int &statusCode, struct addrinfo *a
 	if (addrInfo)
 		freeaddrinfo(addrInfo);
 	for (SocketsIt it = _sockets.begin(); it != _sockets.end(); it++)
-		close(it->first);
+		close(it->fd);
 	_sockets.clear();
 
 	int					errCode = errno;
@@ -191,7 +194,7 @@ void	ServerSockets::verifyPort(const char *strPort)
 
 	/* Public */
 
-const ASockets::Sockets	&ServerSockets::getSockets(void) const
+const ASocket::Sockets	&ServerSockets::getSockets(void) const
 {
 	return (_sockets);
 }

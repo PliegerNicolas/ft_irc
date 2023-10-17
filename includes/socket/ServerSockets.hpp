@@ -6,20 +6,20 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 01:32:52 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:21:42 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
 // INCLUDES
 
-#include "socket/ASockets.hpp"
+#include "socket/ASocket.hpp"
 
 // MACROS
 
 #define SERVOPTSIZE 6
 
-class	ServerSockets: public ASockets
+class	ServerSockets: public ASocket
 {
 	public:
 		/* Typedefs */
@@ -50,7 +50,7 @@ class	ServerSockets: public ASockets
 		/* Member functions */
 
 		// Getter
-		const ASockets::Sockets	&getSockets(void) const;
+		const ASocket::Sockets	&getSockets(void) const;
 
 		// Setter
 
@@ -63,7 +63,7 @@ class	ServerSockets: public ASockets
 
 	private:
 		/* Attributs */
-		Sockets		_sockets;
+		ASocket::Sockets	_sockets;
 
 		/* Constructors & Destructors */
 

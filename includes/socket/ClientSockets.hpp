@@ -6,28 +6,28 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:16:24 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 01:37:12 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:23:12 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
 // INCLUDES
 
-#include "socket/ASockets.hpp"
+#include "socket/ASocket.hpp"
 #include "socket/ServerSockets.hpp"
 
 // MACROS
 
 #define CLIENTOPTSIZE 6
 
-class	ClientSockets: public ASockets
+class	ClientSockets: public ASocket
 {
 	public:
 		/* Attributs */
 
 		/* Constructors & Destructors */
 		ClientSockets(void);
-		ClientSockets(const ASockets::SocketPair &serverSocketPair);
+		ClientSockets(const ASocket::t_socket &serverSocketPair);
 
 		ClientSockets(const ClientSockets &other);
 		ClientSockets	&operator=(const ClientSockets &other);
@@ -49,7 +49,7 @@ class	ClientSockets: public ASockets
 
 	private:
 		/* Attributs */
-		SocketPair	_socket;
+		ASocket::t_socket	_socket;
 
 		/* Constructors & Destructors */
 

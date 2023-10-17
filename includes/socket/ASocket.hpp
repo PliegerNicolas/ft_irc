@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ASockets.hpp                                       :+:      :+:    :+:   */
+/*   ASocket.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 01:32:44 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:20:39 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -39,7 +39,7 @@
 #define MAX_PORT 65535
 #define MIN_PORT 0
 
-class	ASockets
+class	ASocket
 {
 	public:
 		/* Typedefs */
@@ -53,27 +53,29 @@ class	ASockets
 		static const t_sooption	buildSocketOption(const int &level, const int &option,
 			const int &value);
 
-		typedef std::pair<int, struct addrinfo>		SocketPair;
-		typedef std::vector<SocketPair>				Sockets;
-		typedef Sockets::iterator					SocketsIt;
-		typedef Sockets::const_iterator				SocketsConstIt;
+		typedef struct SocketData
+		{
+			int				fd;
+			struct addrinfo	info;
+		}	t_socket;
+
+		typedef std::vector<t_socket>	Sockets;
+		typedef Sockets::iterator		SocketsIt;
+		typedef Sockets::const_iterator	SocketsConstIt;
 
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		ASockets(void);
+		ASocket(void);
 
-		ASockets(const ASockets &other);
-		ASockets	&operator=(const ASockets &other);
+		ASocket(const ASocket &other);
+		ASocket	&operator=(const ASocket &other);
 
-		virtual ~ASockets(void);
+		virtual ~ASocket(void);
 
 		/* Member functions */
 
 		// Getter
-
-		const std::string	getIP(const struct addrinfo &addrInfo) const;
-		const std::string	getPort(const struct addrinfo &addrInfo) const;
 
 		// Setter
 
