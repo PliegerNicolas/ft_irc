@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:34:48 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 19:46:51 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -29,7 +29,7 @@ class	ServerSockets: public ASocket
 			int			domain;		// communication domain (IPv4, IPv6, AF_UNIX, ...)
 			int			service;	// communication semantics (stream, dgream, raw, ...)
 			int			protocol;	// transmission protocol (TCP, UDP, HTTP, ...)
-			const char	*interface;	// IP address ("127.0.0.1", ...)
+			const char	*interface;	// IP address or hostname ("127.0.0.1", "www.google.com", ...)
 			const char	*port;		// Port (6667, 6697, ...)
 		} t_serverconfig;
 

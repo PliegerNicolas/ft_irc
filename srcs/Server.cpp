@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:44:27 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 19:50:30 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -26,9 +26,9 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig):
 	}
 
 	{
-		const ServerSockets::Sockets	&_sockets = _serverSockets.getSockets();
+		const ServerSockets::Sockets	&sockets = _serverSockets.getSockets();
 
-		for (ServerSockets::SocketsConstIt it = _sockets.begin(); it != _sockets.end(); it++)
+		for (ServerSockets::SocketsConstIt it = sockets.begin(); it != sockets.end(); it++)
 		{
 			struct pollfd	newPollFd;
 
@@ -39,7 +39,7 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig):
 		}
 	}
 
-	Server::eventLoop();
+	eventLoop();
 }
 
 Server::Server(const Server &other):
@@ -125,38 +125,69 @@ Server::Server(void):
 
 void	Server::eventLoop(void)
 {
-	/*
-	// Set as front element of _pollFds, server pollfd.
-	_pollFds.push_back(getSocket().getPoll());
+	const ServerSockets::Sockets	&serverSockets = _serverSockets.getSockets();
 
 	while (true)
 	{
-		// Wait for event on any socket (revent on pollfd).
-		int activity = poll(_pollFds.data(), _pollFds.size(), -1);
+		// Await requests all stored file descriptors (server and clients).
+		int		activity = poll(_pollFds.data(), _pollFds.size(), -1);
 
 		if (activity < 0)
-			throw std::runtime_error("Error: poll error (server).");
+			throw	std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
 
-		handleClientConnections(_pollFds.front());
+		size_t	i = 0;
 
-		for (size_t i = 0; i < _clients.size(); i++)
+		for (; i < serverSockets.size(); i++)
 		{
-			struct pollfd	&pollFd = _pollFds[i + 1];
-			Client			*client = *(_clients.begin() + i);
+			const ASocket::t_socket	&serverSocket = serverSockets[i];
+			struct pollfd			&pollFd = _pollFds[i];
 
-			try
-			{
-				handleClientDataReception(client, pollFd);
-			}
-			catch (const std::exception &e)
-			{
-				std::cerr << e.what() << std::endl;
-			}
-			handleClientDisconnections(pollFd, i);
+			(void)serverSocket;
+			(void)pollFd;
+		}
+
+		for (; i < _pollFds.size(); i++)
+		{
+			Client			*client = _clients[i];
+			struct pollfd	&pollFd = _pollFds[i];
+
+			(void)client;
+			(void)pollFd;
 		}
 	}
-	*/
 }
+
+/*
+// Set as front element of _pollFds, server pollfd.
+_pollFds.push_back(getSocket().getPoll());
+
+while (true)
+{
+	// Wait for event on any socket (revent on pollfd).
+	int activity = poll(_pollFds.data(), _pollFds.size(), -1);
+
+	if (activity < 0)
+		throw std::runtime_error("Error: poll error (server).");
+
+	handleClientConnections(_pollFds.front());
+
+	for (size_t i = 0; i < _clients.size(); i++)
+	{
+		struct pollfd	&pollFd = _pollFds[i + 1];
+		Client			*client = *(_clients.begin() + i);
+
+		try
+		{
+			handleClientDataReception(client, pollFd);
+		}
+		catch (const std::exception &e)
+		{
+			std::cerr << e.what() << std::endl;
+		}
+		handleClientDisconnections(pollFd, i);
+	}
+}
+*/
 
 /*
 void	Server::handleClientConnections(struct pollfd &pollFd)
