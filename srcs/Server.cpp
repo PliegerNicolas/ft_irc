@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 19:50:30 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 21:23:00 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -137,22 +137,55 @@ void	Server::eventLoop(void)
 
 		size_t	i = 0;
 
+		// Watch events on server pollFds
 		for (; i < serverSockets.size(); i++)
 		{
+
 			const ASocket::t_socket	&serverSocket = serverSockets[i];
 			struct pollfd			&pollFd = _pollFds[i];
 
+			if (pollFd.revents & POLLIN)
+			{
+				pollFd.revents &= ~POLLIN;
+
+				// Client connection
+			}
+			else if (pollFd.revents & POLLHUP)
+			{
+				pollFd.revents &= ~POLLHUP;
+
+				// socket disconnection ???
+			}
+			else if (pollFd.revents & POLLERR)
+			{
+				pollFd.revents &= ~POLLERR;
+			}
 			(void)serverSocket;
-			(void)pollFd;
 		}
 
+		// Watch events on client pollFds
 		for (; i < _pollFds.size(); i++)
 		{
-			Client			*client = _clients[i];
+			Client			*client = _clients[i - serverSockets.size()];
 			struct pollfd	&pollFd = _pollFds[i];
 
+			if (pollFd.revents & POLLIN)
+			{
+				pollFd.revents &= ~POLLIN;
+
+				// Data received from client.
+			}
+			else if (pollFd.revents & POLLHUP)
+			{
+				pollFd.revents &= ~POLLHUP;
+
+				// Client disconnection.
+			}
+			else if (pollFd.revents & POLLERR)
+			{
+				pollFd.revents &= ~POLLERR;
+			}
 			(void)client;
-			(void)pollFd;
 		}
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 19:46:58 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 20:42:21 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -126,7 +126,7 @@ void	ServerSockets::launchServerSockets(const t_serverconfig &serverConfig)
 		newSocket.info = *ai;
 		newSocket.info.ai_next = NULL;
 
-		// Generate socket file descriptor.
+		// Generate socket file descriptor and verify success of operation.
 		newSocket.fd = socket(newSocket.info.ai_family, newSocket.info.ai_socktype,
 			newSocket.info.ai_protocol);
 		handleServerErrors(newSocket.fd, addrInfo);
@@ -134,9 +134,12 @@ void	ServerSockets::launchServerSockets(const t_serverconfig &serverConfig)
 
 		_sockets.push_back(newSocket);
 
-		// Verify we can bind to it.
+		// Verify we can bind to it and do if it's possible.
 		handleServerErrors(bind(newSocket.fd, newSocket.info.ai_addr, newSocket.info.ai_addrlen),
 			addrInfo);
+
+		// Verify if we can listen with it and do if it's possible.
+		handleServerErrors(listen(newSocket.fd, SOMAXCONN), addrInfo);
 	}
 
 	if (addrInfo)
@@ -231,4 +234,3 @@ ServerSockets::buildServerConfig(const int &domain, const int &service, const in
 
 	/* Protected */
 	/* Private */
-

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:48:44 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 21:22:47 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -16,7 +16,7 @@
 	/* Public */
 
 Client::Client(const ASocket::t_socket &serverSocket):
-	_socket(ClientSockets(serverSocket))
+	_clientSocket(ClientSocket(serverSocket))
 {
 	if (DEBUG)
 	{
@@ -27,7 +27,7 @@ Client::Client(const ASocket::t_socket &serverSocket):
 }
 
 Client::Client(const Client &other):
-	_socket(other._socket)
+	_clientSocket(other._clientSocket)
 {
 	if (DEBUG)
 	{
@@ -48,7 +48,7 @@ Client	&Client::operator=(const Client &other)
 
 	if (this != &other)
 	{
-		_socket = other._socket;
+		_clientSocket = other._clientSocket;
 	}
 
 	return (*this);
@@ -67,7 +67,7 @@ Client::~Client(void)
 	/* Private */
 
 Client::Client(void):
-	_socket(ClientSockets())
+	_clientSocket(ClientSocket())
 {
 	if (DEBUG)
 	{

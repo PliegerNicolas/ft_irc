@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ClientSockets.hpp                                  :+:      :+:    :+:   */
+/*   ClientSocket.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:16:24 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:47:16 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 20:14:45 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -20,23 +20,24 @@
 
 #define CLIENTOPTSIZE 6
 
-class	ClientSockets: public ASocket
+class	ClientSocket: public ASocket
 {
 	public:
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		ClientSockets(void);
-		ClientSockets(const ASocket::t_socket &serverSocket);
+		ClientSocket(void);
+		ClientSocket(const ASocket::t_socket &serverSocket);
 
-		ClientSockets(const ClientSockets &other);
-		ClientSockets	&operator=(const ClientSockets &other);
+		ClientSocket(const ClientSocket &other);
+		ClientSocket	&operator=(const ClientSocket &other);
 
-		virtual ~ClientSockets(void);
+		virtual ~ClientSocket(void);
 
 		/* Member functions */
 
 		// Getter
+		const ASocket::t_socket	getSocket(void) const;
 
 		// Setter
 

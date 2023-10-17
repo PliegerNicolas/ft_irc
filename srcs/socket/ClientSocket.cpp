@@ -1,37 +1,37 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ClientSockets.cpp                                  :+:      :+:    :+:   */
+/*   ClientSocket.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:47:29 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 20:15:31 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include "socket/ClientSockets.hpp"
+#include "socket/ClientSocket.hpp"
 
 /* Constructors & Destructors */
 
 	/* Public */
-ClientSockets::ClientSockets(void):
+ClientSocket::ClientSocket(void):
 	ASocket()
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSockets: default constructor called.";
+		std::cout << "ClientSocket: default constructor called.";
 		std::cout << WHITE;
 	}
 }
 
-ClientSockets::ClientSockets(const ASocket::t_socket &serverSocket):
+ClientSocket::ClientSocket(const ASocket::t_socket &serverSocket):
 	ASocket()
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSockets: parameter constructor called.";
+		std::cout << "ClientSocket: parameter constructor called.";
 		std::cout << WHITE;
 	}
 
@@ -39,24 +39,24 @@ ClientSockets::ClientSockets(const ASocket::t_socket &serverSocket):
 		const_cast<socklen_t*>(&serverSocket.info.ai_addrlen));
 }
 
-ClientSockets::ClientSockets(const ClientSockets &other):
+ClientSocket::ClientSocket(const ClientSocket &other):
 	ASocket(other),
 	_socket(other._socket)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSockets: copy constructor called.";
+		std::cout << "ClientSocket: copy constructor called.";
 		std::cout << WHITE;
 	}
 }
 
-ClientSockets	&ClientSockets::operator=(const ClientSockets &other)
+ClientSocket	&ClientSocket::operator=(const ClientSocket &other)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSockets: assignment operator called.";
+		std::cout << "ClientSocket: assignment operator called.";
 		std::cout << WHITE;
 	}
 
@@ -69,12 +69,12 @@ ClientSockets	&ClientSockets::operator=(const ClientSockets &other)
 	return (*this);
 }
 
-ClientSockets::~ClientSockets(void)
+ClientSocket::~ClientSocket(void)
 {
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSockets: default destructor called.";
+		std::cout << "ClientSocket: default destructor called.";
 		std::cout << WHITE;
 	}
 }
@@ -88,7 +88,7 @@ ClientSockets::~ClientSockets(void)
 	/* Protected */
 	/* Private */
 
-void	ClientSockets::setSocketOptions(void)
+void	ClientSocket::setSocketOptions(void)
 {
 	t_sooption	socketOptions[CLIENTOPTSIZE];
 	size_t		i = 0;
@@ -109,6 +109,12 @@ void	ClientSockets::setSocketOptions(void)
 /* Getters */
 
 	/* Public */
+
+const ASocket::t_socket	ClientSocket::getSocket(void) const
+{
+	return (_socket);
+}
+
 	/* Protected */
 	/* Private */
 

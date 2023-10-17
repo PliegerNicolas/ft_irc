@@ -6,14 +6,14 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:49:03 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 21:22:40 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
 // INCLUDES
 
-#include "socket/ClientSockets.hpp"
+#include "socket/ClientSocket.hpp"
 #include "Server.hpp"
 
 // MACROS
@@ -50,7 +50,7 @@ class	Client
 
 	private:
 		/* Attributs */
-		ClientSockets	_socket;
+		ClientSocket	_clientSocket;
 
 		std::string		_nickname;
 		std::string		_username;
