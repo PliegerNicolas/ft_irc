@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 21:21:31 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:49:03 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -26,7 +26,7 @@ class	Client
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Client(Server &server);
+		Client(const ASocket::t_socket &serverSocket);
 
 		Client(const Client &other);
 		Client	&operator=(const Client &other);
@@ -36,8 +36,6 @@ class	Client
 		/* Member functions */
 
 		// Getter
-		ClientSockets	&getSocket(void);
-
 		std::string		getMessage(const char delimiter);
 
 		// Setter

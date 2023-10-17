@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:23:44 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:47:29 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSockets.hpp"
@@ -37,8 +37,6 @@ ClientSockets::ClientSockets(const ASocket::t_socket &serverSocket):
 
 	 _socket.fd = accept(serverSocket.fd, serverSocket.info.ai_addr,
 		const_cast<socklen_t*>(&serverSocket.info.ai_addrlen));
-	//socklen_t	addrLen = sizeof(*this->getAddress());
-	//_poll.fd = accept(server.getSocketFd(), this->getAddress(), &addrLen);
 }
 
 ClientSockets::ClientSockets(const ClientSockets &other):

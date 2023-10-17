@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 00:16:52 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:48:44 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -15,8 +15,8 @@
 
 	/* Public */
 
-Client::Client(Server &server):
-	_socket(ClientSocket(server.getSocket()))
+Client::Client(const ASocket::t_socket &serverSocket):
+	_socket(ClientSockets(serverSocket))
 {
 	if (DEBUG)
 	{
@@ -67,7 +67,7 @@ Client::~Client(void)
 	/* Private */
 
 Client::Client(void):
-	_socket(ClientSocket())
+	_socket(ClientSockets())
 {
 	if (DEBUG)
 	{
@@ -86,11 +86,6 @@ Client::Client(void):
 /* Getters */
 
 	/* Public */
-
-ClientSocket	&Client::getSocket(void)
-{
-	return (_socket);
-}
 
 std::string	Client::getMessage(const char delimiter)
 {

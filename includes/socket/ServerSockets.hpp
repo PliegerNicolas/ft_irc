@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:21:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:34:48 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -36,6 +36,10 @@ class	ServerSockets: public ASocket
 		static const t_serverconfig	buildServerConfig(const int &domain, const int &service,
 			const int &protocol, const char *interface, const char *port);
 
+		typedef std::vector<t_socket>	Sockets;
+		typedef Sockets::iterator		SocketsIt;
+		typedef Sockets::const_iterator	SocketsConstIt;
+
 		/* Attributs */
 
 		/* Constructors & Destructors */
@@ -50,7 +54,7 @@ class	ServerSockets: public ASocket
 		/* Member functions */
 
 		// Getter
-		const ASocket::Sockets	&getSockets(void) const;
+		const Sockets	&getSockets(void) const;
 
 		// Setter
 
@@ -63,7 +67,7 @@ class	ServerSockets: public ASocket
 
 	private:
 		/* Attributs */
-		ASocket::Sockets	_sockets;
+		Sockets		_sockets;
 
 		/* Constructors & Destructors */
 

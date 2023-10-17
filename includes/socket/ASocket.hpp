@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:20:39 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:34:26 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -58,10 +58,6 @@ class	ASocket
 			int				fd;
 			struct addrinfo	info;
 		}	t_socket;
-
-		typedef std::vector<t_socket>	Sockets;
-		typedef Sockets::iterator		SocketsIt;
-		typedef Sockets::const_iterator	SocketsConstIt;
 
 		/* Attributs */
 

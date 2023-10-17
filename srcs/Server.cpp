@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/16 02:16:59 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 18:44:27 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -15,8 +15,8 @@
 
 	/* Public */
 
-Server::Server(const ASocket::t_soconfig &config):
-	_socket(ServerSocket(config))
+Server::Server(const ServerSockets::t_serverconfig &serverConfig):
+	_serverSockets(ServerSockets(serverConfig))
 {
 	if (DEBUG)
 	{
@@ -25,11 +25,25 @@ Server::Server(const ASocket::t_soconfig &config):
 		std::cout << WHITE;
 	}
 
+	{
+		const ServerSockets::Sockets	&_sockets = _serverSockets.getSockets();
+
+		for (ServerSockets::SocketsConstIt it = _sockets.begin(); it != _sockets.end(); it++)
+		{
+			struct pollfd	newPollFd;
+
+			newPollFd.fd = it->fd;
+			newPollFd.events = POLLIN | POLLHUP | POLLERR;
+
+			_pollFds.push_back(newPollFd);
+		}
+	}
+
 	Server::eventLoop();
 }
 
 Server::Server(const Server &other):
-	_socket(other._socket),
+	_serverSockets(other._serverSockets),
 	_clients(other._clients),
 	_pollFds(other._pollFds)
 {
@@ -52,7 +66,7 @@ Server	&Server::operator=(const Server &other)
 
 	if (this != &other)
 	{
-		_socket = other._socket;
+		_serverSockets = other._serverSockets;
 		_clients = other._clients;
 		_pollFds = other._pollFds;
 	}
@@ -71,12 +85,15 @@ Server::~Server(void)
 
 	for (ClientsIterator it = _clients.begin(); it < _clients.end(); it++)
 		delete *it;
+
+	_clients.clear();
+	_pollFds.clear();
 }
 	/* Protected */
 	/* Private */
 
 Server::Server(void):
-	_socket(ServerSocket())
+	_serverSockets(ServerSockets())
 {
 	if (DEBUG)
 	{
@@ -85,7 +102,19 @@ Server::Server(void):
 		std::cout << WHITE;
 	}
 
-	_pollFds.push_back(getSocket().getPoll());
+	{
+		const ServerSockets::Sockets	&_sockets = _serverSockets.getSockets();
+
+		for (ServerSockets::SocketsConstIt it = _sockets.begin(); it != _sockets.end(); it++)
+		{
+			struct pollfd	newPollFd;
+
+			newPollFd.fd = it->fd;
+			newPollFd.events = POLLIN | POLLHUP | POLLERR;
+
+			_pollFds.push_back(newPollFd);
+		}
+	}
 }
 
 /* Member functions */
@@ -96,6 +125,7 @@ Server::Server(void):
 
 void	Server::eventLoop(void)
 {
+	/*
 	// Set as front element of _pollFds, server pollfd.
 	_pollFds.push_back(getSocket().getPoll());
 
@@ -125,8 +155,10 @@ void	Server::eventLoop(void)
 			handleClientDisconnections(pollFd, i);
 		}
 	}
+	*/
 }
 
+/*
 void	Server::handleClientConnections(struct pollfd &pollFd)
 {
 	if (!(pollFd.revents & POLLIN))
@@ -189,16 +221,11 @@ void	Server::handleClientDisconnections(struct pollfd &pollFd, size_t &index)
 	_clients.erase(_clients.begin() + index);
 	index--;
 }
+*/
 
 /* Getters */
 
 	/* Public */
-
-ServerSocket	&Server::getSocket(void)
-{
-	return (_socket);
-}
-
 	/* Protected */
 	/* Private */
 

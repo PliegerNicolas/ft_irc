@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 18:22:26 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/17 19:08:29 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -26,7 +26,7 @@ ServerSockets::ServerSockets(void):
 
 	// Set default server configurations
 	t_serverconfig	serverConfig = buildServerConfig(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP,
-		"127.0.0.1", "6667");
+		"localhost", "6667");
 
 	launchServerSockets(serverConfig);
 }
@@ -108,6 +108,7 @@ void	ServerSockets::launchServerSockets(const t_serverconfig &serverConfig)
 
 	hints.ai_family = serverConfig.domain;
 	hints.ai_socktype = serverConfig.service;
+	hints.ai_protocol = IPPROTO_TCP;
 	hints.ai_flags = AI_PASSIVE | AI_CANONNAME;
 
 	// Retrieve with getaddrinfo() all matching internet addresses (and more).
@@ -194,7 +195,7 @@ void	ServerSockets::verifyPort(const char *strPort)
 
 	/* Public */
 
-const ASocket::Sockets	&ServerSockets::getSockets(void) const
+const ServerSockets::Sockets	&ServerSockets::getSockets(void) const
 {
 	return (_sockets);
 }
