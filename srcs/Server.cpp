@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 12:17:33 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/18 12:47:08 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -96,17 +96,10 @@ Server::Server(void):
 	}
 
 	{
-		const ServerSockets::Sockets	&_sockets = _serverSockets.getSockets();
+		const ServerSockets::Sockets	&sockets = _serverSockets.getSockets();
 
-		for (ServerSockets::SocketsConstIt it = _sockets.begin(); it != _sockets.end(); it++)
-		{
-			struct pollfd	newPollFd;
-
-			newPollFd.fd = it->fd;
-			newPollFd.events = POLLIN | POLLHUP | POLLERR;
-
-			_pollFds.push_back(newPollFd);
-		}
+		for (ServerSockets::SocketsConstIt it = sockets.begin(); it != sockets.end(); it++)
+			_pollFds.push_back(generatePollFd(*it));
 	}
 }
 
@@ -154,14 +147,10 @@ void	Server::handleServerPollFds(const ServerSockets::Sockets &serverSockets, si
 
 		if (pollFd.revents & POLLIN)
 		{
+			// Clear POLLIN event.
 			pollFd.revents &= ~POLLIN;
 
-			// Client connection
-			Client			*client = new Client(serverSocket);
-			struct	pollfd	clientPollFd = client->generatePollFd();
-
-			_clients.push_back(client);
-			_pollFds.push_back(clientPollFd);
+			handleClientConnections(serverSocket);
 		}
 	}
 }
@@ -175,8 +164,6 @@ void	Server::handleClientsPollFds(const ServerSockets::Sockets &serverSockets, s
 
 		if (pollFd.revents & POLLIN)
 		{
-			pollFd.revents &= ~POLLIN;
-
 			// Data received from client.
 			// Clear revent flag.
 			pollFd.revents &= ~POLLIN;
@@ -211,18 +198,36 @@ void	Server::handleClientsPollFds(const ServerSockets::Sockets &serverSockets, s
 				std::cout << message << std::endl;
 			}
 		}
-		else if (pollFd.revents & POLLHUP)
+
+		if (pollFd.revents & POLLHUP)
 		{
+			// Clear POLLHUP event.
 			pollFd.revents &= ~POLLHUP;
 
-			// Client disconnection.
+			handleClientDisconnections(serverSockets, i);
 		}
-		else if (pollFd.revents & POLLERR)
+
+		if (pollFd.revents & POLLERR)
 		{
 			pollFd.revents &= ~POLLERR;
 		}
-		(void)client;
 	}
+}
+
+void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket)
+{
+	Client			*client = new Client(serverSocket);
+	struct	pollfd	clientPollFd = client->generatePollFd();
+
+	_clients.push_back(client);
+	_pollFds.push_back(clientPollFd);
+}
+
+void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
+{
+	_pollFds.erase(_pollFds.begin() + (i - serverSockets.size()));
+	_clients.erase(_clients.begin() + i);
+	i--;
 }
 
 /*
@@ -284,6 +289,7 @@ void	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 
 	memset(buffer, 0, sizeof(buffer));
 	readBytes = recv(pollFd.fd, buffer, sizeof(buffer), 0);
+	}
 
 	if (readBytes <= 0)
 	{
