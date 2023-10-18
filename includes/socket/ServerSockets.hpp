@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 19:46:51 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/18 12:06:45 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -52,6 +52,7 @@ class	ServerSockets: public ASocket
 		virtual ~ServerSockets(void);
 
 		/* Member functions */
+		const struct pollfd	generatePollFd(void);
 
 		// Getter
 		const Sockets	&getSockets(void) const;
