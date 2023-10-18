@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 12:12:52 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/18 17:52:38 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -24,6 +24,7 @@ class	Client
 {
 	public:
 		/* Attributs */
+		std::string		_buffer; //TEMP
 
 		/* Constructors & Destructors */
 		Client(const ASocket::t_socket &serverSocket);
@@ -37,10 +38,9 @@ class	Client
 		const struct pollfd	generatePollFd(void);
 
 		// Getter
-		std::string			getMessage(const char delimiter);
+		std::string	&getBuffer(void);
 
 		// Setter
-		void				addToBuffer(const char *buffer, const size_t readBytes);
 
 	protected:
 		/* Attributs */
@@ -58,7 +58,7 @@ class	Client
 		std::string		_realname;
 		std::string		_password; // encryption :(
 
-		std::string		_buffer;
+		//std::string		_buffer;
 		std::string		_prefix;
 
 		/* Constructors & Destructors */

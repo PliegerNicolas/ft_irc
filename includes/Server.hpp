@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 14:24:38 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/18 16:03:14 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -18,9 +18,11 @@
 
 // MACROS
 
-#define MSG_BUFFER_SIZE 512
-#define CLIENT_ONLINE 1
+#define CLIENT_CONNECTED 1
 #define CLIENT_DISCONNECTED 0
+
+#define DELIMITER "\n"
+#define MSG_BUFFER_SIZE 512
 
 class	Client;
 

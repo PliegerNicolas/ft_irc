@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 14:28:05 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/18 18:00:35 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -167,7 +167,7 @@ void	Server::handleClientsPollFds(const ServerSockets::Sockets &serverSockets, s
 		{
 			case POLLIN:
 				pollFd.revents &= ~POLLIN;
-				if (handleClientDataReception(client, pollFd) == CLIENT_ONLINE)
+				if (handleClientDataReception(client, pollFd) == CLIENT_CONNECTED)
 					break ;
 			case POLLHUP:
 				pollFd.revents &= ~POLLHUP;
@@ -192,32 +192,53 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 	_pollFds.push_back(clientPollFd);
 }
 
+/**
+ *	With a TCP socket, excess data isn't discarded but is buffered
+ *	by the operating system. The subsequent recv calls will read that data.
+**/
 bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 {
-	// TEMP
-	const char	delimiter = '\n';
-	char		buffer[MSG_BUFFER_SIZE];
-	int			readBytes = -1;
+	std::string		&clientBuffer = client->getBuffer();
+	std::string		delimiter = DELIMITER;
 
-	memset(buffer, 0, sizeof(buffer));
-	readBytes = recv(pollFd.fd, buffer, sizeof(buffer), 0);
+	char			recvBuffer[MSG_BUFFER_SIZE];
+	int				readBytes = -1;
 
+
+	memset(recvBuffer, 0, sizeof(recvBuffer));
+
+	readBytes = recv(pollFd.fd, recvBuffer, sizeof(recvBuffer), 0);
 	if (readBytes < 0)
 		throw std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
 	else if (readBytes == 0)
 		return (CLIENT_DISCONNECTED);
-	else
+
+	clientBuffer.append(recvBuffer, readBytes);
+
+	std::string		message;
+	size_t			pos;
+
+	while ((pos = clientBuffer.find(delimiter)) != std::string::npos)
 	{
-		client->addToBuffer(buffer, readBytes);
-		std::string	message = client->getMessage(delimiter);
+		if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+		{
+			pos = MSG_BUFFER_SIZE - delimiter.length();
+			message = clientBuffer.substr(0, pos);
+			clientBuffer.erase(0, pos);
+			message += delimiter;
+		}
+		else
+		{
+			pos += delimiter.length();
+			message = clientBuffer.substr(0, pos);
+			clientBuffer.erase(0, pos);
+		}
 
-		if (message.empty())
-			return (CLIENT_ONLINE);
-
-		std::cout << "client n*: ";
-		std::cout << message << std::endl;
+		if (message != delimiter)
+			std::cout << "Client n°" << "x" << ": " << message;
 	}
-	return (CLIENT_ONLINE);
+
+	return (CLIENT_CONNECTED);
 }
 
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
