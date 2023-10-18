@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 12:47:08 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/18 14:28:05 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -125,7 +125,6 @@ void	Server::eventLoop(void)
 
 	while (true)
 	{
-		// Await requests all stored file descriptors (server and clients).
 		int		activity = poll(_pollFds.data(), _pollFds.size(), -1);
 
 		if (activity < 0)
@@ -145,12 +144,14 @@ void	Server::handleServerPollFds(const ServerSockets::Sockets &serverSockets, si
 		const ASocket::t_socket	&serverSocket = serverSockets[i];
 		struct pollfd			&pollFd = _pollFds[i];
 
-		if (pollFd.revents & POLLIN)
+		switch (pollFd.revents)
 		{
-			// Clear POLLIN event.
-			pollFd.revents &= ~POLLIN;
-
-			handleClientConnections(serverSocket);
+			case POLLIN:
+				pollFd.revents &= ~POLLIN;
+				handleClientConnections(serverSocket);
+				break ;
+			default:
+				break ;
 		}
 	}
 }
@@ -162,57 +163,25 @@ void	Server::handleClientsPollFds(const ServerSockets::Sockets &serverSockets, s
 		Client			*client = _clients[i - serverSockets.size()];
 		struct pollfd	&pollFd = _pollFds[i];
 
-		if (pollFd.revents & POLLIN)
+		switch (pollFd.revents)
 		{
-			// Data received from client.
-			// Clear revent flag.
-			pollFd.revents &= ~POLLIN;
-
-			const char	delimiter = '\n';
-			char		buffer[MSG_BUFFER_SIZE];
-			int			readBytes = -1;
-
-			memset(buffer, 0, sizeof(buffer));
-			readBytes = recv(pollFd.fd, buffer, sizeof(buffer), 0);
-
-			if (readBytes <= 0)
-			{
-				// Force disconnection.
-				pollFd.revents |= POLLHUP;
-				if (readBytes < 0)
-					throw std::runtime_error(std::string("Error: ") + strerror(errno)
-						+ " (server).");
-			}
-			else
-			{
-				// Fill buffer string.
-				client->addToBuffer(buffer, readBytes);
-				// Extract message if delimiter found.
-				std::string	message = client->getMessage(delimiter);
-
-				if (message.empty())
-					return ;
-
-				// Print message into server.
-				std::cout << "client n*: ";
-				std::cout << message << std::endl;
-			}
-		}
-
-		if (pollFd.revents & POLLHUP)
-		{
-			// Clear POLLHUP event.
-			pollFd.revents &= ~POLLHUP;
-
-			handleClientDisconnections(serverSockets, i);
-		}
-
-		if (pollFd.revents & POLLERR)
-		{
-			pollFd.revents &= ~POLLERR;
+			case POLLIN:
+				pollFd.revents &= ~POLLIN;
+				if (handleClientDataReception(client, pollFd) == CLIENT_ONLINE)
+					break ;
+			case POLLHUP:
+				pollFd.revents &= ~POLLHUP;
+				handleClientDisconnections(serverSockets, i);
+				break ;
+			case POLLERR:
+				break ;
+			default:
+				break ;
 		}
 	}
 }
+
+// ACT ON POLL EVENTS.
 
 void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket)
 {
@@ -223,110 +192,40 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 	_pollFds.push_back(clientPollFd);
 }
 
-void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
+bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 {
-	_pollFds.erase(_pollFds.begin() + (i - serverSockets.size()));
-	_clients.erase(_clients.begin() + i);
-	i--;
-}
-
-/*
-// Set as front element of _pollFds, server pollfd.
-_pollFds.push_back(getSocket().getPoll());
-
-while (true)
-{
-	// Wait for event on any socket (revent on pollfd).
-	int activity = poll(_pollFds.data(), _pollFds.size(), -1);
-
-	if (activity < 0)
-		throw std::runtime_error("Error: poll error (server).");
-
-	handleClientConnections(_pollFds.front());
-
-	for (size_t i = 0; i < _clients.size(); i++)
-	{
-		struct pollfd	&pollFd = _pollFds[i + 1];
-		Client			*client = *(_clients.begin() + i);
-
-		try
-		{
-			handleClientDataReception(client, pollFd);
-		}
-		catch (const std::exception &e)
-		{
-			std::cerr << e.what() << std::endl;
-		}
-		handleClientDisconnections(pollFd, i);
-	}
-}
-*/
-
-/*
-void	Server::handleClientConnections(struct pollfd &pollFd)
-{
-	if (!(pollFd.revents & POLLIN))
-		return ;
-
-	// Clear revent flag.
-	pollFd.revents &= ~POLLIN;
-
-	_clients.push_back(new Client(*this));
-	_pollFds.push_back(_clients.back()->getSocket().getPoll());
-}
-
-void	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
-{
-	if (!(pollFd.revents & POLLIN))
-		return ;
-
-	// Clear revent flag.
-	pollFd.revents &= ~POLLIN;
-
+	// TEMP
 	const char	delimiter = '\n';
 	char		buffer[MSG_BUFFER_SIZE];
 	int			readBytes = -1;
 
 	memset(buffer, 0, sizeof(buffer));
 	readBytes = recv(pollFd.fd, buffer, sizeof(buffer), 0);
-	}
 
-	if (readBytes <= 0)
-	{
-		// Force disconnection.
-		pollFd.revents |= POLLHUP;
-		if (readBytes < 0)
-			throw std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
-	}
+	if (readBytes < 0)
+		throw std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
+	else if (readBytes == 0)
+		return (CLIENT_DISCONNECTED);
 	else
 	{
-		// Fill buffer string.
 		client->addToBuffer(buffer, readBytes);
-		// Extract message if delimiter found.
 		std::string	message = client->getMessage(delimiter);
 
 		if (message.empty())
-			return ;
+			return (CLIENT_ONLINE);
 
-		// Print message into server.
-		std::cout << "nº" << client->getSocket().getSocketFd() << ": ";
+		std::cout << "client n*: ";
 		std::cout << message << std::endl;
 	}
+	return (CLIENT_ONLINE);
 }
 
-void	Server::handleClientDisconnections(struct pollfd &pollFd, size_t &index)
+void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
-	if (!(pollFd.revents & POLLHUP))
-		return ;
-
-	// Clear revent flag.
-	pollFd.revents &= ~POLLHUP;
-
-	_pollFds.erase(_pollFds.begin() + (index - 1));
-	_clients.erase(_clients.begin() + index);
-	index--;
+	_pollFds.erase(_pollFds.begin() + i);
+	_clients.erase(_clients.begin() + (i - serverSockets.size()));
+	i--;
 }
-*/
 
 /* Getters */
 
