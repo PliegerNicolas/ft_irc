@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 19:39:46 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/18 14:24:38 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -18,7 +18,9 @@
 
 // MACROS
 
-#define MSG_BUFFER_SIZE 256
+#define MSG_BUFFER_SIZE 512
+#define CLIENT_ONLINE 1
+#define CLIENT_DISCONNECTED 0
 
 class	Client;
 
@@ -36,6 +38,7 @@ class	Server
 		virtual ~Server(void);
 
 		/* Member functions */
+		const struct pollfd	generatePollFd(const ASocket::t_socket &serverSocket);
 
 		// Getter
 
@@ -66,5 +69,13 @@ class	Server
 		Server(void);
 
 		/* Member functions */
-		void				eventLoop(void);
+		void	eventLoop(void);
+
+		void	handleServerPollFds(const ServerSockets::Sockets &serverSockets, size_t &i);
+		void	handleClientsPollFds(const ServerSockets::Sockets &serverSockets, size_t &i);
+
+		void	handleClientConnections(const ASocket::t_socket &serverSocket);
+		bool	handleClientDataReception(Client *client, struct pollfd &pollFd);
+		void	handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i);
+
 };

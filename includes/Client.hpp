@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 21:22:40 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/18 12:12:52 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -34,12 +34,13 @@ class	Client
 		virtual ~Client(void);
 
 		/* Member functions */
+		const struct pollfd	generatePollFd(void);
 
 		// Getter
-		std::string		getMessage(const char delimiter);
+		std::string			getMessage(const char delimiter);
 
 		// Setter
-		void			addToBuffer(const char *buffer, const size_t readBytes);
+		void				addToBuffer(const char *buffer, const size_t readBytes);
 
 	protected:
 		/* Attributs */
@@ -50,15 +51,15 @@ class	Client
 
 	private:
 		/* Attributs */
-		ClientSocket	_clientSocket;
+		ClientSocket		_clientSocket;
 
 		std::string		_nickname;
 		std::string		_username;
 		std::string		_realname;
-
 		std::string		_password; // encryption :(
 
 		std::string		_buffer;
+		std::string		_prefix;
 
 		/* Constructors & Destructors */
 		Client(void);

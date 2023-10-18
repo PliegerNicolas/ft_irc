@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 21:22:47 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/18 11:41:12 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -80,6 +80,17 @@ Client::Client(void):
 /* Member functions */
 
 	/* Public */
+
+const struct pollfd	Client::generatePollFd(void)
+{
+	struct pollfd	pollFd;
+
+	pollFd.fd = _clientSocket.getSocket().fd;
+	pollFd.events = POLLIN | POLLHUP | POLLERR;
+
+	return (pollFd);
+}
+
 	/* Protected */
 	/* Private */
 
