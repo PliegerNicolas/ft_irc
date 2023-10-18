@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 21:23:00 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/18 11:46:54 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -149,6 +149,11 @@ void	Server::eventLoop(void)
 				pollFd.revents &= ~POLLIN;
 
 				// Client connection
+				Client			*client = new Client(serverSocket);
+				struct	pollfd	clientPollFd = client->generatePollFd();
+
+				_clients.push_back(client);
+				_pollFds.push_back(clientPollFd);
 			}
 			else if (pollFd.revents & POLLHUP)
 			{
@@ -174,6 +179,38 @@ void	Server::eventLoop(void)
 				pollFd.revents &= ~POLLIN;
 
 				// Data received from client.
+				// Clear revent flag.
+				pollFd.revents &= ~POLLIN;
+
+				const char	delimiter = '\n';
+				char		buffer[MSG_BUFFER_SIZE];
+				int			readBytes = -1;
+
+				memset(buffer, 0, sizeof(buffer));
+				readBytes = recv(pollFd.fd, buffer, sizeof(buffer), 0);
+
+				if (readBytes <= 0)
+				{
+					// Force disconnection.
+					pollFd.revents |= POLLHUP;
+					if (readBytes < 0)
+						throw std::runtime_error(std::string("Error: ") + strerror(errno)
+							+ " (server).");
+				}
+				else
+				{
+					// Fill buffer string.
+					client->addToBuffer(buffer, readBytes);
+					// Extract message if delimiter found.
+					std::string	message = client->getMessage(delimiter);
+
+					if (message.empty())
+						return ;
+
+					// Print message into server.
+					std::cout << "client n*: ";
+					std::cout << message << std::endl;
+				}
 			}
 			else if (pollFd.revents & POLLHUP)
 			{
