@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 20:42:21 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/18 17:01:42 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -25,8 +25,8 @@ ServerSockets::ServerSockets(void):
 	}
 
 	// Set default server configurations
-	t_serverconfig	serverConfig = buildServerConfig(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP,
-		"localhost", "6667");
+	t_serverconfig	serverConfig = buildServerConfig(AF_UNSPEC,
+		SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP, "localhost", "6667");
 
 	launchServerSockets(serverConfig);
 }

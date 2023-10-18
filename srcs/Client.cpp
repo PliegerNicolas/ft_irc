@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 11:41:12 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/18 15:36:07 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -98,17 +98,9 @@ const struct pollfd	Client::generatePollFd(void)
 
 	/* Public */
 
-std::string	Client::getMessage(const char delimiter)
+std::string	&Client::getBuffer(void)
 {
-	size_t		pos = _buffer.find(delimiter);
-	std::string	message;
-
-	if (pos != std::string::npos)
-	{
-		message = _buffer.substr(0, pos);
-		_buffer.erase(0, pos + 1);
-	}
-	return (message);
+	return (_buffer);
 }
 
 	/* Protected */
@@ -117,11 +109,5 @@ std::string	Client::getMessage(const char delimiter)
 /* Setters */
 
 	/* Public */
-
-void	Client::addToBuffer(const char *buffer, const size_t readBytes)
-{
-		_buffer.append(buffer, readBytes);
-}
-
 	/* Protected */
 	/* Private */
