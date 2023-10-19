@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 11:48:34 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 16:06:47 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -98,52 +98,41 @@ ServerSockets::~ServerSockets(void)
 
 void	ServerSockets::launchServerSockets(const t_serverconfig &serverConfig)
 {
-	struct addrinfo	hints;
-	struct addrinfo	*addrInfo;
-
 	verifyPort(serverConfig.port);
 
-	memset(&hints, 0, sizeof(hints));
-	memset(&addrInfo, 0, sizeof(addrInfo));
-
-	hints.ai_family = serverConfig.domain;
-	hints.ai_socktype = serverConfig.service;
-	hints.ai_protocol = serverConfig.protocol;
-	hints.ai_flags = AI_PASSIVE | AI_CANONNAME;
+	_hints.ai_family = serverConfig.domain;
+	_hints.ai_socktype = serverConfig.service;
+	_hints.ai_protocol = serverConfig.protocol;
+	_hints.ai_flags = AI_PASSIVE | AI_CANONNAME;
 
 	// Retrieve with getaddrinfo() all matching internet addresses (and more).
 	{
-		int status = getaddrinfo(serverConfig.interface, serverConfig.port, &hints, &addrInfo);
+		int status = getaddrinfo(serverConfig.interface, serverConfig.port, &_hints, &_addrInfo);
 		if (status != 0)
 			throw std::runtime_error(std::string("Error: ") + gai_strerror(status) + " (socket).");
 	}
 
 	// Try to open a socket and bind it for every matching address.
-	for (struct addrinfo *ai = addrInfo; ai != NULL; ai = ai->ai_next)
+	for (struct addrinfo *ai = _addrInfo; ai != NULL; ai = ai->ai_next)
 	{
 		t_socket		newSocket;
 
-		newSocket.info = *ai;
-		newSocket.info.ai_next = NULL;
+		newSocket.info = ai;
 
 		// Generate socket file descriptor and verify success of operation.
-		newSocket.fd = socket(newSocket.info.ai_family, newSocket.info.ai_socktype,
-			newSocket.info.ai_protocol);
-		handleServerErrors(newSocket.fd, addrInfo);
+		newSocket.fd = socket(newSocket.info->ai_family, newSocket.info->ai_socktype,
+			newSocket.info->ai_protocol);
+		handleErrors(newSocket.fd);
 		setSocketOptions();
 
 		_sockets.push_back(newSocket);
 
 		// Verify we can bind to it and do if it's possible.
-		handleServerErrors(bind(newSocket.fd, newSocket.info.ai_addr, newSocket.info.ai_addrlen),
-			addrInfo);
+		handleErrors(bind(newSocket.fd, newSocket.info->ai_addr, newSocket.info->ai_addrlen));
 
 		// Verify if we can listen with it and do if it's possible.
-		handleServerErrors(listen(newSocket.fd, SOMAXCONN), addrInfo);
+		handleErrors(listen(newSocket.fd, SOMAXCONN));
 	}
-
-	if (addrInfo)
-		freeaddrinfo(addrInfo);
 }
 
 void	ServerSockets::setSocketOptions(void)
@@ -172,13 +161,11 @@ void	ServerSockets::setSocketOptions(void)
 
 }
 
-void	ServerSockets::handleServerErrors(const int &statusCode, struct addrinfo *addrInfo)
+void	ServerSockets::handleErrors(const int &statusCode)
 {
 	if (statusCode >= 0)
 		return ;
 
-	if (addrInfo)
-		freeaddrinfo(addrInfo);
 	for (SocketsIt it = _sockets.begin(); it != _sockets.end(); it++)
 		close(it->fd);
 	_sockets.clear();

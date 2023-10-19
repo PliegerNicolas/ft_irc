@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 11:01:43 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 16:08:01 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -57,7 +57,7 @@ class	ASocket
 		typedef struct SocketData
 		{
 			int				fd;
-			struct addrinfo	info;
+			struct addrinfo	*info;
 		}	t_socket;
 
 		/* Attributs */
@@ -78,12 +78,13 @@ class	ASocket
 
 	protected:
 		/* Attributs */
+		struct addrinfo		*_addrInfo;
+		struct addrinfo		_hints;
 
 		/* Constructors & Destructors */
 
 		/* Member functions */
 		virtual void			setSocketOptions(void) = 0;
-		void					handleSocketErrors(const int &statusCode);
 
 	private:
 		/* Attributs */
@@ -91,4 +92,6 @@ class	ASocket
 		/* Constructors & Destructors */
 
 		/* Member functions */
+		struct addrinfo			*addrInfoDeepCopy(const ASocket &other);
+		virtual void			handleErrors(const int &statusCode);
 };

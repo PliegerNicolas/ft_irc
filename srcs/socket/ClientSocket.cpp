@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 11:01:53 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 16:10:48 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSocket.hpp"
@@ -35,8 +35,8 @@ ClientSocket::ClientSocket(const ASocket::t_socket &serverSocket):
 		std::cout << WHITE;
 	}
 
-	 _socket.fd = accept(serverSocket.fd, serverSocket.info.ai_addr,
-		const_cast<socklen_t*>(&serverSocket.info.ai_addrlen));
+	 _socket.fd = accept(serverSocket.fd, serverSocket.info->ai_addr,
+		const_cast<socklen_t*>(&serverSocket.info->ai_addrlen));
 }
 
 ClientSocket::ClientSocket(const ClientSocket &other):
@@ -108,6 +108,18 @@ void	ClientSocket::setSocketOptions(void)
 		if (fcntl(_socket.fd, F_SETFL, O_NONBLOCK))
 			throw std::runtime_error("Error: couldn't set socket option (client).");
 	}
+}
+
+void	ClientSocket::handleErrors(const int &statusCode)
+{
+	if (statusCode >= 0)
+		return ;
+
+	int					errCode = errno;
+	std::ostringstream	errorMessage;
+
+	errorMessage << "Error: " << strerror(errCode) << " (socket).";
+	throw std::runtime_error(errorMessage.str());
 }
 
 /* Getters */

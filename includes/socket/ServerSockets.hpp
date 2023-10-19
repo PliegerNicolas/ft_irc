@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 12:06:45 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 16:07:44 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -77,5 +77,5 @@ class	ServerSockets: public ASocket
 		void	setSocketOptions(void);
 		void	verifyPort(const char *strPort);
 
-		void	handleServerErrors(const int &statusCode, struct addrinfo *addrInfo);
+		void	handleErrors(const int &statusCode);
 };

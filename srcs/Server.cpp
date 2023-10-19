@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 15:10:47 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 16:30:24 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -107,6 +107,8 @@ const struct pollfd	Server::generatePollFd(const ASocket::t_socket	&serverSocket
 {
 	struct pollfd	pollFd;
 
+	memset(&pollFd, 0, sizeof(pollFd));
+
 	pollFd.fd = serverSocket.fd;
 	pollFd.events = POLLIN;
 
@@ -127,11 +129,13 @@ void	Server::eventLoop(void)
 {
 	const ServerSockets::Sockets	&serverSockets = _serverSockets.getSockets();
 
-	while (true)
+	while (g_serverExit == false)
 	{
 		int		activity = poll(_pollFds.data(), _pollFds.size(), -1);
 
-		if (activity < 0)
+		if (g_serverExit)
+			continue ;
+		else if (activity < 0)
 		{
 			deleteClients();
 			throw	std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
@@ -244,8 +248,12 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
+	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
+
+	delete *clientIt;
+	_clients.erase(clientIt);
+
 	_pollFds.erase(_pollFds.begin() + i);
-	_clients.erase(_clients.begin() + (i - serverSockets.size()));
 	i--;
 }
 

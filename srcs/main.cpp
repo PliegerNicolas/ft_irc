@@ -6,10 +6,12 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 17:10:30 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 15:36:55 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
+
+volatile sig_atomic_t g_serverExit = false;
 
 static void	putExpectedUsage(void)
 {
@@ -47,6 +49,8 @@ int	main(int argc, char **argv)
 	if (verifyArguments(argc, argv))
 		return (1);
 
+	signal(SIGINT, sigintHandler);
+
 	try
 	{
 		ServerSockets::t_serverconfig	serverConfig;
@@ -59,6 +63,8 @@ int	main(int argc, char **argv)
 	{
 		std::cerr << e.what() << std::endl;
 	}
+
+	signal(SIGINT, SIG_DFL);
 
 	return (0);
 }

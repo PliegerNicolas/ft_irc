@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:16:24 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 12:08:46 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 16:09:52 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -56,4 +56,5 @@ class	ClientSocket: public ASocket
 
 		/* Member functions */
 		void	setSocketOptions(void);
+		void	handleErrors(const int &statusCode);
 };
