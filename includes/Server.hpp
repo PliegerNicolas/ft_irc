@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 11:09:29 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 14:46:56 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -41,6 +41,7 @@ class	Server
 
 		/* Member functions */
 		const struct pollfd	generatePollFd(const ASocket::t_socket &serverSocket);
+		void				deleteClients(void);
 
 		// Getter
 
@@ -81,5 +82,6 @@ class	Server
 		void	handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i);
 
 		// Utilites
-		void	deleteClients(Server::Clients &clients);
+		void	removeLeadingWhitespaces(std::string &str);
+		size_t	findLastWordEnd(const std::string &str, const size_t &strLen);
 };

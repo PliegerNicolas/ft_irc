@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 11:10:11 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 15:10:47 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -76,7 +76,7 @@ Server::~Server(void)
 		std::cout << WHITE;
 	}
 
-	deleteClients(_clients);
+	deleteClients();
 	_pollFds.clear();
 }
 	/* Protected */
@@ -113,6 +113,13 @@ const struct pollfd	Server::generatePollFd(const ASocket::t_socket	&serverSocket
 	return (pollFd);
 }
 
+void	Server::deleteClients(void)
+{
+	for (ClientsIterator it = _clients.begin(); it < _clients.end(); it++)
+		delete *it;
+	_clients.clear();
+}
+
 	/* Protected */
 	/* Private */
 
@@ -126,7 +133,7 @@ void	Server::eventLoop(void)
 
 		if (activity < 0)
 		{
-			deleteClients(_clients);
+			deleteClients();
 			throw	std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
 		}
 
@@ -198,34 +205,22 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 **/
 bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 {
-	std::string		&clientBuffer = client->getBuffer();
-	std::string		delimiter = DELIMITER;
-
-	char			recvBuffer[MSG_BUFFER_SIZE];
-	int				readBytes = -1;
-
-
-	memset(recvBuffer, 0, sizeof(recvBuffer));
-
-	readBytes = recv(pollFd.fd, recvBuffer, sizeof(recvBuffer), 0);
-	if (readBytes < 0)
-	{
-		deleteClients(_clients);
-		throw std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
-	}
-	else if (readBytes == 0)
+	if (client->readAndStoreFdBuffer(*this, pollFd) == CLIENT_DISCONNECTED)
 		return (CLIENT_DISCONNECTED);
 
-	clientBuffer.append(recvBuffer, readBytes);
+	std::string			&clientBuffer = client->getBuffer();
+	const std::string	delimiter = DELIMITER;
+	std::string			message;
+	size_t				pos;
 
-	std::string		message;
-	size_t			pos;
+	removeLeadingWhitespaces(clientBuffer);
 
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos)
 	{
 		if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
 		{
 			pos = MSG_BUFFER_SIZE - delimiter.length();
+			pos = findLastWordEnd(clientBuffer, pos);
 			message = clientBuffer.substr(0, pos);
 			clientBuffer.erase(0, pos);
 			message += delimiter;
@@ -237,8 +232,11 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 			clientBuffer.erase(0, pos);
 		}
 
+		// TEMP
 		if (message != delimiter)
 			std::cout << "Client n°" << "x" << ": " << message;
+
+		removeLeadingWhitespaces(clientBuffer);
 	}
 
 	return (CLIENT_CONNECTED);
@@ -253,11 +251,27 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 
 // Utilities
 
-void	Server::deleteClients(Server::Clients &clients)
+void	Server::removeLeadingWhitespaces(std::string &str)
 {
-	for (ClientsIterator it = clients.begin(); it < clients.end(); it++)
-		delete *it;
-	clients.clear();
+	size_t	i = 0;
+
+	while (i < str.length() && isspace(str[i]))
+		i++;
+	str.erase(0, i);
+}
+
+size_t	Server::findLastWordEnd(const std::string &str, const size_t &strLen)
+{
+	size_t	pos = strLen;
+	size_t	middle = strLen / 2;
+
+	while (pos > middle && !isspace(str[pos]))
+		pos--;
+	while (pos > middle && isspace(str[pos]))
+		pos--;
+	if (pos == middle)
+		return (strLen);
+	return (pos + 1);
 }
 
 /* Getters */

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 11:00:32 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 11:48:34 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -25,8 +25,8 @@ ServerSockets::ServerSockets(void):
 	}
 
 	// Set default server configurations
-	t_serverconfig	serverConfig = buildServerConfig(AF_UNSPEC,
-		SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP, "localhost", "6667");
+	t_serverconfig	serverConfig = buildServerConfig(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP,
+		"localhost", "6667");
 
 	launchServerSockets(serverConfig);
 }
@@ -108,7 +108,7 @@ void	ServerSockets::launchServerSockets(const t_serverconfig &serverConfig)
 
 	hints.ai_family = serverConfig.domain;
 	hints.ai_socktype = serverConfig.service;
-	hints.ai_protocol = IPPROTO_TCP;
+	hints.ai_protocol = serverConfig.protocol;
 	hints.ai_flags = AI_PASSIVE | AI_CANONNAME;
 
 	// Retrieve with getaddrinfo() all matching internet addresses (and more).
