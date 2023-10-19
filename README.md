@@ -36,4 +36,4 @@ or
 
 ```sudo apt update && sudo apt install make && sudo apt install build-essential```
 
-Then simply write `make` in your console while being at the root of our repository.
+Then simply write `make` in your console while being at the root of our repository to compile the program and launch it as indicated above.
