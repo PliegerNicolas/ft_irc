@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 14:46:56 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 15:33:06 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -15,6 +15,8 @@
 
 #include "socket/ServerSockets.hpp"
 #include "Client.hpp"
+
+#include "signals/signals.hpp"
 
 // MACROS
 

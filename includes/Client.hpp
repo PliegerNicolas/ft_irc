@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 13:32:14 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 15:51:51 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -24,7 +24,6 @@ class	Client
 {
 	public:
 		/* Attributs */
-		std::string		_buffer; //TEMP
 
 		/* Constructors & Destructors */
 		Client(const ASocket::t_socket &serverSocket);

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 18:43:54 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/17 16:09:52 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/19 16:08:54 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ASocket.hpp"
@@ -14,7 +14,8 @@
 /* Constructors & Destructors */
 
 	/* Public */
-ASocket::ASocket(void)
+ASocket::ASocket(void):
+	_addrInfo(NULL)
 {
 	if (DEBUG)
 	{
@@ -22,9 +23,13 @@ ASocket::ASocket(void)
 		std::cout << "ASocket: Default constructor called.";
 		std::cout << WHITE;
 	}
+
+	memset(&_hints, 0, sizeof(_hints));
 }
 
-ASocket::ASocket(const ASocket &other)
+ASocket::ASocket(const ASocket &other):
+	_addrInfo(addrInfoDeepCopy(other)),
+	_hints(other._hints)
 {
 	if (DEBUG)
 	{
@@ -32,8 +37,6 @@ ASocket::ASocket(const ASocket &other)
 		std::cout << "ASocket: Copy constructor called.";
 		std::cout << WHITE;
 	}
-
-	(void)other;
 }
 
 ASocket	&ASocket::operator=(const ASocket &other)
@@ -47,7 +50,8 @@ ASocket	&ASocket::operator=(const ASocket &other)
 
 	if (this != &other)
 	{
-		(void)other;
+		_addrInfo = addrInfoDeepCopy(other);
+		_hints = other._hints;
 	}
 
 	return (*this);
@@ -61,6 +65,9 @@ ASocket::~ASocket(void)
 		std::cout << "ASocket: Default destructor called.";
 		std::cout << WHITE;
 	}
+
+	if (_addrInfo)
+		freeaddrinfo(_addrInfo);
 }
 	/* Protected */
 	/* Private */
@@ -69,8 +76,9 @@ ASocket::~ASocket(void)
 
 	/* Public */
 	/* Protected */
+	/* Private */
 
-void	ASocket::handleSocketErrors(const int &statusCode)
+void	ASocket::handleErrors(const int &statusCode)
 {
 	if (statusCode >= 0)
 		return ;
@@ -78,16 +86,49 @@ void	ASocket::handleSocketErrors(const int &statusCode)
 	int					errCode = errno;
 	std::ostringstream	errorMessage;
 
+	if (_addrInfo)
+		freeaddrinfo(_addrInfo);
+
 	errorMessage << "Error: " << strerror(errCode) << " (socket).";
 	throw std::runtime_error(errorMessage.str());
 }
-
-	/* Private */
 
 /* Getters */
 
 	/* Public */
 
+struct addrinfo	*ASocket::addrInfoDeepCopy(const ASocket &other)
+{
+	struct addrinfo	*cpy = NULL;
+
+	if (_addrInfo != NULL)
+	{
+		freeaddrinfo(_addrInfo);
+		_addrInfo = NULL;
+	}
+
+	if (other._addrInfo != NULL)
+	{
+		struct addrinfo *current = other._addrInfo;
+		struct addrinfo *previous = NULL;
+
+		while (current != NULL)
+		{
+			struct addrinfo *newAddrInfo = new struct addrinfo;
+			memcpy(newAddrInfo, current, sizeof(struct addrinfo));
+			newAddrInfo->ai_next = NULL;
+
+			if (previous == NULL)
+				cpy = newAddrInfo;
+			else
+				previous->ai_next = newAddrInfo;
+
+			previous = newAddrInfo;
+			current = current->ai_next;
+		}
+	}
+	return (cpy);
+}
 /*
 const std::string	ASocket::getIP(const struct addrinfo &addrInfo) const
 {
@@ -153,41 +194,6 @@ const std::string	ASocket::getPort(const struct addrinfo &addrInfo) const
 
 	/* Protected */
 	/* Private */
-
-/*
-struct addrinfo	*ASocket::addrInfoDeepCopy(const ASocket &other)
-{
-	struct addrinfo	*cpy;
-
-	if (_addrInfo != NULL)
-	{
-		freeaddrinfo(_addrInfo);
-		_addrInfo = NULL;
-	}
-
-	if (other._addrInfo != NULL)
-	{
-		struct addrinfo *current = other._addrInfo;
-		struct addrinfo *previous = NULL;
-
-		while (current != NULL)
-		{
-			struct addrinfo *newAddrInfo = new struct addrinfo;
-			memcpy(newAddrInfo, current, sizeof(struct addrinfo));
-			newAddrInfo->ai_next = NULL;
-
-			if (previous == NULL)
-				cpy = newAddrInfo;
-			else
-				previous->ai_next = newAddrInfo;
-
-			previous = newAddrInfo;
-			current = current->ai_next;
-		}
-	}
-	return (cpy);
-}
-*/
 
 /* Setters */
 
