@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 15:36:07 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 13:43:38 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -100,7 +100,7 @@ const struct pollfd	Client::generatePollFd(void)
 
 std::string	&Client::getBuffer(void)
 {
-	return (_buffer);
+	return (_messageBuffer);
 }
 
 	/* Protected */
@@ -109,5 +109,25 @@ std::string	&Client::getBuffer(void)
 /* Setters */
 
 	/* Public */
+
+int	Client::readAndStoreFdBuffer(Server &server, const struct pollfd &pollFd)
+{
+	int				readBytes = -1;
+	char			recvBuffer[MSG_BUFFER_SIZE];
+	memset(recvBuffer, 0, sizeof(recvBuffer));
+
+	readBytes = recv(pollFd.fd, recvBuffer, sizeof(recvBuffer), 0);
+	if (readBytes < 0)
+	{
+		server.deleteClients();
+		throw std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
+	}
+	else if (readBytes == 0)
+		return (CLIENT_DISCONNECTED);
+
+	_messageBuffer.append(recvBuffer, readBytes);
+	return (CLIENT_CONNECTED);
+}
+
 	/* Protected */
 	/* Private */
