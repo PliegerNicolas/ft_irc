@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 18:00:35 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 11:10:11 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -76,10 +76,7 @@ Server::~Server(void)
 		std::cout << WHITE;
 	}
 
-	for (ClientsIterator it = _clients.begin(); it < _clients.end(); it++)
-		delete *it;
-
-	_clients.clear();
+	deleteClients(_clients);
 	_pollFds.clear();
 }
 	/* Protected */
@@ -128,7 +125,10 @@ void	Server::eventLoop(void)
 		int		activity = poll(_pollFds.data(), _pollFds.size(), -1);
 
 		if (activity < 0)
+		{
+			deleteClients(_clients);
 			throw	std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
+		}
 
 		size_t	i = 0;
 
@@ -209,7 +209,10 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 
 	readBytes = recv(pollFd.fd, recvBuffer, sizeof(recvBuffer), 0);
 	if (readBytes < 0)
+	{
+		deleteClients(_clients);
 		throw std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
+	}
 	else if (readBytes == 0)
 		return (CLIENT_DISCONNECTED);
 
@@ -246,6 +249,15 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 	_pollFds.erase(_pollFds.begin() + i);
 	_clients.erase(_clients.begin() + (i - serverSockets.size()));
 	i--;
+}
+
+// Utilities
+
+void	Server::deleteClients(Server::Clients &clients)
+{
+	for (ClientsIterator it = clients.begin(); it < clients.end(); it++)
+		delete *it;
+	clients.clear();
 }
 
 /* Getters */
