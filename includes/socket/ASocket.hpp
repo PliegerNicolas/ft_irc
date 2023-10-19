@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 12:10:56 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 11:01:43 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -27,6 +27,7 @@
 #include <sys/socket.h>
 #include <sys/poll.h>
 #include <netdb.h>
+#include <fcntl.h>
 
 #include <netinet/in.h>
 #include <netinet/tcp.h>

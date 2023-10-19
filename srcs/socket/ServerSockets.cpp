@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/18 17:01:42 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/19 11:00:32 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -159,10 +159,17 @@ void	ServerSockets::setSocketOptions(void)
 	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
 
 	for (i = 0; i < SERVOPTSIZE; i++)
+	{
 		for (SocketsConstIt it = _sockets.begin(); it != _sockets.end(); it++)
+		{
 			if (setsockopt(it->fd, socketOptions[i].level, socketOptions[i].option,
 				&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
 				throw std::runtime_error("Error: couldn't set socket option (socket).");
+			if (fcntl(it->fd, F_SETFL, O_NONBLOCK))
+				throw std::runtime_error("Error: couldn't set socket option (socket).");
+		}
+	}
+
 }
 
 void	ServerSockets::handleServerErrors(const int &statusCode, struct addrinfo *addrInfo)
