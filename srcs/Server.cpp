@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/20 16:05:40 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/20 16:22:18 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -234,6 +234,17 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 		if (clientBuffer[0] == '/')
 		{
 			// CMD
+
+			// TEMP
+			size_t	i;
+			for (i = 0; !isspace(clientBuffer[i]); i++);
+			if (strncmp(clientBuffer.c_str(), "/ZIGUIGUI", i) == 0)
+			{
+				_channels.push_back(new Channel(client));
+			}
+			// TEMP_END
+
+			clientBuffer.clear();
 		}
 		else
 		{
