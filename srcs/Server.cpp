@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 16:30:24 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/20 16:22:18 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -37,8 +37,9 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig):
 
 Server::Server(const Server &other):
 	_serverSockets(other._serverSockets),
+	_pollFds(other._pollFds),
 	_clients(other._clients),
-	_pollFds(other._pollFds)
+	_channels(other._channels)
 {
 	if (DEBUG)
 	{
@@ -60,8 +61,9 @@ Server	&Server::operator=(const Server &other)
 	if (this != &other)
 	{
 		_serverSockets = other._serverSockets;
-		_clients = other._clients;
 		_pollFds = other._pollFds;
+		_clients = other._clients;
+		_channels = other._channels;
 	}
 
 	return (*this);
@@ -76,8 +78,9 @@ Server::~Server(void)
 		std::cout << WHITE;
 	}
 
-	deleteClients();
 	_pollFds.clear();
+	deleteClients();
+	deleteChannels();
 }
 	/* Protected */
 	/* Private */
@@ -122,6 +125,13 @@ void	Server::deleteClients(void)
 	_clients.clear();
 }
 
+void	Server::deleteChannels(void)
+{
+	for (ChannelsIterator it = _channels.begin(); it < _channels.end(); it++)
+		delete *it;
+	_channels.clear();
+}
+
 	/* Protected */
 	/* Private */
 
@@ -138,6 +148,7 @@ void	Server::eventLoop(void)
 		else if (activity < 0)
 		{
 			deleteClients();
+			deleteChannels();
 			throw	std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
 		}
 
@@ -214,32 +225,32 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 
 	std::string			&clientBuffer = client->getBuffer();
 	const std::string	delimiter = DELIMITER;
-	std::string			message;
 	size_t				pos;
 
 	removeLeadingWhitespaces(clientBuffer);
 
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos)
 	{
-		if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+		if (clientBuffer[0] == '/')
 		{
-			pos = MSG_BUFFER_SIZE - delimiter.length();
-			pos = findLastWordEnd(clientBuffer, pos);
-			message = clientBuffer.substr(0, pos);
-			clientBuffer.erase(0, pos);
-			message += delimiter;
+			// CMD
+
+			// TEMP
+			size_t	i;
+			for (i = 0; !isspace(clientBuffer[i]); i++);
+			if (strncmp(clientBuffer.c_str(), "/ZIGUIGUI", i) == 0)
+			{
+				_channels.push_back(new Channel(client));
+			}
+			// TEMP_END
+
+			clientBuffer.clear();
 		}
 		else
 		{
-			pos += delimiter.length();
-			message = clientBuffer.substr(0, pos);
-			clientBuffer.erase(0, pos);
+			// MSG or maybe files when we'll do bonuses ?
+			putMessage(clientBuffer, delimiter, pos);
 		}
-
-		// TEMP
-		if (message != delimiter)
-			std::cout << "Client n°" << "x" << ": " << message;
-
 		removeLeadingWhitespaces(clientBuffer);
 	}
 
@@ -250,6 +261,8 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 {
 	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
 
+	// Should disconnect from channel(s) also.
+
 	delete *clientIt;
 	_clients.erase(clientIt);
 
@@ -258,6 +271,30 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 }
 
 // Utilities
+
+void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos)
+{
+	std::string			message;
+
+	if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+	{
+		pos = MSG_BUFFER_SIZE - delimiter.length();
+		pos = findLastWordEnd(clientBuffer, pos);
+		message = clientBuffer.substr(0, pos);
+		clientBuffer.erase(0, pos);
+		message += delimiter;
+	}
+	else
+	{
+		pos += delimiter.length();
+		message = clientBuffer.substr(0, pos);
+		clientBuffer.erase(0, pos);
+	}
+
+	// TEMP
+	if (message != delimiter)
+		std::cout << "Client n°" << "x" << ": " << message;
+}
 
 void	Server::removeLeadingWhitespaces(std::string &str)
 {
