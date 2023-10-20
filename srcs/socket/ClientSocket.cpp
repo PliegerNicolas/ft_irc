@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 16:10:48 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/20 18:09:14 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSocket.hpp"
@@ -35,8 +35,9 @@ ClientSocket::ClientSocket(const ASocket::t_socket &serverSocket):
 		std::cout << WHITE;
 	}
 
-	 _socket.fd = accept(serverSocket.fd, serverSocket.info->ai_addr,
+	_socket.fd = accept(serverSocket.fd, serverSocket.info->ai_addr,
 		const_cast<socklen_t*>(&serverSocket.info->ai_addrlen));
+	handleErrors(_socket.fd);
 }
 
 ClientSocket::ClientSocket(const ClientSocket &other):

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/20 17:48:49 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/20 18:08:10 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -211,11 +211,18 @@ void	Server::handleClientsPollFds(const ServerSockets::Sockets &serverSockets, s
 
 void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket)
 {
-	Client			*client = new Client(serverSocket);
-	struct	pollfd	clientPollFd = client->generatePollFd();
+	try
+	{
+		Client			*client = new Client(serverSocket);
+		struct	pollfd	clientPollFd = client->generatePollFd();
 
-	_clients.push_back(client);
-	_pollFds.push_back(clientPollFd);
+		_clients.push_back(client);
+		_pollFds.push_back(clientPollFd);
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << "Error: client couldn't connect (server)." << std::endl;
+	}
 }
 
 /**
