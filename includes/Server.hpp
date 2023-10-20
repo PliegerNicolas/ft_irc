@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 15:33:06 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/20 15:07:45 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -15,6 +15,7 @@
 
 #include "socket/ServerSockets.hpp"
 #include "Client.hpp"
+#include "Channel.hpp"
 
 #include "signals/signals.hpp"
 
@@ -27,6 +28,7 @@
 #define MSG_BUFFER_SIZE 512
 
 class	Client;
+class	Channel;
 
 class	Server
 {
@@ -44,6 +46,7 @@ class	Server
 		/* Member functions */
 		const struct pollfd	generatePollFd(const ASocket::t_socket &serverSocket);
 		void				deleteClients(void);
+		void				deleteChannels(void);
 
 		// Getter
 
@@ -58,17 +61,20 @@ class	Server
 
 	private:
 		/* Typedefs */
-		typedef std::vector<Client*>		Clients;
 		typedef std::vector<struct pollfd>	PollFds;
+		typedef std::vector<Client*>		Clients;
+		typedef std::vector<Channel*>		Channels;
 
-		typedef Clients::iterator			ClientsIterator;
 		typedef PollFds::iterator			PollFdsIterator;
+		typedef Clients::iterator			ClientsIterator;
+		typedef Channels::iterator			ChannelsIterator;
 
 		/* Attributs */
 		ServerSockets	_serverSockets;
 
-		Clients			_clients;
 		PollFds			_pollFds;
+		Clients			_clients;
+		Channels		_channels;
 
 		/* Constructors & Destructors */
 		Server(void);

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 16:30:24 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/20 15:09:49 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -37,8 +37,9 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig):
 
 Server::Server(const Server &other):
 	_serverSockets(other._serverSockets),
+	_pollFds(other._pollFds),
 	_clients(other._clients),
-	_pollFds(other._pollFds)
+	_channels(other._channels)
 {
 	if (DEBUG)
 	{
@@ -60,8 +61,9 @@ Server	&Server::operator=(const Server &other)
 	if (this != &other)
 	{
 		_serverSockets = other._serverSockets;
-		_clients = other._clients;
 		_pollFds = other._pollFds;
+		_clients = other._clients;
+		_channels = other._channels;
 	}
 
 	return (*this);
@@ -76,8 +78,9 @@ Server::~Server(void)
 		std::cout << WHITE;
 	}
 
-	deleteClients();
 	_pollFds.clear();
+	deleteClients();
+	deleteChannels();
 }
 	/* Protected */
 	/* Private */
@@ -122,6 +125,13 @@ void	Server::deleteClients(void)
 	_clients.clear();
 }
 
+void	Server::deleteChannels(void)
+{
+	for (ChannelsIterator it = _channels.begin(); it < _channels.end(); it++)
+		delete *it;
+	_channels.clear();
+}
+
 	/* Protected */
 	/* Private */
 
@@ -138,6 +148,7 @@ void	Server::eventLoop(void)
 		else if (activity < 0)
 		{
 			deleteClients();
+			deleteChannels();
 			throw	std::runtime_error(std::string("Error: ") + strerror(errno) + " (server).");
 		}
 
@@ -249,6 +260,8 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
 	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
+
+	// Should disconnect from channel(s) also.
 
 	delete *clientIt;
 	_clients.erase(clientIt);
