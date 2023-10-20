@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/20 16:22:18 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/20 17:48:49 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -189,8 +189,12 @@ void	Server::handleClientsPollFds(const ServerSockets::Sockets &serverSockets, s
 		{
 			case POLLIN:
 				pollFd.revents &= ~POLLIN;
-				if (handleClientDataReception(client, pollFd) == CLIENT_CONNECTED)
-					break ;
+				if (handleClientDataReception(client, pollFd) == CLIENT_DISCONNECTED)
+				{
+					pollFd.revents &= ~POLLHUP;
+					handleClientDisconnections(serverSockets, i);
+				}
+				break ;
 			case POLLHUP:
 				pollFd.revents &= ~POLLHUP;
 				handleClientDisconnections(serverSockets, i);
