@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/20 15:09:49 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/20 16:05:40 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -225,32 +225,21 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 
 	std::string			&clientBuffer = client->getBuffer();
 	const std::string	delimiter = DELIMITER;
-	std::string			message;
 	size_t				pos;
 
 	removeLeadingWhitespaces(clientBuffer);
 
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos)
 	{
-		if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+		if (clientBuffer[0] == '/')
 		{
-			pos = MSG_BUFFER_SIZE - delimiter.length();
-			pos = findLastWordEnd(clientBuffer, pos);
-			message = clientBuffer.substr(0, pos);
-			clientBuffer.erase(0, pos);
-			message += delimiter;
+			// CMD
 		}
 		else
 		{
-			pos += delimiter.length();
-			message = clientBuffer.substr(0, pos);
-			clientBuffer.erase(0, pos);
+			// MSG or maybe files when we'll do bonuses ?
+			putMessage(clientBuffer, delimiter, pos);
 		}
-
-		// TEMP
-		if (message != delimiter)
-			std::cout << "Client n°" << "x" << ": " << message;
-
 		removeLeadingWhitespaces(clientBuffer);
 	}
 
@@ -271,6 +260,30 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 }
 
 // Utilities
+
+void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos)
+{
+	std::string			message;
+
+	if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+	{
+		pos = MSG_BUFFER_SIZE - delimiter.length();
+		pos = findLastWordEnd(clientBuffer, pos);
+		message = clientBuffer.substr(0, pos);
+		clientBuffer.erase(0, pos);
+		message += delimiter;
+	}
+	else
+	{
+		pos += delimiter.length();
+		message = clientBuffer.substr(0, pos);
+		clientBuffer.erase(0, pos);
+	}
+
+	// TEMP
+	if (message != delimiter)
+		std::cout << "Client n°" << "x" << ": " << message;
+}
 
 void	Server::removeLeadingWhitespaces(std::string &str)
 {

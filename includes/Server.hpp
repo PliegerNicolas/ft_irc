@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/20 15:07:45 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/20 16:05:16 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -90,6 +90,8 @@ class	Server
 		void	handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i);
 
 		// Utilites
+		void	putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos);
+
 		void	removeLeadingWhitespaces(std::string &str);
 		size_t	findLastWordEnd(const std::string &str, const size_t &strLen);
 };
