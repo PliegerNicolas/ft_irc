@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 01:30:13 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/22 01:42:25 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -118,15 +118,15 @@ Server::Server(void):
 
 void	Server::deleteClients(void)
 {
-	for (ClientsIterator it = _clients.begin(); it < _clients.end(); it++)
+	for (ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 		delete *it;
 	_clients.clear();
 }
 
 void	Server::deleteChannels(void)
 {
-	for (ChannelsIterator it = _channels.begin(); it < _channels.end(); it++)
-		delete *it;
+	for (ChannelsIterator it = _channels.begin(); it != _channels.end(); it++)
+		delete it->second;
 	_channels.clear();
 }
 
