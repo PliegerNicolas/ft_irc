@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/20 16:05:16 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/21 14:39:17 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -18,6 +18,9 @@
 #include "Channel.hpp"
 
 #include "signals/signals.hpp"
+#include "utils/Utils.hpp"
+
+#include <map>
 
 // MACROS
 
@@ -69,12 +72,26 @@ class	Server
 		typedef Clients::iterator			ClientsIterator;
 		typedef Channels::iterator			ChannelsIterator;
 
+
+		typedef struct CommandParameters
+		{
+			Client				*who;
+			void				*target;
+			const std::string	message;
+		}	t_commandParams;
+
+		typedef void (*commandFunction)(Client*, t_commandParams params);
+
+		typedef std::map<std::string, commandFunction>	Commands;
+		typedef Commands::iterator						CommandsIterator;
+
 		/* Attributs */
 		ServerSockets	_serverSockets;
 
 		PollFds			_pollFds;
 		Clients			_clients;
 		Channels		_channels;
+		Commands		_commands;
 
 		/* Constructors & Destructors */
 		Server(void);
@@ -89,9 +106,6 @@ class	Server
 		bool	handleClientDataReception(Client *client, struct pollfd &pollFd);
 		void	handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i);
 
-		// Utilites
+		void	executeCommand(Client *client, std::string &clientBuffer);
 		void	putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos);
-
-		void	removeLeadingWhitespaces(std::string &str);
-		size_t	findLastWordEnd(const std::string &str, const size_t &strLen);
 };

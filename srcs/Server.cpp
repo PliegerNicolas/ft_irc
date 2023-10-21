@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/20 18:08:10 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/21 14:02:06 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -245,16 +245,7 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 		if (clientBuffer[0] == '/')
 		{
 			// CMD
-
-			// TEMP
-			size_t	i;
-			for (i = 0; !isspace(clientBuffer[i]); i++);
-			if (strncmp(clientBuffer.c_str(), "/ZIGUIGUI", i) == 0)
-			{
-				_channels.push_back(new Channel(client));
-			}
-			// TEMP_END
-
+			executeCommand(client, clientBuffer);
 			clientBuffer.clear();
 		}
 		else
@@ -281,7 +272,11 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 	i--;
 }
 
-// Utilities
+void	Server::executeCommand(Client *client, std::string &clientBuffer)
+{
+	(void)client;
+	(void)clientBuffer;
+}
 
 void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos)
 {
@@ -305,29 +300,6 @@ void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter,
 	// TEMP
 	if (message != delimiter)
 		std::cout << "Client n°" << "x" << ": " << message;
-}
-
-void	Server::removeLeadingWhitespaces(std::string &str)
-{
-	size_t	i = 0;
-
-	while (i < str.length() && isspace(str[i]))
-		i++;
-	str.erase(0, i);
-}
-
-size_t	Server::findLastWordEnd(const std::string &str, const size_t &strLen)
-{
-	size_t	pos = strLen;
-	size_t	middle = strLen / 2;
-
-	while (pos > middle && !isspace(str[pos]))
-		pos--;
-	while (pos > middle && isspace(str[pos]))
-		pos--;
-	if (pos == middle)
-		return (strLen);
-	return (pos + 1);
 }
 
 /* Getters */
