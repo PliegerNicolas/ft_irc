@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/21 14:02:06 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/21 18:55:01 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -24,6 +24,8 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig):
 		std::cout << "Server: parameter constructor called.";
 		std::cout << WHITE;
 	}
+
+	setCommands();
 
 	{
 		const ServerSockets::Sockets	&sockets = _serverSockets.getSockets();
@@ -94,6 +96,8 @@ Server::Server(void):
 		std::cout << "Server: default constructor called.";
 		std::cout << WHITE;
 	}
+
+	setCommands();
 
 	{
 		const ServerSockets::Sockets	&sockets = _serverSockets.getSockets();
@@ -274,8 +278,41 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 
 void	Server::executeCommand(Client *client, std::string &clientBuffer)
 {
+	t_commandParams	commandParams;
+
+	commandParams.who = client;
+	commandParams.target = NULL;
+	commandParams.message = NULL;
+
+	CommandsIterator	commandIt = _commands.find(getNextWord(clientBuffer));
+	if (commandIt == _commands.end())
+		return ;			// error msg ? Command not found.
+
+	(this->*commandIt->second)(client, commandParams);
+}
+
+void	Server::setCommands(void)
+{
+	_commands["/NICK"] = &Server::nickCommand;
+	_commands["/QUIT"] = NULL;
+	_commands["/JOIN"] = NULL;
+	_commands["/WHOIS"] = NULL;
+	_commands["/PRIVMSG"] = NULL;
+	_commands["/NOTICE"] = NULL;
+	_commands["/KICK"] = NULL;
+	_commands["/MODE"] = NULL;
+	_commands["/TOPIC"] = NULL;
+	_commands["/INVITE"] = NULL;
+	_commands["/WHO"] = NULL;
+	_commands["/NAMES"] = NULL;
+	_commands["/PART"] = NULL;
+}
+
+void	Server::nickCommand(Client *client, const t_commandParams &commandParams)
+{
 	(void)client;
-	(void)clientBuffer;
+	(void)commandParams;
+	std::cout << "AAAAA" << std::endl;
 }
 
 void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos)
@@ -313,3 +350,21 @@ void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter,
 	/* Public */
 	/* Protected */
 	/* Private */
+
+/* Static */
+
+	/* Public */
+	/* Protected */
+	/* Private */
+
+const Server::t_commandParams	Server::buildCommandParams(Client *who,
+	const void *target, const char *message)
+{
+	t_commandParams	commandParameters;
+
+	commandParameters.who = who;
+	commandParameters.target = target;
+	commandParameters.message = message;
+
+	return (commandParameters);
+}

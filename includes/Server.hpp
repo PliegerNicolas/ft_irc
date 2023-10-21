@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/21 14:39:17 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/21 18:19:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -72,18 +72,22 @@ class	Server
 		typedef Clients::iterator			ClientsIterator;
 		typedef Channels::iterator			ChannelsIterator;
 
+		// Commands
 
 		typedef struct CommandParameters
 		{
-			Client				*who;
-			void				*target;
-			const std::string	message;
+			Client		*who;
+			const void	*target;
+			const char	*message;
 		}	t_commandParams;
 
-		typedef void (*commandFunction)(Client*, t_commandParams params);
+		typedef void (Server::*commandFunction)(Client*, const t_commandParams &params);
 
 		typedef std::map<std::string, commandFunction>	Commands;
 		typedef Commands::iterator						CommandsIterator;
+
+		static const t_commandParams	buildCommandParams(Client *who, const void *target,
+			const char *message);
 
 		/* Attributs */
 		ServerSockets	_serverSockets;
@@ -98,6 +102,7 @@ class	Server
 
 		/* Member functions */
 		void	eventLoop(void);
+		void	setCommands(void);
 
 		void	handleServerPollFds(const ServerSockets::Sockets &serverSockets, size_t &i);
 		void	handleClientsPollFds(const ServerSockets::Sockets &serverSockets, size_t &i);
@@ -106,6 +111,10 @@ class	Server
 		bool	handleClientDataReception(Client *client, struct pollfd &pollFd);
 		void	handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i);
 
+		// Commands
+
 		void	executeCommand(Client *client, std::string &clientBuffer);
+		void	nickCommand(Client *client, const t_commandParams &commandParams);
+
 		void	putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos);
 };

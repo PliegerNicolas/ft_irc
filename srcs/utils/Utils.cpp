@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 13:30:31 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/21 13:32:19 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/21 18:42:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "utils/Utils.hpp"
@@ -32,4 +32,21 @@ size_t	findLastWordEnd(const std::string &str, const size_t &strLen)
 	if (pos == middle)
 		return (strLen);
 	return (pos + 1);
+}
+
+std::string	getNextWord(std::string &str)
+{
+	size_t	pos = 0;
+	std::string	word;
+
+	if (str.empty())
+		return (word);
+
+	while (str[pos] && !isspace(str[pos]))
+		pos++;
+
+	word = str.substr(0, pos);
+	str.erase(0, pos);
+	removeLeadingWhitespaces(str);
+	return (word);
 }
