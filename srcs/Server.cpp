@@ -6,14 +6,16 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/21 18:55:01 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/22 01:30:13 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
 
-/* Constructors & Destructors */
+/* ************************************************************************** */
+/* *                       Constructors & Destructors                       * */
+/* ************************************************************************** */
 
-	/* Public */
+/* Public */
 
 Server::Server(const ServerSockets::t_serverconfig &serverConfig):
 	_serverSockets(ServerSockets(serverConfig))
@@ -84,8 +86,9 @@ Server::~Server(void)
 	deleteClients();
 	deleteChannels();
 }
-	/* Protected */
-	/* Private */
+
+/* Protected */
+/* Private */
 
 Server::Server(void):
 	_serverSockets(ServerSockets())
@@ -107,20 +110,11 @@ Server::Server(void):
 	}
 }
 
-/* Member functions */
+/* ************************************************************************** */
+/* *                            Member Functions                            * */
+/* ************************************************************************** */
 
-	/* Public */
-const struct pollfd	Server::generatePollFd(const ASocket::t_socket	&serverSocket)
-{
-	struct pollfd	pollFd;
-
-	memset(&pollFd, 0, sizeof(pollFd));
-
-	pollFd.fd = serverSocket.fd;
-	pollFd.events = POLLIN;
-
-	return (pollFd);
-}
+/* Public */
 
 void	Server::deleteClients(void)
 {
@@ -136,8 +130,24 @@ void	Server::deleteChannels(void)
 	_channels.clear();
 }
 
-	/* Protected */
-	/* Private */
+const struct pollfd	Server::generatePollFd(const ASocket::t_socket	&serverSocket)
+{
+	struct pollfd	pollFd;
+
+	memset(&pollFd, 0, sizeof(pollFd));
+
+	pollFd.fd = serverSocket.fd;
+	pollFd.events = POLLIN;
+
+	return (pollFd);
+}
+
+/* Protected */
+/* Private */
+
+/* ************************************************************************** */
+/* *                               Event loop                               * */
+/* ************************************************************************** */
 
 void	Server::eventLoop(void)
 {
@@ -211,7 +221,32 @@ void	Server::handleClientsPollFds(const ServerSockets::Sockets &serverSockets, s
 	}
 }
 
-// ACT ON POLL EVENTS.
+/* ************************************************************************** */
+/* *                          Server interactions                           * */
+/* ************************************************************************** */
+
+bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
+{
+	if (client->readAndStoreFdBuffer(*this, pollFd) == CLIENT_DISCONNECTED)
+		return (CLIENT_DISCONNECTED);
+
+	std::string			&clientBuffer = client->getBuffer();
+	const std::string	delimiter = DELIMITER;
+	size_t				pos;
+
+	removeLeadingWhitespaces(clientBuffer);
+
+	while ((pos = clientBuffer.find(delimiter)) != std::string::npos)
+	{
+		if (clientBuffer[0] == '/')
+			executeCommand(client, clientBuffer);
+		else
+			putMessage(clientBuffer, delimiter, pos);
+		removeLeadingWhitespaces(clientBuffer);
+	}
+
+	return (CLIENT_CONNECTED);
+}
 
 void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket)
 {
@@ -229,40 +264,6 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 	}
 }
 
-/**
- *	With a TCP socket, excess data isn't discarded but is buffered
- *	by the operating system. The subsequent recv calls will read that data.
-**/
-bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
-{
-	if (client->readAndStoreFdBuffer(*this, pollFd) == CLIENT_DISCONNECTED)
-		return (CLIENT_DISCONNECTED);
-
-	std::string			&clientBuffer = client->getBuffer();
-	const std::string	delimiter = DELIMITER;
-	size_t				pos;
-
-	removeLeadingWhitespaces(clientBuffer);
-
-	while ((pos = clientBuffer.find(delimiter)) != std::string::npos)
-	{
-		if (clientBuffer[0] == '/')
-		{
-			// CMD
-			executeCommand(client, clientBuffer);
-			clientBuffer.clear();
-		}
-		else
-		{
-			// MSG or maybe files when we'll do bonuses ?
-			putMessage(clientBuffer, delimiter, pos);
-		}
-		removeLeadingWhitespaces(clientBuffer);
-	}
-
-	return (CLIENT_CONNECTED);
-}
-
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
 	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
@@ -276,43 +277,145 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 	i--;
 }
 
+/* ************************************************************************** */
+/* *                                Commands                                * */
+/* ************************************************************************** */
+
+void	Server::setCommands(void)
+{
+	_commands["/NICK"] = &Server::nick;
+	_commands["/QUIT"] = &Server::quit;
+	_commands["/JOIN"] = &Server::join;
+	_commands["/WHOIS"] = &Server::whois;
+	_commands["/PRIVMSG"] = &Server::privmsg;
+	_commands["/NOTICE"] = &Server::notice;
+	_commands["/KICK"] = &Server::kick;
+	_commands["/MODE"] = &Server::mode;
+	_commands["/TOPIC"] = &Server::topic;
+	_commands["/INVITE"] = &Server::invite;
+	_commands["/WHO"] = &Server::who;
+	_commands["/NAMES"] = &Server::names;
+	_commands["/PART"] = &Server::part;
+}
+
 void	Server::executeCommand(Client *client, std::string &clientBuffer)
 {
-	t_commandParams	commandParams;
+	t_commandParams		commandParams;
+	CommandsIterator	commandIt;
 
 	commandParams.who = client;
 	commandParams.target = NULL;
 	commandParams.message = NULL;
 
-	CommandsIterator	commandIt = _commands.find(getNextWord(clientBuffer));
+	commandIt = _commands.find(getNextWord(clientBuffer));
 	if (commandIt == _commands.end())
+	{
+		std::cerr << "Error: Command not found (temp)." << std::endl;
 		return ;			// error msg ? Command not found.
+	}
 
-	(this->*commandIt->second)(client, commandParams);
+	if (clientBuffer[0] != ':')
+	{
+		std::string	word = getNextWord(clientBuffer);
+
+		if (clientBuffer[0] == '#')
+		{
+			word.erase(0, 1);
+			// We've got here the channel's target name.
+		}
+		else
+		{
+			// We've got here the user's target name
+		}
+	}
+
+	if (clientBuffer[0] == ':')
+	{
+		clientBuffer.erase(0, 1);
+		commandParams.message = clientBuffer.c_str();
+	}
+
+	clientBuffer.clear();
+
+	(this->*commandIt->second)(commandParams);
 }
 
-void	Server::setCommands(void)
+void	Server::nick(const t_commandParams &commandParams)
 {
-	_commands["/NICK"] = &Server::nickCommand;
-	_commands["/QUIT"] = NULL;
-	_commands["/JOIN"] = NULL;
-	_commands["/WHOIS"] = NULL;
-	_commands["/PRIVMSG"] = NULL;
-	_commands["/NOTICE"] = NULL;
-	_commands["/KICK"] = NULL;
-	_commands["/MODE"] = NULL;
-	_commands["/TOPIC"] = NULL;
-	_commands["/INVITE"] = NULL;
-	_commands["/WHO"] = NULL;
-	_commands["/NAMES"] = NULL;
-	_commands["/PART"] = NULL;
-}
-
-void	Server::nickCommand(Client *client, const t_commandParams &commandParams)
-{
-	(void)client;
 	(void)commandParams;
-	std::cout << "AAAAA" << std::endl;
+	std::cout << "NICK command executed." << std::endl;
+}
+
+void	Server::quit(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "QUIT command executed." << std::endl;
+}
+
+void	Server::join(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "JOIN command executed." << std::endl;
+}
+
+void	Server::whois(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "WHOIS command executed." << std::endl;
+}
+
+void	Server::privmsg(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "PRIVMSG command executed." << std::endl;
+}
+
+void	Server::notice(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "NOTICE command executed." << std::endl;
+}
+
+void	Server::kick(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "KICK command executed." << std::endl;
+}
+
+void	Server::mode(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "MODE command executed." << std::endl;
+}
+
+void	Server::topic(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "TOPIC command executed." << std::endl;
+}
+
+void	Server::invite(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "INVITE command executed." << std::endl;
+}
+
+void	Server::who(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "WHO command executed." << std::endl;
+}
+
+void	Server::names(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "NAMES command executed." << std::endl;
+}
+
+void	Server::part(const t_commandParams &commandParams)
+{
+	(void)commandParams;
+	std::cout << "PART command executed." << std::endl;
 }
 
 void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos)
