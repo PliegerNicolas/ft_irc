@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 03:07:49 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/23 01:25:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -64,15 +64,26 @@ class	Server
 
 	private:
 		/* Typedefs */
+
+		typedef enum setCommandParameters
+		{
+			SOURCE = (1 << 1),
+			CLIENT_NAME = (1 << 2),
+			CHANNEL_NAME = (1 << 3),
+			MESSAGE = (1 << 4)
+		}	t_setCommandParams;
+
 		typedef struct CommandParameters
 		{
-			Client		*who;
-			const void	*target;
+			int			mask;
+			Client		*source;
+			const char	*clientName;
+			const char	*channelName;
 			const char	*message;
 		}	t_commandParams;
 
-		static const t_commandParams	buildCommandParams(Client *who, const void *target,
-			const char *message);
+		static t_commandParams	buildCommandParams(Client *source, const char *clientName,
+			const char *channelName, const char *message);
 
 		typedef void (Server::*CommandFunction)(const t_commandParams &params);
 

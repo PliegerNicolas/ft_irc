@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 23:40:06 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/23 01:28:00 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -240,7 +240,7 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 	const std::string	delimiter = DELIMITER;
 	size_t				pos;
 
-	removeLeadingWhitespaces(clientBuffer);
+	removeLeadingWhitespaces(clientBuffer, delimiter);
 	pos = clientBuffer.find(delimiter);
 
 	if (pos == std::string::npos)
@@ -252,7 +252,7 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 			executeCommand(client, clientBuffer, delimiter);
 		else
 			putMessage(clientBuffer, delimiter, pos);
-		removeLeadingWhitespaces(clientBuffer);
+		removeLeadingWhitespaces(clientBuffer, delimiter);
 	}
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
 
@@ -312,12 +312,11 @@ void	Server::setCommands(void)
 void	Server::executeCommand(Client *client, std::string &clientBuffer,
 	const std::string &delimiter)
 {
-	t_commandParams		commandParams;
+	(void)client;
+	(void)clientBuffer;
+	(void)delimiter;
+	/*
 	std::string			word;
-
-	commandParams.who = client;
-	commandParams.target = NULL;
-	commandParams.message = NULL;
 
 	word = getNextWord(clientBuffer);
 	if (word[0] == '/')
@@ -351,6 +350,7 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer,
 	}
 
 	(this->*command)(commandParams);
+	*/
 }
 
 void	Server::nick(const t_commandParams &commandParams)
@@ -537,14 +537,35 @@ bool	Server::isCommand(const std::string &clientBuffer)
 	/* Protected */
 	/* Private */
 
-const Server::t_commandParams	Server::buildCommandParams(Client *who,
-	const void *target, const char *message)
+Server::t_commandParams	Server::buildCommandParams(Client *source,
+	const char *clientName, const char *channelName, const char *message)
 {
 	t_commandParams	commandParameters;
+	memset(&commandParameters, 0, sizeof(commandParameters));
 
-	commandParameters.who = who;
-	commandParameters.target = target;
-	commandParameters.message = message;
+	if (source)
+	{
+		commandParameters.mask |= SOURCE;
+		commandParameters.source = source;
+	}
+
+	if (clientName)
+	{
+		commandParameters.mask |= CLIENT_NAME;
+		commandParameters.clientName = clientName;
+	}
+
+	if (channelName)
+	{
+		commandParameters.mask |= CHANNEL_NAME;
+		commandParameters.channelName = channelName;
+	}
+
+	if (message)
+	{
+		commandParameters.mask |= MESSAGE;
+		commandParameters.message = message;
+	}
 
 	return (commandParameters);
 }

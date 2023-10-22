@@ -6,16 +6,20 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 13:30:31 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 02:37:05 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/23 01:27:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "utils/Utils.hpp"
 
-void	removeLeadingWhitespaces(std::string &str)
+void	removeLeadingWhitespaces(std::string &str, const std::string &delimiter)
 {
+	size_t	endPos = str.find(delimiter);
 	size_t	i = 0;
 
-	while (i < str.length() && isspace(str[i]))
+	if (endPos == std::string::npos)
+		endPos = str.length();
+
+	while (i < endPos && std::isspace(str[i]))
 		i++;
 	str.erase(0, i);
 }
@@ -43,23 +47,21 @@ void	capitalizeString(std::string &str)
 	}
 }
 
-std::string	getNextWord(std::string &str)
+std::string	getNextWord(std::string &str, const std::string &delimiter)
 {
-	size_t	pos = 0;
-	std::string	word;
+	removeLeadingWhitespaces(str, delimiter);
 
 	if (str.empty())
-		return (word);
+		return (std::string());
 
-	removeLeadingWhitespaces(str);
+	size_t	i = 0;
+	while (str[i] && std::isspace(str[i]))
+		i++;
 
-	while (str[pos] && !isspace(str[pos]))
-		pos++;
+	std::string	word = str.substr(0, i);
+	str.erase(0, i);
 
-	word = str.substr(0, pos);
-	str.erase(0, pos);
-
-	removeLeadingWhitespaces(str);
+	removeLeadingWhitespaces(str, delimiter);
 
 	return (word);
 }
