@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 02:31:45 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/22 03:07:49 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -27,7 +27,7 @@
 #define CLIENT_CONNECTED 1
 #define CLIENT_DISCONNECTED 0
 
-#define DELIMITER "\n"
+#define DELIMITER "\n"			//"\r\n" for real IRC servers
 #define MSG_BUFFER_SIZE 512
 
 class	Client;
@@ -111,7 +111,8 @@ class	Server
 
 		// Commands
 		void	setCommands(void);
-		void	executeCommand(Client *client, std::string &clientBuffer);
+		void	executeCommand(Client *client, std::string &clientBuffer,
+					const std::string &delimiter);
 		void	nick(const t_commandParams &commandParams);
 		void	quit(const t_commandParams &commandParams);
 		void	join(const t_commandParams &commandParams);

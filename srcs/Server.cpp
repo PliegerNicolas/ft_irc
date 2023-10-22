@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 02:41:57 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/22 03:04:40 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -119,7 +119,10 @@ Server::Server(void):
 void	Server::deleteClients(void)
 {
 	for (ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		(*it)->closeSocketFd();
 		delete *it;
+	}
 	_clients.clear();
 }
 
@@ -240,16 +243,13 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 	if (pos == std::string::npos)
 		return (CLIENT_CONNECTED);
 
-	if (isCommand(clientBuffer))
-		executeCommand(client, clientBuffer);
-	else
+	while ((pos = clientBuffer.find(delimiter)) != std::string::npos)
 	{
-		do
-		{
+		if (isCommand(clientBuffer))
+			executeCommand(client, clientBuffer, delimiter);
+		else
 			putMessage(clientBuffer, delimiter, pos);
-			removeLeadingWhitespaces(clientBuffer);
-		}
-		while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
+		removeLeadingWhitespaces(clientBuffer);
 	}
 	return (CLIENT_CONNECTED);
 }
@@ -304,7 +304,8 @@ void	Server::setCommands(void)
 	_commands["PART"] = &Server::part;
 }
 
-void	Server::executeCommand(Client *client, std::string &clientBuffer)
+void	Server::executeCommand(Client *client, std::string &clientBuffer,
+	const std::string &delimiter)
 {
 	t_commandParams		commandParams;
 	std::string			word;
@@ -339,10 +340,10 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer)
 	if (clientBuffer[0] == ':')
 	{
 		clientBuffer.erase(0, 1);
-		commandParams.message = clientBuffer.c_str();
+		size_t	pos = clientBuffer.find(delimiter);
+		commandParams.message = clientBuffer.substr(0, pos).c_str();
+		clientBuffer.erase(0, pos);
 	}
-
-	clientBuffer.clear();
 
 	(this->*command)(commandParams);
 }

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 16:21:06 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/22 02:55:57 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -103,6 +103,11 @@ const struct pollfd	Client::generatePollFd(void)
 std::string	&Client::getBuffer(void)
 {
 	return (_messageBuffer);
+}
+
+void	Client::closeSocketFd(void)
+{
+	close(_clientSocket.getSocket().fd);
 }
 
 	/* Protected */

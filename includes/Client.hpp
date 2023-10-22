@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/21 13:34:39 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/22 02:54:54 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -39,6 +39,7 @@ class	Client
 		const struct pollfd	generatePollFd(void);
 		int					readAndStoreFdBuffer(Server &server,
 								const struct pollfd &pollFd);
+		void				closeSocketFd(void);
 
 		// Getter
 		std::string			&getBuffer(void);
