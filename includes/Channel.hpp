@@ -6,7 +6,7 @@
 /*   By: nplieger <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/20 15:43:46 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/21 13:27:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -78,8 +78,6 @@ class	Channel
 		/* Attributs */
 
 		Users	_users;
-		// Vector with banned IPs
-
 		int		_userLimit;
 
 		/* Constructors & Destructors */

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 15:51:51 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/22 02:54:54 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -15,10 +15,12 @@
 
 #include "socket/ClientSocket.hpp"
 #include "Server.hpp"
+#include "Channel.hpp"
 
 // MACROS
 
 class	Server;
+class	Channel;
 
 class	Client
 {
@@ -37,6 +39,7 @@ class	Client
 		const struct pollfd	generatePollFd(void);
 		int					readAndStoreFdBuffer(Server &server,
 								const struct pollfd &pollFd);
+		void				closeSocketFd(void);
 
 		// Getter
 		std::string			&getBuffer(void);
@@ -51,8 +54,15 @@ class	Client
 		/* Member functions */
 
 	private:
+		/* Typedefs */
+		typedef std::vector<Channel*>	Channels;
+
+		typedef Channels::iterator		ChannelsIterator;
+
 		/* Attributs */
 		ClientSocket		_clientSocket;
+		Channel				*_currentChannel;
+		Channels			_channels;
 
 		//char				_nickname[10];
 		std::string			_username;

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/20 16:05:16 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/22 03:07:49 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -18,13 +18,16 @@
 #include "Channel.hpp"
 
 #include "signals/signals.hpp"
+#include "utils/Utils.hpp"
+
+#include <map>
 
 // MACROS
 
 #define CLIENT_CONNECTED 1
 #define CLIENT_DISCONNECTED 0
 
-#define DELIMITER "\n"
+#define DELIMITER "\n"			//"\r\n" for real IRC servers
 #define MSG_BUFFER_SIZE 512
 
 class	Client;
@@ -44,9 +47,9 @@ class	Server
 		virtual ~Server(void);
 
 		/* Member functions */
-		const struct pollfd	generatePollFd(const ASocket::t_socket &serverSocket);
-		void				deleteClients(void);
-		void				deleteChannels(void);
+		void					deleteClients(void);
+		void					deleteChannels(void);
+		const struct pollfd		generatePollFd(const ASocket::t_socket &serverSocket);
 
 		// Getter
 
@@ -61,13 +64,27 @@ class	Server
 
 	private:
 		/* Typedefs */
-		typedef std::vector<struct pollfd>	PollFds;
-		typedef std::vector<Client*>		Clients;
-		typedef std::vector<Channel*>		Channels;
+		typedef struct CommandParameters
+		{
+			Client		*who;
+			const void	*target;
+			const char	*message;
+		}	t_commandParams;
 
-		typedef PollFds::iterator			PollFdsIterator;
-		typedef Clients::iterator			ClientsIterator;
-		typedef Channels::iterator			ChannelsIterator;
+		static const t_commandParams	buildCommandParams(Client *who, const void *target,
+			const char *message);
+
+		typedef void (Server::*CommandFunction)(const t_commandParams &params);
+
+		typedef std::vector<struct pollfd>				PollFds;
+		typedef std::vector<Client*>					Clients;
+		typedef std::map<std::string, Channel*>			Channels;
+		typedef std::map<std::string, CommandFunction>	Commands;
+
+		typedef PollFds::iterator						PollFdsIterator;
+		typedef Clients::iterator						ClientsIterator;
+		typedef Channels::iterator						ChannelsIterator;
+		typedef Commands::iterator						CommandsIterator;
 
 		/* Attributs */
 		ServerSockets	_serverSockets;
@@ -75,23 +92,41 @@ class	Server
 		PollFds			_pollFds;
 		Clients			_clients;
 		Channels		_channels;
+		Commands		_commands;
 
 		/* Constructors & Destructors */
 		Server(void);
 
 		/* Member functions */
-		void	eventLoop(void);
 
+		// Event loop
+		void	eventLoop(void);
 		void	handleServerPollFds(const ServerSockets::Sockets &serverSockets, size_t &i);
 		void	handleClientsPollFds(const ServerSockets::Sockets &serverSockets, size_t &i);
 
+		// Server interactions
 		void	handleClientConnections(const ASocket::t_socket &serverSocket);
 		bool	handleClientDataReception(Client *client, struct pollfd &pollFd);
 		void	handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i);
 
-		// Utilites
-		void	putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos);
+		// Commands
+		void	setCommands(void);
+		void	executeCommand(Client *client, std::string &clientBuffer,
+					const std::string &delimiter);
+		void	nick(const t_commandParams &commandParams);
+		void	quit(const t_commandParams &commandParams);
+		void	join(const t_commandParams &commandParams);
+		void	whois(const t_commandParams &commandParams);
+		void	privmsg(const t_commandParams &commandParams);
+		void	notice(const t_commandParams &commandParams);
+		void	kick(const t_commandParams &commandParams);
+		void	mode(const t_commandParams &commandParams);
+		void	topic(const t_commandParams &commandParams);
+		void	invite(const t_commandParams &commandParams);
+		void	who(const t_commandParams &commandParams);
+		void	names(const t_commandParams &commandParams);
+		void	part(const t_commandParams &commandParams);
 
-		void	removeLeadingWhitespaces(std::string &str);
-		size_t	findLastWordEnd(const std::string &str, const size_t &strLen);
+		void	putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos);
+		bool	isCommand(const std::string &clientBuffer);
 };
