@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 01:42:25 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/22 02:41:57 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -235,16 +235,22 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 	size_t				pos;
 
 	removeLeadingWhitespaces(clientBuffer);
+	pos = clientBuffer.find(delimiter);
 
-	while ((pos = clientBuffer.find(delimiter)) != std::string::npos)
+	if (pos == std::string::npos)
+		return (CLIENT_CONNECTED);
+
+	if (isCommand(clientBuffer))
+		executeCommand(client, clientBuffer);
+	else
 	{
-		if (clientBuffer[0] == '/')
-			executeCommand(client, clientBuffer);
-		else
+		do
+		{
 			putMessage(clientBuffer, delimiter, pos);
-		removeLeadingWhitespaces(clientBuffer);
+			removeLeadingWhitespaces(clientBuffer);
+		}
+		while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
 	}
-
 	return (CLIENT_CONNECTED);
 }
 
@@ -283,40 +289,41 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 
 void	Server::setCommands(void)
 {
-	_commands["/NICK"] = &Server::nick;
-	_commands["/QUIT"] = &Server::quit;
-	_commands["/JOIN"] = &Server::join;
-	_commands["/WHOIS"] = &Server::whois;
-	_commands["/PRIVMSG"] = &Server::privmsg;
-	_commands["/NOTICE"] = &Server::notice;
-	_commands["/KICK"] = &Server::kick;
-	_commands["/MODE"] = &Server::mode;
-	_commands["/TOPIC"] = &Server::topic;
-	_commands["/INVITE"] = &Server::invite;
-	_commands["/WHO"] = &Server::who;
-	_commands["/NAMES"] = &Server::names;
-	_commands["/PART"] = &Server::part;
+	_commands["NICK"] = &Server::nick;
+	_commands["QUIT"] = &Server::quit;
+	_commands["JOIN"] = &Server::join;
+	_commands["WHOIS"] = &Server::whois;
+	_commands["PRIVMSG"] = &Server::privmsg;
+	_commands["NOTICE"] = &Server::notice;
+	_commands["KICK"] = &Server::kick;
+	_commands["MODE"] = &Server::mode;
+	_commands["TOPIC"] = &Server::topic;
+	_commands["INVITE"] = &Server::invite;
+	_commands["WHO"] = &Server::who;
+	_commands["NAMES"] = &Server::names;
+	_commands["PART"] = &Server::part;
 }
 
 void	Server::executeCommand(Client *client, std::string &clientBuffer)
 {
 	t_commandParams		commandParams;
-	CommandsIterator	commandIt;
+	std::string			word;
 
 	commandParams.who = client;
 	commandParams.target = NULL;
 	commandParams.message = NULL;
 
-	commandIt = _commands.find(getNextWord(clientBuffer));
-	if (commandIt == _commands.end())
-	{
-		std::cerr << "Error: Command not found (temp)." << std::endl;
-		return ;			// error msg ? Command not found.
-	}
+	word = getNextWord(clientBuffer);
+	if (word[0] == '/')
+		word.erase(0, 1);
+	capitalizeString(word);
+
+	// We checked it's existance before.
+	CommandFunction	command = _commands.find(word)->second;
 
 	if (clientBuffer[0] != ':')
 	{
-		std::string	word = getNextWord(clientBuffer);
+		word = getNextWord(clientBuffer);
 
 		if (clientBuffer[0] == '#')
 		{
@@ -337,7 +344,7 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer)
 
 	clientBuffer.clear();
 
-	(this->*commandIt->second)(commandParams);
+	(this->*command)(commandParams);
 }
 
 void	Server::nick(const t_commandParams &commandParams)
@@ -440,6 +447,27 @@ void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter,
 	// TEMP
 	if (message != delimiter)
 		std::cout << "Client n°" << "x" << ": " << message;
+}
+
+bool	Server::isCommand(const std::string &clientBuffer)
+{
+	size_t		pos = 0;
+	std::string	command;
+
+	while (clientBuffer[pos] && !isspace(clientBuffer[pos]))
+		pos++;
+
+	command = clientBuffer.substr(0, pos);
+
+	if (command[0] == '/')
+		command.erase(0, 1);
+	capitalizeString(command);
+
+	CommandsIterator	commandIt = _commands.find(command);
+
+	if (commandIt == _commands.end())
+		return (false);
+	return (true);
 }
 
 /* Getters */

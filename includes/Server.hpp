@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 01:41:45 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/22 02:31:45 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -74,12 +74,12 @@ class	Server
 		static const t_commandParams	buildCommandParams(Client *who, const void *target,
 			const char *message);
 
-		typedef void (Server::*commandFunction)(const t_commandParams &params);
+		typedef void (Server::*CommandFunction)(const t_commandParams &params);
 
 		typedef std::vector<struct pollfd>				PollFds;
 		typedef std::vector<Client*>					Clients;
 		typedef std::map<std::string, Channel*>			Channels;
-		typedef std::map<std::string, commandFunction>	Commands;
+		typedef std::map<std::string, CommandFunction>	Commands;
 
 		typedef PollFds::iterator						PollFdsIterator;
 		typedef Clients::iterator						ClientsIterator;
@@ -127,4 +127,5 @@ class	Server
 		void	part(const t_commandParams &commandParams);
 
 		void	putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos);
+		bool	isCommand(const std::string &clientBuffer);
 };
