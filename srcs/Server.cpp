@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 21:49:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/22 23:40:06 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -246,7 +246,7 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 	if (pos == std::string::npos)
 		return (CLIENT_CONNECTED);
 
-	while ((pos = clientBuffer.find(delimiter)) != std::string::npos)
+	do
 	{
 		if (isCommand(clientBuffer))
 			executeCommand(client, clientBuffer, delimiter);
@@ -254,6 +254,8 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 			putMessage(clientBuffer, delimiter, pos);
 		removeLeadingWhitespaces(clientBuffer);
 	}
+	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
+
 	return (CLIENT_CONNECTED);
 }
 
@@ -277,7 +279,7 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 {
 	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
 
-	// Should disconnect from channel(s) also.
+	// Should disconnect from channel(s) also. This transmits privileges if no one has them.
 
 	delete *clientIt;
 	_clients.erase(clientIt);
@@ -355,78 +357,121 @@ void	Server::nick(const t_commandParams &commandParams)
 {
 	(void)commandParams;
 	std::cout << "NICK command executed." << std::endl;
+
+	// This command should set the user's nickname. Careful.
+	// Nicknames should be unique to ensure accessibility !
+	// Nicknames are freed on client disconnection. There is not
+	// persistence.
 }
 
 void	Server::quit(const t_commandParams &commandParams)
 {
 	(void)commandParams;
 	std::cout << "QUIT command executed." << std::endl;
+	// This quits the server so destroys the affiliates client.
+	// See Server::handleClientDisconnection()
 }
 
 void	Server::join(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
+	// Should only be Channel.
 	(void)commandParams;
 	std::cout << "JOIN command executed." << std::endl;
+	// This adds the client to the channel's list and add it
+	// to it's active channel.
+	// If the channel doesn't exist, it creates it and
+	// gives operator privileges to the creator.
 }
 
 void	Server::whois(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
+	// Should only be Client.
 	(void)commandParams;
 	std::cout << "WHOIS command executed." << std::endl;
+	// Gets information about an existing user :
+	// nickname, name, blablabla ...
 }
 
 void	Server::privmsg(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
 	(void)commandParams;
 	std::cout << "PRIVMSG command executed." << std::endl;
+	// Sends a message to the target (Channel or Client).
 }
 
 void	Server::notice(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
 	(void)commandParams;
 	std::cout << "NOTICE command executed." << std::endl;
+	// Sends a server notice to a client, channel or everywhere.
 }
 
 void	Server::kick(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
+	// Should only be Client.
 	(void)commandParams;
 	std::cout << "KICK command executed." << std::endl;
+	// My current commandParams aren't adapted to this.
+	// Kicks a target out of a channel.
 }
 
 void	Server::mode(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
+	// Should only be Client.
 	(void)commandParams;
 	std::cout << "MODE command executed." << std::endl;
 }
 
 void	Server::topic(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
+	// Should only be Channel.
 	(void)commandParams;
 	std::cout << "TOPIC command executed." << std::endl;
 }
 
 void	Server::invite(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
+	// Should only be Client.
 	(void)commandParams;
 	std::cout << "INVITE command executed." << std::endl;
+	// Invites a client to a channel.
+	// My current commandParams aren't adapted to this.
 }
 
 void	Server::who(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
+	// Should only be Channel.
 	(void)commandParams;
 	std::cout << "WHO command executed." << std::endl;
+	//  List the users in a channel (names, real names, server info, status, ...)
 }
 
 void	Server::names(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
+	// Should only be Channel.
 	(void)commandParams;
 	std::cout << "NAMES command executed." << std::endl;
+	// Lists users of a channel (nicknames and status)
 }
 
 void	Server::part(const t_commandParams &commandParams)
 {
+	// check arguments : target could be Client* or Channel*
+	// Should only be Channel.
 	(void)commandParams;
 	std::cout << "PART command executed." << std::endl;
+	// Leaves a channel. A user can be member of multiple channels at the same time
+	// for persistence.
 }
 
 void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos)
