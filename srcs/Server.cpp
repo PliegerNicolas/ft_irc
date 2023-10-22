@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/22 03:04:40 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/22 21:49:43 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -43,7 +43,8 @@ Server::Server(const Server &other):
 	_serverSockets(other._serverSockets),
 	_pollFds(other._pollFds),
 	_clients(other._clients),
-	_channels(other._channels)
+	_channels(other._channels),
+	_commands(other._commands)
 {
 	if (DEBUG)
 	{
@@ -68,6 +69,7 @@ Server	&Server::operator=(const Server &other)
 		_pollFds = other._pollFds;
 		_clients = other._clients;
 		_channels = other._channels;
+		_commands = other._commands;
 	}
 
 	return (*this);
@@ -85,6 +87,7 @@ Server::~Server(void)
 	_pollFds.clear();
 	deleteClients();
 	deleteChannels();
+	_commands.clear();
 }
 
 /* Protected */
