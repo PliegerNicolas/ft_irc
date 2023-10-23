@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 12:15:04 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 13:05:10 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -296,6 +296,7 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 void	Server::setCommands(void)
 {
 	_commands["NICK"] = &Server::nick;
+	_commands["USER"] = &Server::user;
 	_commands["QUIT"] = &Server::quit;
 	_commands["JOIN"] = &Server::join;
 	_commands["WHOIS"] = &Server::whois;
@@ -351,6 +352,18 @@ void	Server::nick(const t_commandParams &commandParams)
 	// Should take only one argument (new nickname) but no message.
 	(void)commandParams;
 	std::cout << "NICK command executed." << std::endl;
+
+	// This command should set the user's nickname. Careful.
+	// Nicknames should be unique to ensure accessibility !
+	// Nicknames are freed on client disconnection. There is not
+	// persistence.
+}
+
+void	Server::user(const t_commandParams &commandParams)
+{
+	// Should take 3 arguments (username, hostname servername) and a message.
+	(void)commandParams;
+	std::cout << "USER command executed." << std::endl;
 
 	// This command should set the user's nickname. Careful.
 	// Nicknames should be unique to ensure accessibility !
