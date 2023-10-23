@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 13:03:46 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 13:14:03 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -122,6 +122,7 @@ class	Server
 		void	setCommands(void);
 		void	executeCommand(Client *client, std::string &clientBuffer,
 					const std::string &delimiter);
+		void	cap(const t_commandParams &commandParams);
 		void	nick(const t_commandParams &commandParams);
 		void	user(const t_commandParams &commandParams);
 		void	quit(const t_commandParams &commandParams);

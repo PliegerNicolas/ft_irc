@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 13:05:10 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 13:13:56 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -295,6 +295,7 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 
 void	Server::setCommands(void)
 {
+	_commands["CAP"] = &Server::cap;
 	_commands["NICK"] = &Server::nick;
 	_commands["USER"] = &Server::user;
 	_commands["QUIT"] = &Server::quit;
@@ -345,6 +346,13 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer,
 
 	commandParams = buildCommandParams(client, parameters, message);
 	(this->*command)(commandParams);
+}
+
+void	Server::cap(const t_commandParams &commandParams)
+{
+	// Unclear
+	(void)commandParams;
+	std::cout << "CAP command executed." << std::endl;
 }
 
 void	Server::nick(const t_commandParams &commandParams)
