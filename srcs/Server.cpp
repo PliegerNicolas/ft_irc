@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 13:13:56 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 14:21:12 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -328,7 +328,7 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer,
 	capitalizeString(word);
 	command = _commands.find(word)->second;
 
-	while (clientBuffer.find(delimiter) > 0 || clientBuffer[0] == ':')
+	while (clientBuffer.find(delimiter) > 0 && clientBuffer[0] != ':')
 	{
 		word = getNextWord(clientBuffer, delimiter);
 
@@ -357,6 +357,13 @@ void	Server::cap(const t_commandParams &commandParams)
 
 void	Server::nick(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() != 1))
+	{
+		std::cerr << "Error: invalid arguments in NICK command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take only one argument (new nickname) but no message.
 	(void)commandParams;
 	std::cout << "NICK command executed." << std::endl;
@@ -369,6 +376,13 @@ void	Server::nick(const t_commandParams &commandParams)
 
 void	Server::user(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
+		|| (commandParams.arguments.size() != 3))
+	{
+		std::cerr << "Error: invalid arguments in USER command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take 3 arguments (username, hostname servername) and a message.
 	(void)commandParams;
 	std::cout << "USER command executed." << std::endl;
@@ -381,6 +395,12 @@ void	Server::user(const t_commandParams &commandParams)
 
 void	Server::quit(const t_commandParams &commandParams)
 {
+	if ((commandParams.mask & SOURCE) != (SOURCE))
+	{
+		std::cerr << "Error: invalid arguments in QUIT command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should not take arguments nor message.
 	(void)commandParams;
 	std::cout << "QUIT command executed." << std::endl;
@@ -390,6 +410,13 @@ void	Server::quit(const t_commandParams &commandParams)
 
 void	Server::join(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() != 1))
+	{
+		std::cerr << "Error: invalid arguments in JOIN command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should only take one argument (channel) but no message ?/.
 	(void)commandParams;
 	std::cout << "JOIN command executed." << std::endl;
@@ -401,6 +428,13 @@ void	Server::join(const t_commandParams &commandParams)
 
 void	Server::whois(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() != 1))
+	{
+		std::cerr << "Error: invalid arguments in WHOIS command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should only take one argument (client name) but no message.
 	(void)commandParams;
 	std::cout << "WHOIS command executed." << std::endl;
@@ -410,6 +444,13 @@ void	Server::whois(const t_commandParams &commandParams)
 
 void	Server::privmsg(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
+		|| (commandParams.arguments.size() != 1))
+	{
+		std::cerr << "Error: invalid arguments in PRIVMSG command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should only take one argument (client name or channel name) AND a message.
 	(void)commandParams;
 	std::cout << "PRIVMSG command executed." << std::endl;
@@ -418,6 +459,13 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 void	Server::notice(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
+		|| (commandParams.arguments.size() != 1))
+	{
+		std::cerr << "Error: invalid arguments in NOTICE command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should only take one argument (client name or channel name) AND a message.
 	(void)commandParams;
 	std::cout << "NOTICE command executed." << std::endl;
@@ -426,6 +474,13 @@ void	Server::notice(const t_commandParams &commandParams)
 
 void	Server::kick(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
+	{
+		std::cerr << "Error: invalid arguments in KICK command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take 1 or 2 arguments (channel name + client name) AND a message (optional).
 	(void)commandParams;
 	std::cout << "KICK command executed." << std::endl;
@@ -434,6 +489,13 @@ void	Server::kick(const t_commandParams &commandParams)
 
 void	Server::mode(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
+	{
+		std::cerr << "Error: invalid arguments in MODE command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take 1 or 2 arguments (channel name + mode option(s)) but no message.
 	(void)commandParams;
 	std::cout << "MODE command executed." << std::endl;
@@ -441,6 +503,13 @@ void	Server::mode(const t_commandParams &commandParams)
 
 void	Server::topic(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
+		|| (commandParams.arguments.size() != 1))
+	{
+		std::cerr << "Error: invalid arguments in TOPIC command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take 1 argument (channel name) and a message.
 	(void)commandParams;
 	std::cout << "TOPIC command executed." << std::endl;
@@ -448,6 +517,13 @@ void	Server::topic(const t_commandParams &commandParams)
 
 void	Server::invite(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() != 2))
+	{
+		std::cerr << "Error: invalid arguments in INVITE command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take 2 argument (client name + channel name) but no message.
 	(void)commandParams;
 	std::cout << "INVITE command executed." << std::endl;
@@ -457,6 +533,13 @@ void	Server::invite(const t_commandParams &commandParams)
 
 void	Server::who(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() != 1))
+	{
+		std::cerr << "Error: invalid arguments in WHO command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take 1 argument (channel name) but no message.
 	(void)commandParams;
 	std::cout << "WHO command executed." << std::endl;
@@ -465,6 +548,17 @@ void	Server::who(const t_commandParams &commandParams)
 
 void	Server::names(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() != 1))
+	{	if ((commandParams.mask & SOURCE) != (SOURCE))
+	{
+		std::cerr << "Error: invalid arguments in QUIT command (temp message)." << std::endl;
+		return ;
+	}
+		std::cerr << "Error: invalid arguments in NAMES command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take 1 argument (channel name) but no message.
 	(void)commandParams;
 	std::cout << "NAMES command executed." << std::endl;
@@ -473,8 +567,19 @@ void	Server::names(const t_commandParams &commandParams)
 
 void	Server::part(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() != 1))
+	{
+		std::cerr << "Error: invalid arguments in PART command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take 1 argument (channel name) but no message.
-	(void)commandParams;
+	(void)commandParams;	if ((commandParams.mask & SOURCE) != (SOURCE))
+	{
+		std::cerr << "Error: invalid arguments in QUIT command (temp message)." << std::endl;
+		return ;
+	}
 	std::cout << "PART command executed." << std::endl;
 	// Leaves a channel. A user can be member of multiple channels at the same time
 	// for persistence.
@@ -482,6 +587,13 @@ void	Server::part(const t_commandParams &commandParams)
 
 void	Server::password(const t_commandParams &commandParams)
 {
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() != 1))
+	{
+		std::cerr << "Error: invalid arguments in PASS command (temp message)." << std::endl;
+		return ;
+	}
+
 	// Should take 1 argument (server password) but no message.
 	// Maybe should take 2 arguments (channel_name + channel password) but no message.
 	(void)commandParams;
@@ -557,6 +669,8 @@ Server::t_commandParams	Server::buildCommandParams(Client *source,
 {
 	t_commandParams	commandParameters;
 
+	commandParameters.mask = 0;
+
 	if (source)
 	{
 		commandParameters.mask |= SOURCE;
@@ -565,7 +679,7 @@ Server::t_commandParams	Server::buildCommandParams(Client *source,
 	else
 		commandParameters.source = NULL;
 
-	if (arguments.size() != 0)
+	if (arguments.size() > 0)
 	{
 		commandParameters.mask |= ARGUMENTS;
 		commandParameters.arguments = arguments;
