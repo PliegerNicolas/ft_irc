@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 13:30:31 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 01:27:04 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/23 11:27:25 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "utils/Utils.hpp"
@@ -55,7 +55,7 @@ std::string	getNextWord(std::string &str, const std::string &delimiter)
 		return (std::string());
 
 	size_t	i = 0;
-	while (str[i] && std::isspace(str[i]))
+	while (str[i] && !std::isspace(str[i]))
 		i++;
 
 	std::string	word = str.substr(0, i);

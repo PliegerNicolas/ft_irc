@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 01:25:56 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/23 11:02:37 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -68,22 +68,20 @@ class	Server
 		typedef enum setCommandParameters
 		{
 			SOURCE = (1 << 1),
-			CLIENT_NAME = (1 << 2),
-			CHANNEL_NAME = (1 << 3),
-			MESSAGE = (1 << 4)
+			ARGUMENTS = (1 << 2),
+			MESSAGE = (1 << 3)
 		}	t_setCommandParams;
 
 		typedef struct CommandParameters
 		{
-			int			mask;
-			Client		*source;
-			const char	*clientName;
-			const char	*channelName;
-			const char	*message;
+			int							mask;
+			Client						*source;
+			std::vector<std::string>	arguments;
+			const char					*message;
 		}	t_commandParams;
 
-		static t_commandParams	buildCommandParams(Client *source, const char *clientName,
-			const char *channelName, const char *message);
+		static t_commandParams	buildCommandParams(Client *source,
+			std::vector<std::string> &arguments, const char *message);
 
 		typedef void (Server::*CommandFunction)(const t_commandParams &params);
 
@@ -137,6 +135,7 @@ class	Server
 		void	who(const t_commandParams &commandParams);
 		void	names(const t_commandParams &commandParams);
 		void	part(const t_commandParams &commandParams);
+		void	password(const t_commandParams &commandParams);
 
 		void	putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos);
 		bool	isCommand(const std::string &clientBuffer);

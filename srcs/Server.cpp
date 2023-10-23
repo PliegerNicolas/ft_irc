@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 01:28:00 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/23 11:57:49 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -252,7 +252,8 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 			executeCommand(client, clientBuffer, delimiter);
 		else
 			putMessage(clientBuffer, delimiter, pos);
-		removeLeadingWhitespaces(clientBuffer, delimiter);
+
+		clientBuffer.erase(0, delimiter.length());
 	}
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
 
@@ -307,54 +308,47 @@ void	Server::setCommands(void)
 	_commands["WHO"] = &Server::who;
 	_commands["NAMES"] = &Server::names;
 	_commands["PART"] = &Server::part;
+	_commands["PASS"] = &Server::password;
 }
 
 void	Server::executeCommand(Client *client, std::string &clientBuffer,
 	const std::string &delimiter)
 {
-	(void)client;
-	(void)clientBuffer;
-	(void)delimiter;
-	/*
-	std::string			word;
+	CommandFunction				command;
+	std::string					word;
+	std::vector<std::string>	parameters;
+	const char					*message = NULL;
+	t_commandParams				commandParams;
 
-	word = getNextWord(clientBuffer);
+	word = getNextWord(clientBuffer, delimiter);
 	if (word[0] == '/')
 		word.erase(0, 1);
 	capitalizeString(word);
+	command = _commands.find(word)->second;
 
-	// We checked it's existance before.
-	CommandFunction	command = _commands.find(word)->second;
-
-	if (clientBuffer[0] != ':')
+	while (clientBuffer.find(delimiter) > 0 || clientBuffer[0] == ':')
 	{
-		word = getNextWord(clientBuffer);
+		word = getNextWord(clientBuffer, delimiter);
 
-		if (clientBuffer[0] == '#')
-		{
-			word.erase(0, 1);
-			// We've got here the channel's target name.
-		}
-		else
-		{
-			// We've got here the user's target name
-		}
+		parameters.push_back(word);
 	}
 
 	if (clientBuffer[0] == ':')
 	{
+		size_t	pos;
 		clientBuffer.erase(0, 1);
-		size_t	pos = clientBuffer.find(delimiter);
-		commandParams.message = clientBuffer.substr(0, pos).c_str();
+		pos = clientBuffer.find(delimiter);
+		message = clientBuffer.substr(0, pos).c_str();
 		clientBuffer.erase(0, pos);
 	}
 
+	commandParams = buildCommandParams(client, parameters, message);
 	(this->*command)(commandParams);
-	*/
 }
 
 void	Server::nick(const t_commandParams &commandParams)
 {
+	// Should take only one argument (new nickname) but no message.
 	(void)commandParams;
 	std::cout << "NICK command executed." << std::endl;
 
@@ -366,6 +360,7 @@ void	Server::nick(const t_commandParams &commandParams)
 
 void	Server::quit(const t_commandParams &commandParams)
 {
+	// Should not take arguments nor message.
 	(void)commandParams;
 	std::cout << "QUIT command executed." << std::endl;
 	// This quits the server so destroys the affiliates client.
@@ -374,8 +369,7 @@ void	Server::quit(const t_commandParams &commandParams)
 
 void	Server::join(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
-	// Should only be Channel.
+	// Should only take one argument (channel) but no message ?/.
 	(void)commandParams;
 	std::cout << "JOIN command executed." << std::endl;
 	// This adds the client to the channel's list and add it
@@ -386,8 +380,7 @@ void	Server::join(const t_commandParams &commandParams)
 
 void	Server::whois(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
-	// Should only be Client.
+	// Should only take one argument (client name) but no message.
 	(void)commandParams;
 	std::cout << "WHOIS command executed." << std::endl;
 	// Gets information about an existing user :
@@ -396,7 +389,7 @@ void	Server::whois(const t_commandParams &commandParams)
 
 void	Server::privmsg(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
+	// Should only take one argument (client name or channel name) AND a message.
 	(void)commandParams;
 	std::cout << "PRIVMSG command executed." << std::endl;
 	// Sends a message to the target (Channel or Client).
@@ -404,7 +397,7 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 void	Server::notice(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
+	// Should only take one argument (client name or channel name) AND a message.
 	(void)commandParams;
 	std::cout << "NOTICE command executed." << std::endl;
 	// Sends a server notice to a client, channel or everywhere.
@@ -412,34 +405,29 @@ void	Server::notice(const t_commandParams &commandParams)
 
 void	Server::kick(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
-	// Should only be Client.
+	// Should take 1 or 2 arguments (channel name + client name) AND a message (optional).
 	(void)commandParams;
 	std::cout << "KICK command executed." << std::endl;
-	// My current commandParams aren't adapted to this.
 	// Kicks a target out of a channel.
 }
 
 void	Server::mode(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
-	// Should only be Client.
+	// Should take 1 or 2 arguments (channel name + mode option(s)) but no message.
 	(void)commandParams;
 	std::cout << "MODE command executed." << std::endl;
 }
 
 void	Server::topic(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
-	// Should only be Channel.
+	// Should take 1 argument (channel name) and a message.
 	(void)commandParams;
 	std::cout << "TOPIC command executed." << std::endl;
 }
 
 void	Server::invite(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
-	// Should only be Client.
+	// Should take 2 argument (client name + channel name) but no message.
 	(void)commandParams;
 	std::cout << "INVITE command executed." << std::endl;
 	// Invites a client to a channel.
@@ -448,8 +436,7 @@ void	Server::invite(const t_commandParams &commandParams)
 
 void	Server::who(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
-	// Should only be Channel.
+	// Should take 1 argument (channel name) but no message.
 	(void)commandParams;
 	std::cout << "WHO command executed." << std::endl;
 	//  List the users in a channel (names, real names, server info, status, ...)
@@ -457,8 +444,7 @@ void	Server::who(const t_commandParams &commandParams)
 
 void	Server::names(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
-	// Should only be Channel.
+	// Should take 1 argument (channel name) but no message.
 	(void)commandParams;
 	std::cout << "NAMES command executed." << std::endl;
 	// Lists users of a channel (nicknames and status)
@@ -466,12 +452,19 @@ void	Server::names(const t_commandParams &commandParams)
 
 void	Server::part(const t_commandParams &commandParams)
 {
-	// check arguments : target could be Client* or Channel*
-	// Should only be Channel.
+	// Should take 1 argument (channel name) but no message.
 	(void)commandParams;
 	std::cout << "PART command executed." << std::endl;
 	// Leaves a channel. A user can be member of multiple channels at the same time
 	// for persistence.
+}
+
+void	Server::password(const t_commandParams &commandParams)
+{
+	// Should take 1 argument (server password) but no message.
+	// Maybe should take 2 arguments (channel_name + channel password) but no message.
+	(void)commandParams;
+	std::cout << "PASS command executed." << std::endl;
 }
 
 void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos)
@@ -488,9 +481,10 @@ void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter,
 	}
 	else
 	{
-		pos += delimiter.length();
+		pos = clientBuffer.find(delimiter);
 		message = clientBuffer.substr(0, pos);
 		clientBuffer.erase(0, pos);
+		message += delimiter;
 	}
 
 	// TEMP
@@ -512,11 +506,11 @@ bool	Server::isCommand(const std::string &clientBuffer)
 		command.erase(0, 1);
 	capitalizeString(command);
 
-	CommandsIterator	commandIt = _commands.find(command);
+	CommandsIterator commandIt = _commands.find(command);
 
-	if (commandIt == _commands.end())
-		return (false);
-	return (true);
+	if (commandIt != _commands.end())
+		return (true);
+	return (false);
 }
 
 /* Getters */
@@ -538,7 +532,7 @@ bool	Server::isCommand(const std::string &clientBuffer)
 	/* Private */
 
 Server::t_commandParams	Server::buildCommandParams(Client *source,
-	const char *clientName, const char *channelName, const char *message)
+	std::vector<std::string> &arguments, const char *message)
 {
 	t_commandParams	commandParameters;
 	memset(&commandParameters, 0, sizeof(commandParameters));
@@ -549,16 +543,10 @@ Server::t_commandParams	Server::buildCommandParams(Client *source,
 		commandParameters.source = source;
 	}
 
-	if (clientName)
+	if (arguments.size() != 0)
 	{
-		commandParameters.mask |= CLIENT_NAME;
-		commandParameters.clientName = clientName;
-	}
-
-	if (channelName)
-	{
-		commandParameters.mask |= CHANNEL_NAME;
-		commandParameters.channelName = channelName;
+		commandParameters.mask |= ARGUMENTS;
+		commandParameters.arguments = arguments;
 	}
 
 	if (message)
