@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 12:09:26 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 12:15:04 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -535,13 +535,14 @@ Server::t_commandParams	Server::buildCommandParams(Client *source,
 	std::vector<std::string> &arguments, std::string &message)
 {
 	t_commandParams	commandParameters;
-	memset(&commandParameters, 0, sizeof(commandParameters));
 
 	if (source)
 	{
 		commandParameters.mask |= SOURCE;
 		commandParameters.source = source;
 	}
+	else
+		commandParameters.source = NULL;
 
 	if (arguments.size() != 0)
 	{
