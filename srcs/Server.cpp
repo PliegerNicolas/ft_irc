@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 11:57:49 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 12:09:26 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -317,7 +317,7 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer,
 	CommandFunction				command;
 	std::string					word;
 	std::vector<std::string>	parameters;
-	const char					*message = NULL;
+	std::string					message;
 	t_commandParams				commandParams;
 
 	word = getNextWord(clientBuffer, delimiter);
@@ -338,7 +338,7 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer,
 		size_t	pos;
 		clientBuffer.erase(0, 1);
 		pos = clientBuffer.find(delimiter);
-		message = clientBuffer.substr(0, pos).c_str();
+		message = clientBuffer.substr(0, pos);
 		clientBuffer.erase(0, pos);
 	}
 
@@ -532,7 +532,7 @@ bool	Server::isCommand(const std::string &clientBuffer)
 	/* Private */
 
 Server::t_commandParams	Server::buildCommandParams(Client *source,
-	std::vector<std::string> &arguments, const char *message)
+	std::vector<std::string> &arguments, std::string &message)
 {
 	t_commandParams	commandParameters;
 	memset(&commandParameters, 0, sizeof(commandParameters));
@@ -549,7 +549,7 @@ Server::t_commandParams	Server::buildCommandParams(Client *source,
 		commandParameters.arguments = arguments;
 	}
 
-	if (message)
+	if (!message.empty())
 	{
 		commandParameters.mask |= MESSAGE;
 		commandParameters.message = message;

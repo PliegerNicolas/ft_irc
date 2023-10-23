@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 11:02:37 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 12:09:44 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -77,11 +77,11 @@ class	Server
 			int							mask;
 			Client						*source;
 			std::vector<std::string>	arguments;
-			const char					*message;
+			std::string					message;
 		}	t_commandParams;
 
 		static t_commandParams	buildCommandParams(Client *source,
-			std::vector<std::string> &arguments, const char *message);
+			std::vector<std::string> &arguments, std::string &message);
 
 		typedef void (Server::*CommandFunction)(const t_commandParams &params);
 
