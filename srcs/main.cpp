@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 11:27:48 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 15:13:42 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -57,7 +57,7 @@ int	main(int argc, char **argv)
 		serverConfig = ServerSockets::buildServerConfig(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP,
 			"0.0.0.0", argv[1]);
 
-		Server	serv(serverConfig);
+		Server	serv(serverConfig, argv[2]);
 	}
 	catch (const std::exception &e)
 	{

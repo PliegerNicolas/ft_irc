@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 14:21:12 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 16:20:06 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Server.hpp"
@@ -17,8 +17,10 @@
 
 /* Public */
 
-Server::Server(const ServerSockets::t_serverconfig &serverConfig):
-	_serverSockets(ServerSockets(serverConfig))
+Server::Server(const ServerSockets::t_serverconfig &serverConfig,
+	const std::string &password):
+	_serverSockets(ServerSockets(serverConfig)),
+	_password(password)
 {
 	if (DEBUG)
 	{
@@ -44,7 +46,8 @@ Server::Server(const Server &other):
 	_pollFds(other._pollFds),
 	_clients(other._clients),
 	_channels(other._channels),
-	_commands(other._commands)
+	_commands(other._commands),
+	_password(other._password)
 {
 	if (DEBUG)
 	{
@@ -70,6 +73,7 @@ Server	&Server::operator=(const Server &other)
 		_clients = other._clients;
 		_channels = other._channels;
 		_commands = other._commands;
+		_password = other._password;
 	}
 
 	return (*this);
@@ -94,7 +98,8 @@ Server::~Server(void)
 /* Private */
 
 Server::Server(void):
-	_serverSockets(ServerSockets())
+	_serverSockets(ServerSockets()),
+	_password("")
 {
 	if (DEBUG)
 	{
@@ -251,11 +256,18 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 		if (isCommand(clientBuffer))
 			executeCommand(client, clientBuffer, delimiter);
 		else
-			putMessage(clientBuffer, delimiter, pos);
+			putMessage(client, delimiter, pos);
 
 		clientBuffer.erase(0, delimiter.length());
 	}
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
+
+	if ((~(client->getConnectionRetries()) & VERIFIED)
+		&& client->getConnectionRetries() >= MAX_CONNECTION_RETRIES)
+	{
+		std::cerr << "Error: Shesh too much retries (temp msg)." << std::endl;
+		return (CLIENT_DISCONNECTED);
+	}
 
 	return (CLIENT_CONNECTED);
 }
@@ -310,7 +322,7 @@ void	Server::setCommands(void)
 	_commands["WHO"] = &Server::who;
 	_commands["NAMES"] = &Server::names;
 	_commands["PART"] = &Server::part;
-	_commands["PASS"] = &Server::password;
+	_commands["PASS"] = &Server::pass;
 }
 
 void	Server::executeCommand(Client *client, std::string &clientBuffer,
@@ -357,6 +369,12 @@ void	Server::cap(const t_commandParams &commandParams)
 
 void	Server::nick(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED))
+	{
+		std::cerr << "Error: get VERIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
 	{
@@ -364,18 +382,38 @@ void	Server::nick(const t_commandParams &commandParams)
 		return ;
 	}
 
-	// Should take only one argument (new nickname) but no message.
-	(void)commandParams;
-	std::cout << "NICK command executed." << std::endl;
+	const std::string	&nickname = commandParams.arguments[0];
+	Client				*source = commandParams.source;
 
-	// This command should set the user's nickname. Careful.
-	// Nicknames should be unique to ensure accessibility !
-	// Nicknames are freed on client disconnection. There is not
-	// persistence.
+	// Check is 9 characteres max.
+	if (nickname.length() < 0 && nickname.length() >= 10)
+	{
+		std::cerr << "Error: nickname too long in NICK command (temp message)." << std::endl;
+		return ;
+	}
+
+	// Check if given nickname is unique.
+	for(ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		if (nickname == (*it)->getNickname())
+		{
+			std::cerr << "Error: nickname not unique in NICK command (temp message)." << std::endl;
+			return ;
+		}
+	}
+
+	source->setNickname(nickname);
+	source->setServerPermissions(IDENTIFIED);
 }
 
 void	Server::user(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED))
+	{
+		std::cerr << "Error: get VERIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
 		|| (commandParams.arguments.size() != 3))
 	{
@@ -410,6 +448,12 @@ void	Server::quit(const t_commandParams &commandParams)
 
 void	Server::join(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
+	{
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
 	{
@@ -428,6 +472,12 @@ void	Server::join(const t_commandParams &commandParams)
 
 void	Server::whois(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
+	{
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
 	{
@@ -444,6 +494,12 @@ void	Server::whois(const t_commandParams &commandParams)
 
 void	Server::privmsg(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
+	{
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
 		|| (commandParams.arguments.size() != 1))
 	{
@@ -459,6 +515,12 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 void	Server::notice(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
+	{
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
 		|| (commandParams.arguments.size() != 1))
 	{
@@ -474,6 +536,12 @@ void	Server::notice(const t_commandParams &commandParams)
 
 void	Server::kick(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
+	{
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
 	{
@@ -489,6 +557,12 @@ void	Server::kick(const t_commandParams &commandParams)
 
 void	Server::mode(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
+	{
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
 	{
@@ -503,6 +577,12 @@ void	Server::mode(const t_commandParams &commandParams)
 
 void	Server::topic(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
+	{
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
 		|| (commandParams.arguments.size() != 1))
 	{
@@ -517,6 +597,12 @@ void	Server::topic(const t_commandParams &commandParams)
 
 void	Server::invite(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
+	{
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 2))
 	{
@@ -533,6 +619,12 @@ void	Server::invite(const t_commandParams &commandParams)
 
 void	Server::who(const t_commandParams &commandParams)
 {
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
+	{
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+		return ;
+	}
+
 	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
 	{
@@ -548,13 +640,15 @@ void	Server::who(const t_commandParams &commandParams)
 
 void	Server::names(const t_commandParams &commandParams)
 {
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() != 1))
-	{	if ((commandParams.mask & SOURCE) != (SOURCE))
+	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
 	{
-		std::cerr << "Error: invalid arguments in QUIT command (temp message)." << std::endl;
+		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
 		return ;
 	}
+
+	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+		|| (commandParams.arguments.size() != 1))
+	{
 		std::cerr << "Error: invalid arguments in NAMES command (temp message)." << std::endl;
 		return ;
 	}
@@ -575,17 +669,18 @@ void	Server::part(const t_commandParams &commandParams)
 	}
 
 	// Should take 1 argument (channel name) but no message.
-	(void)commandParams;	if ((commandParams.mask & SOURCE) != (SOURCE))
+	if ((commandParams.mask & SOURCE) != (SOURCE))
 	{
 		std::cerr << "Error: invalid arguments in QUIT command (temp message)." << std::endl;
 		return ;
 	}
+
 	std::cout << "PART command executed." << std::endl;
 	// Leaves a channel. A user can be member of multiple channels at the same time
 	// for persistence.
 }
 
-void	Server::password(const t_commandParams &commandParams)
+void	Server::pass(const t_commandParams &commandParams)
 {
 	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
@@ -594,14 +689,22 @@ void	Server::password(const t_commandParams &commandParams)
 		return ;
 	}
 
-	// Should take 1 argument (server password) but no message.
-	// Maybe should take 2 arguments (channel_name + channel password) but no message.
-	(void)commandParams;
-	std::cout << "PASS command executed." << std::endl;
+	Client	*source = commandParams.source;
+
+	if (source->getServerPermissions() & VERIFIED)
+		return ;
+	else if (_password != commandParams.arguments[0])
+	{
+		std::cerr << "Error: wrong password PASS command (temp message)." << std::endl;
+		source->incrementConnectionRetries();
+	}
+	else
+		source->setServerPermissions(VERIFIED);
 }
 
-void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos)
+void	Server::putMessage(Client *client, const std::string &delimiter, size_t &pos)
 {
+	std::string			&clientBuffer = client->getBuffer();
 	std::string			message;
 
 	if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
@@ -622,7 +725,7 @@ void	Server::putMessage(std::string &clientBuffer, const std::string &delimiter,
 
 	// TEMP
 	if (message != delimiter)
-		std::cout << "Client n°" << "x" << ": " << message;
+		std::cout << "Client " << client->getNickname() << ": " << message;
 }
 
 bool	Server::isCommand(const std::string &clientBuffer)
@@ -693,3 +796,4 @@ Server::t_commandParams	Server::buildCommandParams(Client *source,
 
 	return (commandParameters);
 }
+

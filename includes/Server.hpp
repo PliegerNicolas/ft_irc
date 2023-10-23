@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 13:14:03 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 15:56:20 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -29,6 +29,7 @@
 
 #define DELIMITER "\n"			//"\r\n" for real IRC servers
 #define MSG_BUFFER_SIZE 512
+#define MAX_CONNECTION_RETRIES 3
 
 class	Client;
 class	Channel;
@@ -38,8 +39,14 @@ class	Server
 	public:
 		/* Attributs */
 
+		typedef enum ServerPermissions
+		{
+			VERIFIED = (1 << 0),
+			IDENTIFIED = (1 << 1)
+		}	t_serverPermissions;
+
 		/* Constructors & Destructors */
-		Server(const ServerSockets::t_serverconfig &serverConfig);
+		Server(const ServerSockets::t_serverconfig &serverConfig, const std::string &password);
 
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
@@ -103,6 +110,8 @@ class	Server
 		Channels		_channels;
 		Commands		_commands;
 
+		std::string		_password;
+
 		/* Constructors & Destructors */
 		Server(void);
 
@@ -122,6 +131,7 @@ class	Server
 		void	setCommands(void);
 		void	executeCommand(Client *client, std::string &clientBuffer,
 					const std::string &delimiter);
+
 		void	cap(const t_commandParams &commandParams);
 		void	nick(const t_commandParams &commandParams);
 		void	user(const t_commandParams &commandParams);
@@ -137,8 +147,8 @@ class	Server
 		void	who(const t_commandParams &commandParams);
 		void	names(const t_commandParams &commandParams);
 		void	part(const t_commandParams &commandParams);
-		void	password(const t_commandParams &commandParams);
+		void	pass(const t_commandParams &commandParams);
 
-		void	putMessage(std::string &clientBuffer, const std::string &delimiter, size_t &pos);
+		void	putMessage(Client *client, const std::string &delimiter, size_t &pos);
 		bool	isCommand(const std::string &clientBuffer);
 };

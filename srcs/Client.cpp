@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 10:33:19 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/23 16:21:20 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -17,7 +17,9 @@
 
 Client::Client(const ASocket::t_socket &serverSocket):
 	_clientSocket(ClientSocket(serverSocket)),
-	_currentChannel(NULL)
+	_currentChannel(NULL),
+	_serverPermissions(0),
+	_connectionRetries(1)
 {
 	if (DEBUG)
 	{
@@ -29,7 +31,9 @@ Client::Client(const ASocket::t_socket &serverSocket):
 
 Client::Client(const Client &other):
 	_clientSocket(other._clientSocket),
-	_currentChannel(other._currentChannel)
+	_currentChannel(other._currentChannel),
+	_serverPermissions(other._serverPermissions),
+	_connectionRetries(other._connectionRetries)
 {
 	if (DEBUG)
 	{
@@ -52,6 +56,8 @@ Client	&Client::operator=(const Client &other)
 	{
 		_clientSocket = other._clientSocket;
 		_currentChannel = other._currentChannel;
+		_serverPermissions = other._serverPermissions;
+		_connectionRetries = other._connectionRetries;
 	}
 
 	return (*this);
@@ -70,7 +76,9 @@ Client::~Client(void)
 	/* Private */
 
 Client::Client(void):
-	_clientSocket(ClientSocket())
+	_clientSocket(ClientSocket()),
+	_serverPermissions(0),
+	_connectionRetries(1)
 {
 	if (DEBUG)
 	{
@@ -96,6 +104,16 @@ const struct pollfd	Client::generatePollFd(void)
 	return (pollFd);
 }
 
+void	Client::closeSocketFd(void)
+{
+	close(_clientSocket.getSocket().fd);
+}
+
+void	Client::incrementConnectionRetries(void)
+{
+	_connectionRetries++;
+}
+
 	/* Protected */
 	/* Private */
 
@@ -108,9 +126,24 @@ std::string	&Client::getBuffer(void)
 	return (_messageBuffer);
 }
 
-void	Client::closeSocketFd(void)
+int	Client::getSocketFd(void)
 {
-	close(_clientSocket.getSocket().fd);
+	return (_clientSocket.getSocket().fd);
+}
+
+const std::string	&Client::getNickname(void) const
+{
+	return (_nickname);
+}
+
+short	&Client::getConnectionRetries(void)
+{
+	return (_connectionRetries);
+}
+
+int	&Client::getServerPermissions(void)
+{
+	return (_serverPermissions);
 }
 
 	/* Protected */
@@ -127,6 +160,7 @@ int	Client::readAndStoreFdBuffer(Server &server, const struct pollfd &pollFd)
 	memset(recvBuffer, 0, sizeof(recvBuffer));
 
 	readBytes = recv(pollFd.fd, recvBuffer, sizeof(recvBuffer), 0);
+		const int			&getSocketFd(void);
 	if (readBytes < 0)
 	{
 		server.deleteClients();
@@ -137,6 +171,16 @@ int	Client::readAndStoreFdBuffer(Server &server, const struct pollfd &pollFd)
 
 	_messageBuffer.append(recvBuffer, readBytes);
 	return (CLIENT_CONNECTED);
+}
+
+void	Client::setNickname(const std::string &nickname)
+{
+	_nickname = nickname;
+}
+
+void	Client::setServerPermissions(const int &mask)
+{
+	_serverPermissions |= mask;
 }
 
 	/* Protected */
