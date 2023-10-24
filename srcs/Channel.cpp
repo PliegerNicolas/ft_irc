@@ -6,7 +6,7 @@
 /*   By: nplieger <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/24 16:27:28 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/24 16:49:47 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ Channel::Channel(void):
 /* Member functions */
 
 	/* Public */
+
 bool	Channel::isUserRegistered(const Client* client) const
 {
 	for (UsersConstIterator it = _users.begin(); it != _users.end(); ++it)
@@ -90,8 +91,10 @@ bool	Channel::isUserRegistered(const Client* client) const
 		if (client == it->client)
 			return (true);
 	}
+
 	return (false);
 }
+
 	/* Protected */
 	/* Private */
 
