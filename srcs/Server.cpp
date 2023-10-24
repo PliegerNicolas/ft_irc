@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 13:25:24 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/24 13:49:31 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -681,6 +681,13 @@ void	Server::pass(const t_commandParams &commandParams)
 void	Server::putMessage(Client *client, const std::string &delimiter, size_t &pos)
 {
 	std::string			&clientBuffer = client->getBuffer();
+
+	if (isVERIFIEDandIDENTIFIED(client))
+	{
+		clientBuffer.clear();
+		return ;
+	}
+
 	std::string			message;
 
 	if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
