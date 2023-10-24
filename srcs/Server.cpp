@@ -330,21 +330,31 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer,
 	const std::string &delimiter)
 {
 	CommandFunction				command;
+	t_commandParams				commandParams;
+
+	{
+		std::string	word = getNextWord(clientBuffer, delimiter);
+		if (word[0] == '/')
+			word.erase(0, 1);
+		capitalizeString(word);
+		command = _commands.find(word)->second;
+	}
+
+	commandParams = parseCommand(client, clientBuffer, delimiter);
+	(this->*command)(commandParams);
+}
+
+Server::t_commandParams	Server::parseCommand(Client *client, std::string &clientBuffer,
+	const std::string &delimiter)
+{
+	t_commandParams				commandParams;
 	std::string					word;
 	std::vector<std::string>	parameters;
 	std::string					message;
-	t_commandParams				commandParams;
-
-	word = getNextWord(clientBuffer, delimiter);
-	if (word[0] == '/')
-		word.erase(0, 1);
-	capitalizeString(word);
-	command = _commands.find(word)->second;
 
 	while (clientBuffer.find(delimiter) > 0 && clientBuffer[0] != ':')
 	{
 		word = getNextWord(clientBuffer, delimiter);
-
 		parameters.push_back(word);
 	}
 
@@ -357,8 +367,7 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer,
 		clientBuffer.erase(0, pos);
 	}
 
-	commandParams = buildCommandParams(client, parameters, message);
-	(this->*command)(commandParams);
+	return (buildCommandParams(client, parameters, message));
 }
 
 void	Server::cap(const t_commandParams &commandParams)
@@ -653,7 +662,10 @@ void	Server::pass(const t_commandParams &commandParams)
 	Client	*source = commandParams.source;
 
 	if (source->getServerPermissions() & VERIFIED)
+	{
+		std::cerr << "Error: already VERIFIED in PASS command (temp message)." << std::endl;
 		return ;
+	}
 	else if (_password != commandParams.arguments[0])
 	{
 		std::cerr << "Error: wrong password PASS command (temp message)." << std::endl;
@@ -663,6 +675,9 @@ void	Server::pass(const t_commandParams &commandParams)
 		source->setServerPermissions(VERIFIED);
 }
 
+
+
+
 void	Server::putMessage(Client *client, const std::string &delimiter, size_t &pos)
 {
 	std::string			&clientBuffer = client->getBuffer();
@@ -671,7 +686,7 @@ void	Server::putMessage(Client *client, const std::string &delimiter, size_t &po
 	if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
 	{
 		pos = MSG_BUFFER_SIZE - delimiter.length();
-		pos = findLastWordEnd(clientBuffer, pos);
+		pos = findLastChar(clientBuffer, pos);
 		message = clientBuffer.substr(0, pos);
 		clientBuffer.erase(0, pos);
 		message += delimiter;

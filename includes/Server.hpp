@@ -129,28 +129,30 @@ class	Server
 		void	handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i);
 
 		// Commands
-		void	setCommands(void);
-		void	executeCommand(Client *client, std::string &clientBuffer,
-					const std::string &delimiter);
+		void			setCommands(void);
+		void			executeCommand(Client *client, std::string &clientBuffer,
+							const std::string &delimiter);
+		t_commandParams	parseCommand(Client *client, std::string &clientBuffer,
+							const std::string &delimiter);
 
-		void	cap(const t_commandParams &commandParams);
-		void	nick(const t_commandParams &commandParams);
-		void	user(const t_commandParams &commandParams);
-		void	quit(const t_commandParams &commandParams);
-		void	join(const t_commandParams &commandParams);
-		void	whois(const t_commandParams &commandParams);
-		void	privmsg(const t_commandParams &commandParams);
-		void	notice(const t_commandParams &commandParams);
-		void	kick(const t_commandParams &commandParams);
-		void	mode(const t_commandParams &commandParams);
-		void	topic(const t_commandParams &commandParams);
-		void	invite(const t_commandParams &commandParams);
-		void	who(const t_commandParams &commandParams);
-		void	names(const t_commandParams &commandParams);
-		void	part(const t_commandParams &commandParams);
-		void	pass(const t_commandParams &commandParams);
+		void			cap(const t_commandParams &commandParams);
+		void			nick(const t_commandParams &commandParams);
+		void			user(const t_commandParams &commandParams);
+		void			quit(const t_commandParams &commandParams);
+		void			join(const t_commandParams &commandParams);
+		void			whois(const t_commandParams &commandParams);
+		void			privmsg(const t_commandParams &commandParams);
+		void			notice(const t_commandParams &commandParams);
+		void			kick(const t_commandParams &commandParams);
+		void			mode(const t_commandParams &commandParams);
+		void			topic(const t_commandParams &commandParams);
+		void			invite(const t_commandParams &commandParams);
+		void			who(const t_commandParams &commandParams);
+		void			names(const t_commandParams &commandParams);
+		void			part(const t_commandParams &commandParams);
+		void			pass(const t_commandParams &commandParams);
 
-		void	putMessage(Client *client, const std::string &delimiter, size_t &pos);
-		bool	isCommand(const std::string &clientBuffer);
-		bool	isVERIFIEDandIDENTIFIED(const Client *client);
+		void			putMessage(Client *client, const std::string &delimiter, size_t &pos);
+		bool			isCommand(const std::string &clientBuffer);
+    bool      isVERIFIEDandIDENTIFIED(const Client *client);
 };

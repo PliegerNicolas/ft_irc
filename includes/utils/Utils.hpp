@@ -15,7 +15,7 @@
 #include <string>
 
 void				removeLeadingWhitespaces(std::string &str, const std::string &delimiter);
-size_t				findLastWordEnd(const std::string &str, const size_t &strLen);
+size_t				findLastChar(const std::string &str, const size_t &strLen);
 void				capitalizeString(std::string &str);
 
 std::string			getNextWord(std::string &str, const std::string &delimiter);
