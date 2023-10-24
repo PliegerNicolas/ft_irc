@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 14:54:58 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 15:01:57 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -308,22 +308,22 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 
 void	Server::setCommands(void)
 {
-	_commands["CAP"] = &Server::cap;
+	_commands["PASS"] = &Server::pass;
 	_commands["NICK"] = &Server::nick;
 	_commands["USER"] = &Server::user;
-	_commands["QUIT"] = &Server::quit;
 	_commands["JOIN"] = &Server::join;
+	_commands["INVITE"] = &Server::invite;
 	_commands["WHOIS"] = &Server::whois;
 	_commands["PRIVMSG"] = &Server::privmsg;
-	_commands["NOTICE"] = &Server::notice;
-	_commands["KICK"] = &Server::kick;
 	_commands["MODE"] = &Server::mode;
+	_commands["KICK"] = &Server::kick;
+	_commands["NOTICE"] = &Server::notice;
 	_commands["TOPIC"] = &Server::topic;
-	_commands["INVITE"] = &Server::invite;
 	_commands["WHO"] = &Server::who;
 	_commands["NAMES"] = &Server::names;
 	_commands["PART"] = &Server::part;
-	_commands["PASS"] = &Server::pass;
+	_commands["CAP"] = &Server::cap;
+	_commands["QUIT"] = &Server::quit;
 }
 
 void	Server::executeCommand(Client *client, std::string &clientBuffer,
@@ -660,8 +660,9 @@ void	Server::pass(const t_commandParams &commandParams)
 		source->setServerPermissions(VERIFIED);
 }
 
-
-
+/* ************************************************************************** */
+/* *                            Server utilities                            * */
+/* ************************************************************************** */
 
 void	Server::putMessage(Client *client, const std::string &delimiter, size_t &pos)
 {
