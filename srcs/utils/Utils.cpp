@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 13:30:31 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 11:27:25 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 12:14:03 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "utils/Utils.hpp"
@@ -24,7 +24,7 @@ void	removeLeadingWhitespaces(std::string &str, const std::string &delimiter)
 	str.erase(0, i);
 }
 
-size_t	findLastWordEnd(const std::string &str, const size_t &strLen)
+size_t	findLastChar(const std::string &str, const size_t &strLen)
 {
 	size_t	pos = strLen;
 	size_t	middle = strLen / 2;
