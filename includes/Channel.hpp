@@ -6,7 +6,7 @@
 /*   By: nplieger <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/23 15:44:46 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 16:27:14 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -44,6 +44,12 @@ class	Channel
 			MODE = (1 << 4)
 		}	t_userPerms;
 
+		typedef struct User
+		{
+			const Client*	client;
+			size_t			permissionsMask;
+		}	t_user;
+
 		/* Attributs */
 
 		/* Constructors & Destructors */
@@ -56,6 +62,18 @@ class	Channel
 
 		/* Member functions */
 
+		void	addUser(const Client* client, const int &mask);
+		bool	isUserRegistered(const Client* client) const;
+
+		// GETTERS
+
+		int	getUserPerms(void);
+		int	getHalfOpsPerms(void);
+		int	getOpsPerms(void);
+		int	getAdminPerms(void);
+
+		// SETTERS
+
 	protected:
 		/* Attributs */
 
@@ -65,15 +83,10 @@ class	Channel
 	private:
 		/* Typedefs */
 
-		typedef struct User
-		{
-			const Client*	client;
-			size_t			permissionsMask;
-		}	t_user;
-
 		typedef std::vector<t_user>	Users;
 
 		typedef Users::iterator		UsersIterator;
+		typedef Users::const_iterator	UsersConstIterator;
 
 		/* Attributs */
 
@@ -87,10 +100,6 @@ class	Channel
 		t_user	createUser(const Client* client, const size_t &permissionsMask);
 
 		// GETTERS
-		size_t	getUserPerms(void);
-		size_t	getHalfOpsPerms(void);
-		size_t	getOpsPerms(void);
-		size_t	getAdminPerms(void);
 
 		// SETTERS
 };

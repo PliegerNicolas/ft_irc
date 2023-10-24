@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 13:17:59 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/24 16:04:02 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -56,10 +56,12 @@ class	Client
 		const std::string	&getNickname(void) const;
 		short				&getConnectionRetries(void);
 		int				getServerPermissions(void) const;
+		Channel				*getActiveChannel(void);
 
 		// Setter
 		void				setNickname(const std::string &nickname);
 		void				setServerPermissions(const int &mask);
+		void				setActiveChannel(Channel *channel);
 
 	protected:
 		/* Attributs */
@@ -76,7 +78,7 @@ class	Client
 
 		/* Attributs */
 		ClientSocket		_clientSocket;
-		Channel				*_currentChannel;
+		Channel				*_activeChannel;
 		Channels			_channels;
 
 		int					_serverPermissions;

@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 15:13:08 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 16:42:03 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -463,12 +463,38 @@ void	Server::join(const t_commandParams &commandParams)
 		std::cerr << " in JOIN command (temp message)." << std::endl;
 		return ;
 	}
+	
+	std::string channelName = commandParams.arguments[0];
+
+	if (channelName[0] == '#')
+		channelName.erase(0, 1);
+	else
+	{
+		std::cerr << "Error: invalid channel name." << std::endl;
+		return;
+	}
+
+	Client		*client = commandParams.source;
+	Channel		*channel;
+	ChannelsIterator itChannel = _channels.find(channelName);
+
+	if (itChannel != _channels.end())
+	{
+		channel = itChannel->second;
+		if (!channel->isUserRegistered(client))
+			channel->addUser(client, channel->getUserPerms());
+	}
+	else
+	{
+		channel = new Channel(client);
+		_channels[channelName] = channel;
+	}
+	client->setActiveChannel(channel);
 
 	// This adds the client to the channel's list and add it
 	// to it's active channel.
 	// If the channel doesn't exist, it creates it and
 	// gives operator privileges to the creator.
-	std::cout << "JOIN command executed." << std::endl;
 }
 
 void	Server::whois(const t_commandParams &commandParams)

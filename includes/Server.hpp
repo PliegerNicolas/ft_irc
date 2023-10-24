@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 14:28:06 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 15:40:31 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ class	Server
 		const struct pollfd		generatePollFd(const ASocket::t_socket &serverSocket);
 
 		// Getter
-
+		
 		// Setter
 
 	protected:
