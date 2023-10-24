@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 13:49:31 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 14:54:58 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -370,8 +370,14 @@ Server::t_commandParams	Server::parseCommand(Client *client, std::string &client
 	return (buildCommandParams(client, parameters, message));
 }
 
+/* ************************************************************************** */
+/* *                           Command Functions                            * */
+/* ************************************************************************** */
+
 void	Server::cap(const t_commandParams &commandParams)
 {
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
+		return ;
 	// Unclear
 	(void)commandParams;
 	std::cout << "CAP command executed." << std::endl;
@@ -379,34 +385,32 @@ void	Server::cap(const t_commandParams &commandParams)
 
 void	Server::nick(const t_commandParams &commandParams)
 {
-	if (areBitsNotSet(commandParams.source->getServerPermissions(), VERIFIED))
-	{
-		std::cerr << "Error: get VERIFIED (temp message)." << std::endl;
+	if (verifyServerPermissions(commandParams.source, VERIFIED))
 		return ;
-	}
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
 		|| commandParams.arguments.size() != 1)
 	{
-		std::cerr << "Error: invalid arguments in NICK command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in NICK command (temp message)." << std::endl;
 		return ;
 	}
 
-	const std::string	&nickname = commandParams.arguments[0];
 	Client				*source = commandParams.source;
+	const	std::string	&nickname = commandParams.arguments[0];
 
-	// Check is 9 characteres max.
-	if (nickname.length() < 0 && nickname.length() >= 10)
+	if (nickname.length() >= 10)
 	{
-		std::cerr << "Error: nickname too long in NICK command (temp message)." << std::endl;
+		std::cerr << "Error: nickname too long";
+		std::cerr << " in NICK command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Check if given nickname is unique.
-	for(ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
+	for (ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 	{
 		if (nickname == (*it)->getNickname())
 		{
-			std::cerr << "Error: nickname not unique in NICK command (temp message)." << std::endl;
+			std::cerr << "Error: nickname already exists";
+			std:: cerr << " in NICK command (temp message)." << std::endl;
 			return ;
 		}
 	}
@@ -417,237 +421,217 @@ void	Server::nick(const t_commandParams &commandParams)
 
 void	Server::user(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED))
+	if (verifyServerPermissions(commandParams.source, VERIFIED))
+		return ;
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE)
+		|| commandParams.arguments.size() != 3)
 	{
-		std::cerr << "Error: get VERIFIED (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in NICK command (temp message)." << std::endl;
 		return ;
 	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
-		|| (commandParams.arguments.size() != 3))
-	{
-		std::cerr << "Error: invalid arguments in USER command (temp message)." << std::endl;
-		return ;
-	}
-
-	// Should take 3 arguments (username, hostname servername) and a message.
-	(void)commandParams;
-	std::cout << "USER command executed." << std::endl;
 
 	// This command should set the user's nickname. Careful.
 	// Nicknames should be unique to ensure accessibility !
 	// Nicknames are freed on client disconnection. There is not
 	// persistence.
+	std::cout << "USER command executed." << std::endl;
 }
 
 void	Server::quit(const t_commandParams &commandParams)
 {
-	if ((commandParams.mask & SOURCE) != (SOURCE))
+	if (areBitsNotSet(commandParams.mask, SOURCE))
 	{
-		std::cerr << "Error: invalid arguments in QUIT command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in QUIT command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should not take arguments nor message.
-	(void)commandParams;
-	std::cout << "QUIT command executed." << std::endl;
 	// This quits the server so destroys the affiliates client.
 	// See Server::handleClientDisconnection()
+	std::cout << "QUIT command executed." << std::endl;
 }
 
 void	Server::join(const t_commandParams &commandParams)
 {
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() != 1))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| commandParams.arguments.size() != 1)
 	{
-		std::cerr << "Error: invalid arguments in JOIN command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in JOIN command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should only take one argument (channel) but no message ?/.
-	(void)commandParams;
-	std::cout << "JOIN command executed." << std::endl;
 	// This adds the client to the channel's list and add it
 	// to it's active channel.
 	// If the channel doesn't exist, it creates it and
 	// gives operator privileges to the creator.
+	std::cout << "JOIN command executed." << std::endl;
 }
 
 void	Server::whois(const t_commandParams &commandParams)
 {
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() != 1))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| commandParams.arguments.size() != 1)
 	{
-		std::cerr << "Error: invalid arguments in WHOIS command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in WHOIS command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should only take one argument (client name) but no message.
-	(void)commandParams;
-	std::cout << "WHOIS command executed." << std::endl;
 	// Gets information about an existing user :
 	// nickname, name, blablabla ...
+	std::cout << "WHOIS command executed." << std::endl;
 }
 
 void	Server::privmsg(const t_commandParams &commandParams)
 {
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
-		|| (commandParams.arguments.size() != 1))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE)
+		|| commandParams.arguments.size() != 1)
 	{
-		std::cerr << "Error: invalid arguments in PRIVMSG command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in PRIVMSG command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should only take one argument (client name or channel name) AND a message.
-	(void)commandParams;
-	std::cout << "PRIVMSG command executed." << std::endl;
 	// Sends a message to the target (Channel or Client).
+	std::cout << "PRIVMSG command executed." << std::endl;
 }
 
 void	Server::notice(const t_commandParams &commandParams)
 {
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
-		|| (commandParams.arguments.size() != 1))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE)
+		|| commandParams.arguments.size() != 1)
 	{
-		std::cerr << "Error: invalid arguments in NOTICE command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in NOTICE command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should only take one argument (client name or channel name) AND a message.
-	(void)commandParams;
-	std::cout << "NOTICE command executed." << std::endl;
 	// Sends a server notice to a client, channel or everywhere.
+	std::cout << "NOTICE command executed." << std::endl;
 }
 
 void	Server::kick(const t_commandParams &commandParams)
 {
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| (commandParams.arguments.size() >= 1 && commandParams.arguments.size() <= 2))
 	{
-		std::cerr << "Error: invalid arguments in KICK command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in KICK command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should take 1 or 2 arguments (channel name + client name) AND a message (optional).
-	(void)commandParams;
-	std::cout << "KICK command executed." << std::endl;
 	// Kicks a target out of a channel.
+	std::cout << "KICK command executed." << std::endl;
 }
 
 void	Server::mode(const t_commandParams &commandParams)
 {
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| (commandParams.arguments.size() >= 1 && commandParams.arguments.size() <= 2))
 	{
-		std::cerr << "Error: invalid arguments in MODE command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in MODE command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should take 1 or 2 arguments (channel name + mode option(s)) but no message.
-	(void)commandParams;
+	// ???
 	std::cout << "MODE command executed." << std::endl;
 }
 
 void	Server::topic(const t_commandParams &commandParams)
 {
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
-		|| (commandParams.arguments.size() != 1))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE)
+		|| commandParams.arguments.size() != 1)
 	{
-		std::cerr << "Error: invalid arguments in TOPIC command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in TOPIC command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should take 1 argument (channel name) and a message.
-	(void)commandParams;
+	// ???
 	std::cout << "TOPIC command executed." << std::endl;
 }
 
 void	Server::invite(const t_commandParams &commandParams)
 {
-
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() != 2))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| commandParams.arguments.size() != 2)
 	{
-		std::cerr << "Error: invalid arguments in INVITE command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in INVITE command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should take 2 argument (client name + channel name) but no message.
-	(void)commandParams;
-	std::cout << "INVITE command executed." << std::endl;
 	// Invites a client to a channel.
 	// My current commandParams aren't adapted to this.
+	std::cout << "INVITE command executed." << std::endl;
 }
 
 void	Server::who(const t_commandParams &commandParams)
 {
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() != 1))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| commandParams.arguments.size() != 1)
 	{
-		std::cerr << "Error: invalid arguments in WHO command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in WHO command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should take 1 argument (channel name) but no message.
-	(void)commandParams;
-	std::cout << "WHO command executed." << std::endl;
 	//  List the users in a channel (names, real names, server info, status, ...)
+	std::cout << "WHO command executed." << std::endl;
 }
 
 void	Server::names(const t_commandParams &commandParams)
 {
-	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() != 1))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| commandParams.arguments.size() != 1)
 	{
-		std::cerr << "Error: invalid arguments in NAMES command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in NAMES command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should take 1 argument (channel name) but no message.
-	(void)commandParams;
-	std::cout << "NAMES command executed." << std::endl;
 	// Lists users of a channel (nicknames and status)
+	std::cout << "NAMES command executed." << std::endl;
 }
 
 void	Server::part(const t_commandParams &commandParams)
 {
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() != 1))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
+		return ;
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| commandParams.arguments.size() != 1)
 	{
-		std::cerr << "Error: invalid arguments in PART command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in PART command (temp message)." << std::endl;
 		return ;
 	}
 
-	// Should take 1 argument (channel name) but no message.
-	if ((commandParams.mask & SOURCE) != (SOURCE))
-	{
-		std::cerr << "Error: invalid arguments in QUIT command (temp message)." << std::endl;
-		return ;
-	}
-
-	std::cout << "PART command executed." << std::endl;
 	// Leaves a channel. A user can be member of multiple channels at the same time
 	// for persistence.
+	std::cout << "PART command executed." << std::endl;
 }
 
 void	Server::pass(const t_commandParams &commandParams)
@@ -655,13 +639,14 @@ void	Server::pass(const t_commandParams &commandParams)
 	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
 	{
-		std::cerr << "Error: invalid arguments in PASS command (temp message)." << std::endl;
+		std::cerr << "Error: invalid arguments";
+		std::cerr << " in PASS command (temp message)." << std::endl;
 		return ;
 	}
 
 	Client	*source = commandParams.source;
 
-	if (source->getServerPermissions() & VERIFIED)
+	if (areBitsSet(source->getServerPermissions(), VERIFIED))
 	{
 		std::cerr << "Error: already VERIFIED in PASS command (temp message)." << std::endl;
 		return ;
@@ -682,7 +667,7 @@ void	Server::putMessage(Client *client, const std::string &delimiter, size_t &po
 {
 	std::string			&clientBuffer = client->getBuffer();
 
-	if (isVERIFIEDandIDENTIFIED(client))
+	if (verifyServerPermissions(client, VERIFIED | IDENTIFIED))
 	{
 		clientBuffer.clear();
 		return ;
@@ -732,18 +717,20 @@ bool	Server::isCommand(const std::string &clientBuffer)
 	return (false);
 }
 
-bool	Server::isVERIFIEDandIDENTIFIED(const Client *client)
+bool	Server::verifyServerPermissions(const Client *client, const int &mask)
 {
-	if (areBitsNotSet(client->getServerPermissions(), VERIFIED))
+	if (areBitsSet(mask, VERIFIED)
+		&& areBitsNotSet(client->getServerPermissions(), VERIFIED))
 	{
 		std::cerr << "Error: User isn't VERIFIED. Use PASS [password]";
 		std::cerr << " to verify your access permissions (temp)." << std::endl;
 		return (true);
 	}
-	else if (areBitsNotSet(client->getServerPermissions(), IDENTIFIED))
+	else if (areBitsSet(mask, IDENTIFIED)
+		&& areBitsNotSet(client->getServerPermissions(), IDENTIFIED))
 	{
-		std::cerr << "Error: User isn't IDENTIFIED. Use NICK to identify";
-		std::cerr << " yourself (temp)." << std::endl;
+		std::cerr << "Error: User isn't VERIFIED. Use PASS [password]";
+		std::cerr << " to verify your access permissions (temp)." << std::endl;
 		return (true);
 	}
 	return (false);
