@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 16:03:51 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/25 01:21:34 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -115,6 +115,22 @@ void	Client::incrementConnectionRetries(void)
 	_connectionRetries++;
 }
 
+void	Client::sendMessageToClient(const std::string &message) const
+{
+	send(getSocketFd(), message.c_str(), message.length(), 0);
+}
+
+void	Client::broadcastMessageToChannel(const std::string &message) const
+{
+	if (!_activeChannel)
+		return ;
+
+	Channel::Users	users = _activeChannel->getUsers();
+
+	for (Channel::UsersIterator it = users.begin(); it != users.end(); it++)
+		(it->client)->sendMessageToClient(message);
+}
+
 	/* Protected */
 	/* Private */
 
@@ -127,7 +143,7 @@ std::string	&Client::getBuffer(void)
 	return (_messageBuffer);
 }
 
-int	Client::getSocketFd(void)
+int	Client::getSocketFd(void) const
 {
 	return (_clientSocket.getSocket().fd);
 }

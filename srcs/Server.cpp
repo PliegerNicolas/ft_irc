@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 16:42:03 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/25 01:22:45 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -463,7 +463,7 @@ void	Server::join(const t_commandParams &commandParams)
 		std::cerr << " in JOIN command (temp message)." << std::endl;
 		return ;
 	}
-	
+
 	std::string channelName = commandParams.arguments[0];
 
 	if (channelName[0] == '#')
@@ -551,7 +551,7 @@ void	Server::kick(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| (commandParams.arguments.size() >= 1 && commandParams.arguments.size() <= 2))
+		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
 	{
 		std::cerr << "Error: invalid arguments";
 		std::cerr << " in KICK command (temp message)." << std::endl;
@@ -567,7 +567,7 @@ void	Server::mode(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| (commandParams.arguments.size() >= 1 && commandParams.arguments.size() <= 2))
+		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
 	{
 		std::cerr << "Error: invalid arguments";
 		std::cerr << " in MODE command (temp message)." << std::endl;
@@ -720,7 +720,10 @@ void	Server::putMessage(Client *client, const std::string &delimiter, size_t &po
 
 	// TEMP
 	if (message != delimiter)
-		std::cout << "Client " << client->getNickname() << ": " << message;
+	{
+		message = client->getNickname() + ": " + message;
+		client->broadcastMessageToChannel(message);
+	}
 }
 
 bool	Server::isCommand(const std::string &clientBuffer)
