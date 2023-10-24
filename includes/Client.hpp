@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 16:04:02 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/25 01:19:20 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -49,13 +49,16 @@ class	Client
 								const struct pollfd &pollFd);
 		void				incrementConnectionRetries(void);
 
+		void				sendMessageToClient(const std::string &message) const;
+		void				broadcastMessageToChannel(const std::string &message) const;
+
 		// Getter
 		std::string			&getBuffer(void);
-		int					getSocketFd(void);
+		int					getSocketFd(void) const;
 
 		const std::string	&getNickname(void) const;
 		short				&getConnectionRetries(void);
-		int				getServerPermissions(void) const;
+		int					getServerPermissions(void) const;
 		Channel				*getActiveChannel(void);
 
 		// Setter

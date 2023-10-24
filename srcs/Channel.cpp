@@ -6,7 +6,7 @@
 /*   By: nplieger <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/24 16:49:47 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/25 01:20:26 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,6 +130,11 @@ int	Channel::getOpsPerms(void)
 int	Channel::getAdminPerms(void)
 {
 	return (KICK | BAN | INVITE | TOPIC | MODE);
+}
+
+const Channel::Users	&Channel::getUsers(void) const
+{
+	return (_users);
 }
 
 	/* Protected */

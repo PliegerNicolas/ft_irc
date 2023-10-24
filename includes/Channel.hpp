@@ -6,7 +6,7 @@
 /*   By: nplieger <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/24 16:27:14 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/25 01:20:07 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -50,6 +50,11 @@ class	Channel
 			size_t			permissionsMask;
 		}	t_user;
 
+		typedef std::vector<t_user>	Users;
+
+		typedef Users::iterator		UsersIterator;
+		typedef Users::const_iterator	UsersConstIterator;
+
 		/* Attributs */
 
 		/* Constructors & Destructors */
@@ -67,10 +72,12 @@ class	Channel
 
 		// GETTERS
 
-		int	getUserPerms(void);
-		int	getHalfOpsPerms(void);
-		int	getOpsPerms(void);
-		int	getAdminPerms(void);
+		const Users	&getUsers(void) const;
+
+		int			getUserPerms(void);
+		int			getHalfOpsPerms(void);
+		int			getOpsPerms(void);
+		int			getAdminPerms(void);
 
 		// SETTERS
 
@@ -81,13 +88,6 @@ class	Channel
 
 		/* Member functions */
 	private:
-		/* Typedefs */
-
-		typedef std::vector<t_user>	Users;
-
-		typedef Users::iterator		UsersIterator;
-		typedef Users::const_iterator	UsersConstIterator;
-
 		/* Attributs */
 
 		Users	_users;
