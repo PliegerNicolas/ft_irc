@@ -154,5 +154,5 @@ class	Server
 
 		void			putMessage(Client *client, const std::string &delimiter, size_t &pos);
 		bool			isCommand(const std::string &clientBuffer);
-    bool      isVERIFIEDandIDENTIFIED(const Client *client);
+		bool			verifyServerPermissions(const Client *client, const int &mask);
 };
