@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 15:01:57 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 15:13:08 by nplieger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -730,8 +730,8 @@ bool	Server::verifyServerPermissions(const Client *client, const int &mask)
 	else if (areBitsSet(mask, IDENTIFIED)
 		&& areBitsNotSet(client->getServerPermissions(), IDENTIFIED))
 	{
-		std::cerr << "Error: User isn't VERIFIED. Use PASS [password]";
-		std::cerr << " to verify your access permissions (temp)." << std::endl;
+		std::cerr << "Error: User isn't IDENTIFIED. Use NICK [nickname]";
+		std::cerr << " to verify your identity (temp)." << std::endl;
 		return (true);
 	}
 	return (false);
