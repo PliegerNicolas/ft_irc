@@ -6,9 +6,10 @@
 /*   By: nplieger <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/20 15:52:47 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 16:27:28 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "Channel.hpp"
 
 /* Constructors & Destructors */
@@ -82,6 +83,15 @@ Channel::Channel(void):
 /* Member functions */
 
 	/* Public */
+bool	Channel::isUserRegistered(const Client* client) const
+{
+	for (UsersConstIterator it = _users.begin(); it != _users.end(); ++it)
+	{
+		if (client == it->client)
+			return (true);
+	}
+	return (false);
+}
 	/* Protected */
 	/* Private */
 
@@ -98,27 +108,37 @@ Channel::t_user	Channel::createUser(const Client* client, const size_t &permissi
 /* Getters */
 
 	/* Public */
-	/* Protected */
-	/* Private */
 
-size_t	Channel::getUserPerms(void)
+int	Channel::getUserPerms(void)
 {
-	return (0x00);
+	return (0);
 }
 
-size_t	Channel::getHalfOpsPerms(void)
+int	Channel::getHalfOpsPerms(void)
 {
 	return (KICK | INVITE);
 }
 
-size_t	Channel::getOpsPerms(void)
+int	Channel::getOpsPerms(void)
 {
 	return (KICK | BAN | INVITE | TOPIC);
 }
 
-size_t	Channel::getAdminPerms(void)
+int	Channel::getAdminPerms(void)
 {
 	return (KICK | BAN | INVITE | TOPIC | MODE);
+}
+
+	/* Protected */
+	/* Private */
+
+void	Channel::addUser(const Client* client, const int &mask)
+{
+	t_user	newUser;
+
+	newUser.client = client;
+	newUser.permissionsMask = mask;
+	_users.push_back(newUser);
 }
 
 /* Setters */

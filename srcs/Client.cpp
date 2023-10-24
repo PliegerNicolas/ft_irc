@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 13:18:07 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/24 16:03:51 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -17,7 +17,7 @@
 
 Client::Client(const ASocket::t_socket &serverSocket):
 	_clientSocket(ClientSocket(serverSocket)),
-	_currentChannel(NULL),
+	_activeChannel(NULL),
 	_serverPermissions(0),
 	_connectionRetries(1)
 {
@@ -31,7 +31,7 @@ Client::Client(const ASocket::t_socket &serverSocket):
 
 Client::Client(const Client &other):
 	_clientSocket(other._clientSocket),
-	_currentChannel(other._currentChannel),
+	_activeChannel(other._activeChannel),
 	_serverPermissions(other._serverPermissions),
 	_connectionRetries(other._connectionRetries)
 {
@@ -55,7 +55,7 @@ Client	&Client::operator=(const Client &other)
 	if (this != &other)
 	{
 		_clientSocket = other._clientSocket;
-		_currentChannel = other._currentChannel;
+		_activeChannel = other._activeChannel;
 		_serverPermissions = other._serverPermissions;
 		_connectionRetries = other._connectionRetries;
 	}
@@ -77,6 +77,7 @@ Client::~Client(void)
 
 Client::Client(void):
 	_clientSocket(ClientSocket()),
+	_activeChannel(NULL),
 	_serverPermissions(0),
 	_connectionRetries(1)
 {
@@ -146,6 +147,11 @@ int	Client::getServerPermissions(void) const
 	return (_serverPermissions);
 }
 
+Channel	*Client::getActiveChannel(void)
+{
+	return (_activeChannel);
+}
+
 	/* Protected */
 	/* Private */
 
@@ -173,6 +179,7 @@ int	Client::readAndStoreFdBuffer(Server &server, const struct pollfd &pollFd)
 	return (CLIENT_CONNECTED);
 }
 
+
 void	Client::setNickname(const std::string &nickname)
 {
 	_nickname = nickname;
@@ -181,6 +188,11 @@ void	Client::setNickname(const std::string &nickname)
 void	Client::setServerPermissions(const int &mask)
 {
 	_serverPermissions |= mask;
+}
+
+void	Client::setActiveChannel(Channel *channel)
+{
+	_activeChannel = channel;
 }
 
 	/* Protected */
