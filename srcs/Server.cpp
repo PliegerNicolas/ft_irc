@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 12:14:21 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 13:25:24 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "Server.hpp"
 
 /* ************************************************************************** */
@@ -378,14 +379,13 @@ void	Server::cap(const t_commandParams &commandParams)
 
 void	Server::nick(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED))
+	if (areBitsNotSet(commandParams.source->getServerPermissions(), VERIFIED))
 	{
 		std::cerr << "Error: get VERIFIED (temp message)." << std::endl;
 		return ;
 	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() != 1))
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| commandParams.arguments.size() != 1)
 	{
 		std::cerr << "Error: invalid arguments in NICK command (temp message)." << std::endl;
 		return ;
@@ -457,13 +457,9 @@ void	Server::quit(const t_commandParams &commandParams)
 
 void	Server::join(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
 		return ;
-	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
 	{
 		std::cerr << "Error: invalid arguments in JOIN command (temp message)." << std::endl;
@@ -481,13 +477,9 @@ void	Server::join(const t_commandParams &commandParams)
 
 void	Server::whois(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
 		return ;
-	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
 	{
 		std::cerr << "Error: invalid arguments in WHOIS command (temp message)." << std::endl;
@@ -503,13 +495,9 @@ void	Server::whois(const t_commandParams &commandParams)
 
 void	Server::privmsg(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
 		return ;
-	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
 		|| (commandParams.arguments.size() != 1))
 	{
 		std::cerr << "Error: invalid arguments in PRIVMSG command (temp message)." << std::endl;
@@ -524,13 +512,9 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 void	Server::notice(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
 		return ;
-	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
 		|| (commandParams.arguments.size() != 1))
 	{
 		std::cerr << "Error: invalid arguments in NOTICE command (temp message)." << std::endl;
@@ -545,13 +529,9 @@ void	Server::notice(const t_commandParams &commandParams)
 
 void	Server::kick(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
 		return ;
-	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
 	{
 		std::cerr << "Error: invalid arguments in KICK command (temp message)." << std::endl;
@@ -566,13 +546,9 @@ void	Server::kick(const t_commandParams &commandParams)
 
 void	Server::mode(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
 		return ;
-	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
 	{
 		std::cerr << "Error: invalid arguments in MODE command (temp message)." << std::endl;
@@ -586,13 +562,9 @@ void	Server::mode(const t_commandParams &commandParams)
 
 void	Server::topic(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
 		return ;
-	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS | MESSAGE)) != (SOURCE | ARGUMENTS | MESSAGE))
 		|| (commandParams.arguments.size() != 1))
 	{
 		std::cerr << "Error: invalid arguments in TOPIC command (temp message)." << std::endl;
@@ -606,13 +578,10 @@ void	Server::topic(const t_commandParams &commandParams)
 
 void	Server::invite(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
-		return ;
-	}
 
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
+		return ;
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 2))
 	{
 		std::cerr << "Error: invalid arguments in INVITE command (temp message)." << std::endl;
@@ -628,13 +597,9 @@ void	Server::invite(const t_commandParams &commandParams)
 
 void	Server::who(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
 		return ;
-	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
 	{
 		std::cerr << "Error: invalid arguments in WHO command (temp message)." << std::endl;
@@ -649,13 +614,9 @@ void	Server::who(const t_commandParams &commandParams)
 
 void	Server::names(const t_commandParams &commandParams)
 {
-	if (~(commandParams.source->getServerPermissions()) & (VERIFIED | IDENTIFIED))
-	{
-		std::cerr << "Error: get VERIFIED or/and IDENTIFIED (temp message)." << std::endl;
+	if (isVERIFIEDandIDENTIFIED(commandParams.source))
 		return ;
-	}
-
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
+	else if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
 		|| (commandParams.arguments.size() != 1))
 	{
 		std::cerr << "Error: invalid arguments in NAMES command (temp message)." << std::endl;
@@ -761,6 +722,23 @@ bool	Server::isCommand(const std::string &clientBuffer)
 
 	if (commandIt != _commands.end())
 		return (true);
+	return (false);
+}
+
+bool	Server::isVERIFIEDandIDENTIFIED(const Client *client)
+{
+	if (areBitsNotSet(client->getServerPermissions(), VERIFIED))
+	{
+		std::cerr << "Error: User isn't VERIFIED. Use PASS [password]";
+		std::cerr << " to verify your access permissions (temp)." << std::endl;
+		return (true);
+	}
+	else if (areBitsNotSet(client->getServerPermissions(), IDENTIFIED))
+	{
+		std::cerr << "Error: User isn't IDENTIFIED. Use NICK to identify";
+		std::cerr << " yourself (temp)." << std::endl;
+		return (true);
+	}
 	return (false);
 }
 

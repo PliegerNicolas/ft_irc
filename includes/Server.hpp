@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 12:09:58 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 13:24:38 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #pragma once
 
 // INCLUDES
@@ -74,9 +75,9 @@ class	Server
 
 		typedef enum setCommandParameters
 		{
-			SOURCE = (1 << 1),
-			ARGUMENTS = (1 << 2),
-			MESSAGE = (1 << 3)
+			SOURCE = (1 << 0),
+			ARGUMENTS = (1 << 1),
+			MESSAGE = (1 << 2)
 		}	t_setCommandParams;
 
 		typedef struct CommandParameters
@@ -153,4 +154,5 @@ class	Server
 
 		void			putMessage(Client *client, const std::string &delimiter, size_t &pos);
 		bool			isCommand(const std::string &clientBuffer);
+    bool      isVERIFIEDandIDENTIFIED(const Client *client);
 };

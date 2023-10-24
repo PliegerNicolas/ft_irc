@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 16:21:20 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 13:18:07 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Client.hpp"
@@ -141,7 +141,7 @@ short	&Client::getConnectionRetries(void)
 	return (_connectionRetries);
 }
 
-int	&Client::getServerPermissions(void)
+int	Client::getServerPermissions(void) const
 {
 	return (_serverPermissions);
 }

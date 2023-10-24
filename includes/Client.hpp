@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 15:53:25 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 13:17:59 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -55,7 +55,7 @@ class	Client
 
 		const std::string	&getNickname(void) const;
 		short				&getConnectionRetries(void);
-		int					&getServerPermissions(void);
+		int				getServerPermissions(void) const;
 
 		// Setter
 		void				setNickname(const std::string &nickname);

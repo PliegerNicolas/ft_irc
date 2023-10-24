@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 13:30:31 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 12:14:03 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/24 12:57:09 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "utils/Utils.hpp"
 
 void	removeLeadingWhitespaces(std::string &str, const std::string &delimiter)
@@ -64,4 +65,37 @@ std::string	getNextWord(std::string &str, const std::string &delimiter)
 	removeLeadingWhitespaces(str, delimiter);
 
 	return (word);
+}
+
+/* ************************************************************************** */
+/* *                            BitMasks handling                           * */
+/* ************************************************************************** */
+
+bool	areBitsSet(const int &mask, const int &bits)
+{
+	if ((mask & bits) == bits)
+		return (true);
+	return (false);
+}
+
+bool	areBitsNotSet(const int &mask, const int &bits)
+{
+	if ((mask & bits) != bits)
+		return (true);
+	return (false);
+}
+
+inline void	toggleBits(int &mask, const int &bits)
+{
+	mask ^= bits;
+}
+
+inline void	setBits(int &mask, const int &bits)
+{
+	mask |= bits;
+}
+
+inline void	removeBits(int &mask, const int &bits)
+{
+	mask &= ~bits;
 }
