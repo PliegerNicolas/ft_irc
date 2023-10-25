@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 02:43:55 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 19:47:51 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "Client.hpp"
 
 /* Constructors & Destructors */
@@ -115,6 +116,14 @@ void	Client::incrementConnectionRetries(void)
 	_connectionRetries++;
 }
 
+void	Client::addToJoinedChannels(Channel *channel)
+{
+	if (!channel)
+		return ;
+
+	_joinedChannels[channel->getName()] = channel;
+}
+
 void	Client::receiveMessage(const std::string &message) const
 {
 	send(getSocketFd(), message.c_str(), message.length(), 0);
@@ -129,8 +138,8 @@ void	Client::broadcastMessageToChannel(const std::string &message) const
 
 	for (Channel::UsersIterator it = users.begin(); it != users.end(); it++)
 	{
-		if (this != it->client)
-			(it->client)->receiveMessage(message);
+		if (_activeChannel == it->client->getActiveChannel() && this != it->client)
+			it->client->receiveMessage(message);
 	}
 }
 
@@ -165,6 +174,12 @@ int	Client::getServerPermissions(void) const
 {
 	return (_serverPermissions);
 }
+
+Channel::Channels	&Client::getJoinedChannels(void)
+{
+	return (_joinedChannels);
+}
+
 
 Channel	*Client::getActiveChannel(void)
 {

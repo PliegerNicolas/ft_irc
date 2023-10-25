@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 02:59:53 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 18:43:07 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,9 @@
 #include "Channel.hpp"
 
 #include "signals/signals.hpp"
-#include "utils/Utils.hpp"
+#include "utils/utils.hpp"
 
+#include <vector>
 #include <map>
 
 // MACROS
@@ -38,13 +39,43 @@ class	Channel;
 class	Server
 {
 	public:
-		/* Attributs */
-
+		/* Typedefs */
 		typedef enum ServerPermissions
 		{
 			VERIFIED = (1 << 0),
 			IDENTIFIED = (1 << 1)
 		}	t_serverPermissions;
+
+		typedef enum setCommandParameters
+		{
+			SOURCE = (1 << 0),
+			ARGUMENTS = (1 << 1),
+			MESSAGE = (1 << 2)
+		}	t_setCommandParams;
+
+		typedef struct CommandParameters
+		{
+			int							mask;
+			Client						*source;
+			std::vector<std::string>	arguments;
+			std::string					message;
+		}	t_commandParams;
+
+		static t_commandParams	buildCommandParams(Client *source,
+			std::vector<std::string> &arguments, std::string &message);
+
+		typedef void (Server::*CommandFunction)(const t_commandParams &params);
+		typedef std::vector<struct pollfd>				PollFds;
+		typedef std::map<std::string, CommandFunction>	Commands;
+		typedef std::vector<Client*>					Clients;
+		typedef std::map<std::string, Channel*>			Channels;
+
+		typedef PollFds::iterator						PollFdsIterator;
+		typedef Commands::iterator						CommandsIterator;
+		typedef Clients::iterator						ClientsIterator;
+		typedef Channels::iterator						ChannelsIterator;
+
+		/* Attributs */
 
 		/* Constructors & Destructors */
 		Server(const ServerSockets::t_serverconfig &serverConfig, const std::string &password);
@@ -71,45 +102,13 @@ class	Server
 		/* Member functions */
 
 	private:
-		/* Typedefs */
-
-		typedef enum setCommandParameters
-		{
-			SOURCE = (1 << 0),
-			ARGUMENTS = (1 << 1),
-			MESSAGE = (1 << 2)
-		}	t_setCommandParams;
-
-		typedef struct CommandParameters
-		{
-			int							mask;
-			Client						*source;
-			std::vector<std::string>	arguments;
-			std::string					message;
-		}	t_commandParams;
-
-		static t_commandParams	buildCommandParams(Client *source,
-			std::vector<std::string> &arguments, std::string &message);
-
-		typedef void (Server::*CommandFunction)(const t_commandParams &params);
-
-		typedef std::vector<struct pollfd>				PollFds;
-		typedef std::vector<Client*>					Clients;
-		typedef std::map<std::string, Channel*>			Channels;
-		typedef std::map<std::string, CommandFunction>	Commands;
-
-		typedef PollFds::iterator						PollFdsIterator;
-		typedef Clients::iterator						ClientsIterator;
-		typedef Channels::iterator						ChannelsIterator;
-		typedef Commands::iterator						CommandsIterator;
-
 		/* Attributs */
 		ServerSockets	_serverSockets;
 
+		Commands		_commands;
 		PollFds			_pollFds;
 		Clients			_clients;
 		Channels		_channels;
-		Commands		_commands;
 
 		std::string		_password;
 

@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Utils.cpp                                          :+:      :+:    :+:   */
+/*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 13:30:31 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 12:57:09 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/25 18:44:13 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "utils/Utils.hpp"
+#include "utils/utils.hpp"
 
 void	removeLeadingWhitespaces(std::string &str, const std::string &delimiter)
 {

@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 02:45:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 19:52:08 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,10 +44,10 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig,
 
 Server::Server(const Server &other):
 	_serverSockets(other._serverSockets),
+	_commands(other._commands),
 	_pollFds(other._pollFds),
 	_clients(other._clients),
 	_channels(other._channels),
-	_commands(other._commands),
 	_password(other._password)
 {
 	if (DEBUG)
@@ -70,10 +70,10 @@ Server	&Server::operator=(const Server &other)
 	if (this != &other)
 	{
 		_serverSockets = other._serverSockets;
+		_commands = other._commands;
 		_pollFds = other._pollFds;
 		_clients = other._clients;
 		_channels = other._channels;
-		_commands = other._commands;
 		_password = other._password;
 	}
 
@@ -89,10 +89,10 @@ Server::~Server(void)
 		std::cout << WHITE;
 	}
 
+	_commands.clear();
 	_pollFds.clear();
 	deleteClients();
 	deleteChannels();
-	_commands.clear();
 }
 
 /* Protected */
@@ -127,7 +127,7 @@ Server::Server(void):
 
 void	Server::deleteClients(void)
 {
-	for (ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
+	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 	{
 		(*it)->closeSocketFd();
 		delete *it;
@@ -137,7 +137,7 @@ void	Server::deleteClients(void)
 
 void	Server::deleteChannels(void)
 {
-	for (ChannelsIterator it = _channels.begin(); it != _channels.end(); it++)
+	for (Channel::ChannelsIterator it = _channels.begin(); it != _channels.end(); it++)
 		delete it->second;
 	_channels.clear();
 }
@@ -291,7 +291,7 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
-	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
+	Client::ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
 
 	// Should disconnect from channel(s) also. This transmits privileges if no one has them.
 
@@ -404,8 +404,14 @@ void	Server::nick(const t_commandParams &commandParams)
 		std::cerr << " in NICK command (temp message)." << std::endl;
 		return ;
 	}
+	else if (nickname[0] == '#')
+	{
+		std::cerr << "Error: nickname shouldn't start with #";
+		std::cerr << " in NICK command (temp message)." << std::endl;
+		return ;
+	}
 
-	for (ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
+	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 	{
 		if (nickname == (*it)->getNickname())
 		{
@@ -447,9 +453,20 @@ void	Server::quit(const t_commandParams &commandParams)
 		return ;
 	}
 
+	else if (verifyServerPermissions(commandParams.source, VERIFIED))
+	{
+		std::cerr << "You are not connected to the server" << std::endl;
+		return ;
+	}
+
 	// This quits the server so destroys the affiliates client.
 	// See Server::handleClientDisconnection()
 	std::cout << "QUIT command executed." << std::endl;
+
+	//Client *client = commandParams.source;
+	//for (ChannelsIterator it = _channels.begin(); it != _channels.end(); ++it)
+	//	it->second->removeUser(client, it->second->getAdminPerms());
+	//std::cerr << "QUIT the server (need to quit with return CLIENT_DISCONNECTED)." << std::endl;
 }
 
 void	Server::join(const t_commandParams &commandParams)
@@ -474,25 +491,27 @@ void	Server::join(const t_commandParams &commandParams)
 		return;
 	}
 
-	Client		*client = commandParams.source;
-	Channel		*channel;
-	ChannelsIterator itChannel = _channels.find(channelName);
+	Client						*source = commandParams.source;
+	Channel						*channel;
+	Channel::ChannelsIterator	itChannel = _channels.find(channelName);
 
 	if (itChannel != _channels.end())
 	{
 		channel = itChannel->second;
-		if (!channel->isUserRegistered(client))
-			channel->addUser(client, channel->getUserPerms());
+		if (!channel->isUserRegistered(source))
+			channel->addUser(source, channel->getUserPerms());
 	}
 	else
 	{
-		channel = new Channel(client);
+		channel = new Channel(channelName, source);
 		_channels[channelName] = channel;
 	}
-	client->setActiveChannel(channel);
+	source->setActiveChannel(channel);
+	source->addToJoinedChannels(channel);
 
 	// TEMP
-	client->receiveMessage(":localhost 366 Paul #" + channelName);
+	source->receiveMessage(":localhost 366 " + source->getNickname()
+		+ " #" + channelName + DELIMITER);
 
 	// This adds the client to the channel's list and add it
 	// to it's active channel.
@@ -561,8 +580,69 @@ void	Server::kick(const t_commandParams &commandParams)
 		return ;
 	}
 
-	// Kicks a target out of a channel.
-	std::cout << "KICK command executed." << std::endl;
+	Channel			*targetChannel = NULL;
+	Channel::User	*targetUser = NULL;
+	Channel::User	*sourceUser = NULL;
+
+	if (commandParams.arguments.size() == 1)
+	{
+		if (commandParams.arguments[0][0] != '#')
+		{
+			targetChannel = commandParams.source->getActiveChannel();
+			targetUser = targetChannel->getUser(commandParams.arguments[0]);
+			sourceUser = targetChannel->getUser(commandParams.source->getNickname());
+		}
+	}
+	else if (commandParams.arguments.size() == 2)
+	{
+		if (commandParams.arguments[0][0] == '#' && commandParams.arguments[1][0] != '#')
+		{
+			std::string	channelName = commandParams.arguments[0];
+			channelName.erase(0, 1);
+
+			Channels			&joinedChannels = commandParams.source->getJoinedChannels();
+			ChannelsIterator	it = joinedChannels.find(channelName);
+
+			if (it != joinedChannels.end())
+			{
+				targetChannel = it->second;
+				targetUser = targetChannel->getUser(commandParams.arguments[1]);
+				sourceUser = targetChannel->getUser(commandParams.source->getNickname());
+			}
+		}
+	}
+
+	if (targetChannel == NULL)
+	{
+		std::cerr << "Error: channel not found (temp message)." << std::endl;
+		return ;
+	}
+	else if (targetUser == NULL)
+	{
+		std::cerr << "Error: user not found (temp message)." << std::endl;
+		return ;
+	}
+	else if (sourceUser == NULL)
+	{
+		std::cerr << "Error: you're not member of that channel (temp message)." << std::endl;
+		return ;
+	}
+	else if (areBitsNotSet(sourceUser->permissionsMask, Channel::KICK))
+	{
+		std::cerr << "Error: not enough permissions (temp message)." << std::endl;
+		return ;
+	}
+
+	targetChannel->removeUser(targetUser->client);
+
+	std::string	message;
+	if (areBitsSet(commandParams.mask, MESSAGE))
+		message = ":" + sourceUser->client->getNickname() + " KICK "
+			+ targetChannel->getName() + " :" + commandParams.message + DELIMITER;
+	else
+		message = ":" + sourceUser->client->getNickname() + " KICK "
+			+ targetChannel->getName() + DELIMITER;
+	targetUser->client->receiveMessage(message);
 }
 
 void	Server::mode(const t_commandParams &commandParams)

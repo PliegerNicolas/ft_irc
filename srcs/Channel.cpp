@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nplieger <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/25 01:20:26 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 19:33:16 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,8 @@
 
 	/* Public */
 
-Channel::Channel(const Client* channelCreator):
+Channel::Channel(const std::string &name, Client* channelCreator):
+	_name(name),
 	_userLimit(-1)
 {
 	if (DEBUG)
@@ -70,6 +71,7 @@ Channel::~Channel(void)
 	/* Private */
 
 Channel::Channel(void):
+	_name(""),
 	_userLimit(-1)
 {
 	if (DEBUG)
@@ -95,10 +97,25 @@ bool	Channel::isUserRegistered(const Client* client) const
 	return (false);
 }
 
+void	Channel::addUser(Client* client, const int &mask)
+{
+	_users.push_back(createUser(client, mask));
+}
+
+void	Channel::removeUser(const Client* client)
+{
+	UsersIterator	it = _users.begin();
+
+	for (; it != _users.end() && it->client != client; it++);
+
+	if (it != _users.end())
+		it->client->setActiveChannel(NULL);
+}
+
 	/* Protected */
 	/* Private */
 
-Channel::t_user	Channel::createUser(const Client* client, const size_t &permissionsMask)
+Channel::t_user	Channel::createUser(Client* client, const size_t &permissionsMask)
 {
 	t_user	user;
 
@@ -111,6 +128,22 @@ Channel::t_user	Channel::createUser(const Client* client, const size_t &permissi
 /* Getters */
 
 	/* Public */
+
+const std::string	&Channel::getName(void) const
+{
+	return (_name);
+}
+
+Channel::User	*Channel::getUser(const std::string &nickname)
+{
+	UsersIterator	it = _users.begin();
+
+	for (; it != _users.end() && it->client->getNickname() != nickname; it++);
+
+	if (it != _users.end())
+		return (&(*it));
+	return (NULL);
+}
 
 int	Channel::getUserPerms(void)
 {
@@ -139,15 +172,6 @@ const Channel::Users	&Channel::getUsers(void) const
 
 	/* Protected */
 	/* Private */
-
-void	Channel::addUser(const Client* client, const int &mask)
-{
-	t_user	newUser;
-
-	newUser.client = client;
-	newUser.permissionsMask = mask;
-	_users.push_back(newUser);
-}
 
 /* Setters */
 

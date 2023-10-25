@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 02:44:11 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 19:47:13 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #pragma once
 
 // INCLUDES
@@ -16,6 +17,9 @@
 #include "socket/ClientSocket.hpp"
 #include "Server.hpp"
 #include "Channel.hpp"
+
+#include <vector>
+#include <map>
 
 // MACROS
 
@@ -25,13 +29,20 @@ class	Channel;
 class	Client
 {
 	public:
-		/* Attributs */
-
+		/* Typedefs */
 		typedef enum ServerPermissions
 		{
 			VERIFIED = (1 << 0),
 			IDENTIFIED = (1 << 1)
 		}	t_serverPermissions;
+
+		typedef std::vector<Client*>			Clients;
+		typedef std::map<std::string, Channel*>	Channels;
+
+		typedef Clients::iterator				ClientsIterator;
+		typedef Channels::iterator				ChannelsIterator;
+
+		/* Attributs */
 
 		/* Constructors & Destructors */
 		Client(const ASocket::t_socket &serverSocket);
@@ -49,6 +60,8 @@ class	Client
 								const struct pollfd &pollFd);
 		void				incrementConnectionRetries(void);
 
+		void				addToJoinedChannels(Channel *channel);
+
 		void				receiveMessage(const std::string &message) const;
 		void				broadcastMessageToChannel(const std::string &message) const;
 
@@ -59,6 +72,7 @@ class	Client
 		const std::string	&getNickname(void) const;
 		short				&getConnectionRetries(void);
 		int					getServerPermissions(void) const;
+		Channels			&getJoinedChannels(void);
 		Channel				*getActiveChannel(void);
 
 		// Setter
@@ -74,15 +88,10 @@ class	Client
 		/* Member functions */
 
 	private:
-		/* Typedefs */
-		typedef std::vector<Channel*>	Channels;
-
-		typedef Channels::iterator		ChannelsIterator;
-
 		/* Attributs */
 		ClientSocket		_clientSocket;
 		Channel				*_activeChannel;
-		Channels			_channels;
+		Channels			_joinedChannels;
 
 		int					_serverPermissions;
 		std::string			_password; // encryption :(
