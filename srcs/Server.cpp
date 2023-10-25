@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 16:18:16 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/25 16:46:15 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -605,6 +605,8 @@ void	Server::kick(const t_commandParams &commandParams)
 	if (it_user->client->getActiveChannel() == it_channel->second)
 		it_user->client->setActiveChannel(NULL);
 	
+	std::cerr << commandParams.arguments[3] << std::endl;
+
 	// Kicks a target out of a channel.
 	std::cout << "KICK command executed." << std::endl;
 }
