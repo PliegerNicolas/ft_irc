@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 01:22:45 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 02:45:42 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -490,6 +490,9 @@ void	Server::join(const t_commandParams &commandParams)
 		_channels[channelName] = channel;
 	}
 	client->setActiveChannel(channel);
+
+	// TEMP
+	client->receiveMessage(":localhost 366 Paul #" + channelName);
 
 	// This adds the client to the channel's list and add it
 	// to it's active channel.

@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 01:19:20 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 02:44:11 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -49,7 +49,7 @@ class	Client
 								const struct pollfd &pollFd);
 		void				incrementConnectionRetries(void);
 
-		void				sendMessageToClient(const std::string &message) const;
+		void				receiveMessage(const std::string &message) const;
 		void				broadcastMessageToChannel(const std::string &message) const;
 
 		// Getter
