@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/25 19:33:16 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 01:28:39 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,6 +95,13 @@ bool	Channel::isUserRegistered(const Client* client) const
 	}
 
 	return (false);
+}
+
+bool	Channel::isFull(void) const
+{
+	if (_userLimit == -1 || _userLimit > static_cast<int>(_users.size()))
+		return (false);
+	return (true);
 }
 
 void	Channel::addUser(Client* client, const int &mask)

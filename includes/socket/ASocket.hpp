@@ -6,15 +6,15 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 13:23:07 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 16:08:01 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/26 00:05:30 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 
 // INCLUDES
 
-#include "colors.hpp"
-#include "debug.hpp"
+#include "utils/colors.hpp"
+#include "utils/debug.hpp"
 
 #include <iostream>
 #include <sstream>

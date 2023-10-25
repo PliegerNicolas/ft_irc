@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 19:52:08 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 01:31:27 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -376,8 +376,6 @@ Server::t_commandParams	Server::parseCommand(Client *client, std::string &client
 
 void	Server::cap(const t_commandParams &commandParams)
 {
-	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
-		return ;
 	// Unclear
 	(void)commandParams;
 	std::cout << "CAP command executed." << std::endl;
@@ -387,27 +385,24 @@ void	Server::nick(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() != 1)
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in NICK command (temp message)." << std::endl;
+		serverResponse(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+		return ;
+	}
+	else if (commandParams.arguments.size() > 1)
+	{
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 		return ;
 	}
 
 	Client				*source = commandParams.source;
 	const	std::string	&nickname = commandParams.arguments[0];
 
-	if (nickname.length() >= 10)
+	if (nickname.length() >= 10 || nickname[0] == '#')
 	{
-		std::cerr << "Error: nickname too long";
-		std::cerr << " in NICK command (temp message)." << std::endl;
-		return ;
-	}
-	else if (nickname[0] == '#')
-	{
-		std::cerr << "Error: nickname shouldn't start with #";
-		std::cerr << " in NICK command (temp message)." << std::endl;
+		serverResponse(commandParams.source, ERR_ERRONEUSNICKNAME, nickname,
+			"Erroneous Nickname");
 		return ;
 	}
 
@@ -415,14 +410,16 @@ void	Server::nick(const t_commandParams &commandParams)
 	{
 		if (nickname == (*it)->getNickname())
 		{
-			std::cerr << "Error: nickname already exists";
-			std:: cerr << " in NICK command (temp message)." << std::endl;
+			serverResponse(commandParams.source, ERR_NICKNAMEINUSE, nickname,
+				"Nickname is already in use");
 			return ;
 		}
 	}
 
 	source->setNickname(nickname);
 	source->setServerPermissions(IDENTIFIED);
+	serverResponse(source, RPL_WELCOME, "",
+		"You are now known as " + nickname);
 }
 
 void	Server::user(const t_commandParams &commandParams)
@@ -433,7 +430,7 @@ void	Server::user(const t_commandParams &commandParams)
 		|| commandParams.arguments.size() != 3)
 	{
 		std::cerr << "Error: invalid arguments";
-		std::cerr << " in NICK command (temp message)." << std::endl;
+		std::cerr << " in USER command (temp message)." << std::endl;
 		return ;
 	}
 
@@ -453,52 +450,52 @@ void	Server::quit(const t_commandParams &commandParams)
 		return ;
 	}
 
-	else if (verifyServerPermissions(commandParams.source, VERIFIED))
-	{
-		std::cerr << "You are not connected to the server" << std::endl;
-		return ;
-	}
-
 	// This quits the server so destroys the affiliates client.
 	// See Server::handleClientDisconnection()
 	std::cout << "QUIT command executed." << std::endl;
-
-	//Client *client = commandParams.source;
-	//for (ChannelsIterator it = _channels.begin(); it != _channels.end(); ++it)
-	//	it->second->removeUser(client, it->second->getAdminPerms());
-	//std::cerr << "QUIT the server (need to quit with return CLIENT_DISCONNECTED)." << std::endl;
 }
 
 void	Server::join(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() != 1)
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in JOIN command (temp message)." << std::endl;
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		return ;
+	}
+	else if (commandParams.arguments.size() > 1)
+	{
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 		return ;
 	}
 
-	std::string channelName = commandParams.arguments[0];
+	Client		*source = commandParams.source;
+	std::string	channelName = commandParams.arguments[0];
 
-	if (channelName[0] == '#')
-		channelName.erase(0, 1);
-	else
+	if (channelName[0] != '#')
 	{
-		std::cerr << "Error: invalid channel name." << std::endl;
-		return;
+		serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+		return ;
 	}
 
-	Client						*source = commandParams.source;
 	Channel						*channel;
 	Channel::ChannelsIterator	itChannel = _channels.find(channelName);
 
 	if (itChannel != _channels.end())
 	{
 		channel = itChannel->second;
-		if (!channel->isUserRegistered(source))
+		if (channel->isFull())
+		{
+			serverResponse(source, ERR_CHANNELISFULL, channelName, "Channel is full");
+			return ;
+		}
+		else if (source->getActiveChannel() == channel)
+		{
+			serverResponse(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
+			return ;
+		}
+		else
 			channel->addUser(source, channel->getUserPerms());
 	}
 	else
@@ -506,17 +503,14 @@ void	Server::join(const t_commandParams &commandParams)
 		channel = new Channel(channelName, source);
 		_channels[channelName] = channel;
 	}
+
 	source->setActiveChannel(channel);
 	source->addToJoinedChannels(channel);
 
 	// TEMP
-	source->receiveMessage(":localhost 366 " + source->getNickname()
-		+ " #" + channelName + DELIMITER);
-
-	// This adds the client to the channel's list and add it
-	// to it's active channel.
-	// If the channel doesn't exist, it creates it and
-	// gives operator privileges to the creator.
+	serverResponse(source, RPL_TOPIC, channelName, "topic"); // get topic
+	serverResponse(source, RPL_NAMREPLY, "= " + channelName, "usr1 user2 user3"); // get users list
+	serverResponse(source, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
 }
 
 void	Server::whois(const t_commandParams &commandParams)
@@ -847,6 +841,32 @@ bool	Server::verifyServerPermissions(const Client *client, const int &mask)
 		return (true);
 	}
 	return (false);
+}
+
+void	Server::serverResponse(const Client *client, const std::string &code,
+	const std::string &parameters, const std::string &trailing)
+{
+	std::string	response;
+	std::string	targetNickname = client->getNickname();
+
+	response = ":" + _serverSockets.getHostname();
+
+	response += " " + code;
+
+	if (targetNickname.empty())
+		response += " *";
+	else
+		response += " " + targetNickname;
+
+	if (!parameters.empty())
+		response += " " + parameters;
+
+	if (!trailing.empty())
+		response += " :" + trailing;
+
+	response += DELIMITER;
+
+	client->receiveMessage(response);
 }
 
 /* Getters */

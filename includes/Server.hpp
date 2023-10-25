@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 18:43:07 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 00:45:02 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,9 @@
 
 #include "signals/signals.hpp"
 #include "utils/utils.hpp"
+#include "ircProtocolCodes.hpp"
 
+#include <sstream>
 #include <vector>
 #include <map>
 
@@ -154,4 +156,6 @@ class	Server
 		void			putMessage(Client *client, const std::string &delimiter, size_t &pos);
 		bool			isCommand(const std::string &clientBuffer);
 		bool			verifyServerPermissions(const Client *client, const int &mask);
+		void			serverResponse(const Client *client, const std::string &code,
+							const std::string &parameters, const std::string &trailing);
 };

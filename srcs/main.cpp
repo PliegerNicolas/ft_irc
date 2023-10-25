@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 15:21:38 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/26 01:06:37 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ int	main(int argc, char **argv)
 	{
 		ServerSockets::t_serverconfig	serverConfig;
 		serverConfig = ServerSockets::buildServerConfig(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP,
-			"0.0.0.0", argv[1]);
+			"localhost", argv[1]);
 
 		Server	serv(serverConfig, argv[2]);
 	}
