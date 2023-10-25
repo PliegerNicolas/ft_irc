@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nplieger <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/25 01:20:07 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 15:52:32 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #pragma once
 
 // INCLUDES
@@ -46,11 +47,12 @@ class	Channel
 
 		typedef struct User
 		{
-			const Client*	client;
+			Client*	client;
 			size_t			permissionsMask;
 		}	t_user;
 
-		typedef std::vector<t_user>	Users;
+		typedef t_user				User;
+		typedef std::vector<User>	Users;
 
 		typedef Users::iterator		UsersIterator;
 		typedef Users::const_iterator	UsersConstIterator;
@@ -58,7 +60,7 @@ class	Channel
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Channel(const Client* channelCreator);
+		Channel(Client* channelCreator);
 
 		Channel(const Channel &other);
 		Channel	&operator=(const Channel &other);
@@ -67,7 +69,9 @@ class	Channel
 
 		/* Member functions */
 
-		void	addUser(const Client* client, const int &mask);
+		void	addUser(Client* client, const int &mask);
+		void	removeUser(const Client* client, const int mask);
+		void	removeUser(std::string _nickname);
 		bool	isUserRegistered(const Client* client) const;
 
 		// GETTERS
@@ -97,7 +101,7 @@ class	Channel
 		Channel(void);
 
 		/* Member functions */
-		t_user	createUser(const Client* client, const size_t &permissionsMask);
+		t_user	createUser(Client* client, const size_t &permissionsMask);
 
 		// GETTERS
 

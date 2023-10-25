@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 02:45:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 16:18:16 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -447,9 +447,24 @@ void	Server::quit(const t_commandParams &commandParams)
 		return ;
 	}
 
+	else if (verifyServerPermissions(commandParams.source, VERIFIED))
+	{
+		std::cerr << "You are not connected to the server" << std::endl;
+		return ;
+	}
+
 	// This quits the server so destroys the affiliates client.
 	// See Server::handleClientDisconnection()
 	std::cout << "QUIT command executed." << std::endl;
+	Client *client = commandParams.source;
+
+	for (ChannelsIterator it = _channels.begin(); it != _channels.end(); ++it)
+		it->second->removeUser(client, it->second->getAdminPerms());
+
+	// useless because we quit the server ?
+	client->setActiveChannel(NULL);
+
+	std::cerr << "QUIT the server (need to quit with return CLIENT_DISCONNECTED)." << std::endl;
 }
 
 void	Server::join(const t_commandParams &commandParams)
@@ -492,7 +507,7 @@ void	Server::join(const t_commandParams &commandParams)
 	client->setActiveChannel(channel);
 
 	// TEMP
-	client->receiveMessage(":localhost 366 Paul #" + channelName);
+	client->receiveMessage(":localhost 366 Paul #" + channelName + "\n");
 
 	// This adds the client to the channel's list and add it
 	// to it's active channel.
@@ -554,13 +569,42 @@ void	Server::kick(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
+		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 3))
 	{
 		std::cerr << "Error: invalid arguments";
 		std::cerr << " in KICK command (temp message)." << std::endl;
 		return ;
 	}
 
+	ChannelsIterator it_channel = _channels.find(commandParams.arguments[0]);
+
+	if (it_channel == _channels.end())
+	{
+		std::cerr << "Error: channel not found" << std::endl;
+		return ;
+	}
+
+	Channel::Users  users = it_channel->second->getUsers();
+	Channel::UsersIterator it_user;
+
+	for (it_user = users.begin(); it_user != users.end(); ++it_user)
+	{
+		if (it_user->client->getNickname() == commandParams.arguments[1])
+			break;
+	}
+
+	if (it_user == users.end())
+	{
+		std::cerr << "Error: Nickname not found" << std::endl;
+		return ;
+	}
+
+	it_channel->second->removeUser(it_user->client->getNickname());
+
+	// remove active channel of the user being kick if he was on the channel
+	if (it_user->client->getActiveChannel() == it_channel->second)
+		it_user->client->setActiveChannel(NULL);
+	
 	// Kicks a target out of a channel.
 	std::cout << "KICK command executed." << std::endl;
 }

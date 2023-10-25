@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nplieger <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/25 01:20:26 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/25 15:52:38 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 	/* Public */
 
-Channel::Channel(const Client* channelCreator):
+Channel::Channel(Client* channelCreator):
 	_userLimit(-1)
 {
 	if (DEBUG)
@@ -98,7 +98,7 @@ bool	Channel::isUserRegistered(const Client* client) const
 	/* Protected */
 	/* Private */
 
-Channel::t_user	Channel::createUser(const Client* client, const size_t &permissionsMask)
+Channel::t_user	Channel::createUser(Client* client, const size_t &permissionsMask)
 {
 	t_user	user;
 
@@ -140,13 +140,47 @@ const Channel::Users	&Channel::getUsers(void) const
 	/* Protected */
 	/* Private */
 
-void	Channel::addUser(const Client* client, const int &mask)
+void	Channel::addUser(Client* client, const int &mask)
 {
 	t_user	newUser;
 
 	newUser.client = client;
 	newUser.permissionsMask = mask;
 	_users.push_back(newUser);
+}
+
+void	Channel::removeUser(const Client* client, const int mask)
+{
+	UsersIterator it;
+
+	if (areBitsSet(mask, KICK)
+		&& areBitsNotSet(client->getServerPermissions(), KICK))
+		std::cerr << "Error: permission" << std::endl;
+	else
+	{
+		for (it = _users.begin(); it != _users.end(); ++it)
+		{
+			if (it->client == client)
+			{
+				std::cerr << "J'enleve un user\n";
+				std::cerr << "nick = " << it->client->getNickname() << std::endl;
+				_users.erase(it);
+				return ;
+			}
+		}
+	}
+}
+
+void	Channel::removeUser(std::string _nickname)
+{
+	for (UsersIterator it = _users.begin(); it != _users.end(); ++it)
+	{
+		if (it->client->getNickname() == _nickname)
+		{
+			_users.erase(it);
+			return ;
+		}
+	}
 }
 
 /* Setters */

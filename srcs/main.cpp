@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 15:13:42 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/25 15:21:38 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "Server.hpp"
 
 volatile sig_atomic_t g_serverExit = false;
