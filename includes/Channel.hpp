@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/25 15:52:32 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/25 19:13:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,12 @@
 #include "Server.hpp"
 #include "Client.hpp"
 
+#include <vector>
+#include <map>
+
 // MACROS
 
+class	Server;
 class	Client;
 
 class	Channel
@@ -48,19 +52,21 @@ class	Channel
 		typedef struct User
 		{
 			Client*	client;
-			size_t			permissionsMask;
+			size_t	permissionsMask;
 		}	t_user;
 
-		typedef t_user				User;
-		typedef std::vector<User>	Users;
+		typedef std::map<std::string, Channel*>	Channels;
+		typedef t_user							User;
+		typedef std::vector<User>				Users;
 
-		typedef Users::iterator		UsersIterator;
-		typedef Users::const_iterator	UsersConstIterator;
+		typedef Channels::iterator				ChannelsIterator;
+		typedef Users::iterator					UsersIterator;
+		typedef Users::const_iterator			UsersConstIterator;
 
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Channel(Client* channelCreator);
+		Channel(const std::string &name, Client* channelCreator);
 
 		Channel(const Channel &other);
 		Channel	&operator=(const Channel &other);
@@ -69,19 +75,20 @@ class	Channel
 
 		/* Member functions */
 
-		void	addUser(Client* client, const int &mask);
-		void	removeUser(const Client* client, const int mask);
-		void	removeUser(std::string _nickname);
-		bool	isUserRegistered(const Client* client) const;
+		void				addUser(Client* client, const int &mask);
+		void				removeUser(const Client* client);
+		bool				isUserRegistered(const Client* client) const;
 
 		// GETTERS
 
-		const Users	&getUsers(void) const;
+		const std::string	&getName(void) const;
+		const Users			&getUsers(void) const;
+		User				*getUser(const std::string &nickname);
 
-		int			getUserPerms(void);
-		int			getHalfOpsPerms(void);
-		int			getOpsPerms(void);
-		int			getAdminPerms(void);
+		int					getUserPerms(void);
+		int					getHalfOpsPerms(void);
+		int					getOpsPerms(void);
+		int					getAdminPerms(void);
 
 		// SETTERS
 
@@ -91,11 +98,13 @@ class	Channel
 		/* Constructors & Destructors */
 
 		/* Member functions */
+
 	private:
 		/* Attributs */
+		std::string	_name;
 
-		Users	_users;
-		int		_userLimit;
+		Users		_users;
+		int			_userLimit;
 
 		/* Constructors & Destructors */
 		Channel(void);
