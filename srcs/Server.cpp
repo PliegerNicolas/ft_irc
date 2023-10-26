@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 19:37:25 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 21:52:40 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -416,13 +416,13 @@ void	Server::nick(const t_commandParams &commandParams)
 	Client				*source = commandParams.source;
 	const	std::string	&nickname = commandParams.arguments[0];
 
-	if (nickname.length() >= 10 || nickname[0] == '#')
+	if (nickname.length() > MAX_NICKNAME_LENGTH || nickname[0] == '#')
 		serverResponse(commandParams.source, ERR_ERRONEUSNICKNAME, nickname,
 			"Erroneous Nickname");
 
-	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		if (nickname == (*it)->getNickname())
+		const Client	*concurrentNicknameHolder = getClient(nickname);
+		if (concurrentNicknameHolder)
 			serverResponse(commandParams.source, ERR_NICKNAMEINUSE, nickname,
 				"Nickname is already in use");
 	}
@@ -471,21 +471,19 @@ void	Server::join(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	Client		*source = commandParams.source;
-	std::string	channelName = commandParams.arguments[0];
+	Client				*source = commandParams.source;
+	const std::string	&channelName = commandParams.arguments[0];
 
 	if (channelName[0] != '#')
 		serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 
-	Channel						*channel;
-	Channel::ChannelsIterator	itChannel = _channels.find(channelName);
+	Channel	*channel = getChannel(channelName);
 
-	if (itChannel != _channels.end())
+	if (channel)
 	{
-		channel = itChannel->second;
 		if (channel->isFull())
 			serverResponse(source, ERR_CHANNELISFULL, channelName, "Channel is full");
-		else if (source->getActiveChannel() == channel)
+		else if (channel == source->getActiveChannel())
 			serverResponse(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
 		else
 			channel->addUser(source, channel->getUserPerms());
@@ -530,6 +528,18 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
+
+	const std::string	&targetName = commandParams.arguments[0];
+	if (targetName[0] == '#')
+	{
+
+	}
+	else
+	{
+
+	}
+
+	/*
 	const Client		*source = commandParams.source;
 	const std::string	&targetName = commandParams.arguments[0];
 
@@ -562,6 +572,43 @@ void	Server::privmsg(const t_commandParams &commandParams)
 		Client *targetClient = *it;
 		targetClient->receiveMessage(response);
 	}
+	*/
+
+	/*
+	std::string			&clientBuffer = client->getBuffer();
+
+	if (verifyServerPermissions(client, VERIFIED | IDENTIFIED))
+	{
+		clientBuffer.clear();
+		return ;
+	}
+
+	std::string			message;
+
+	if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+	{
+		pos = MSG_BUFFER_SIZE - delimiter.length();
+		pos = findLastChar(clientBuffer, pos);
+		message = clientBuffer.substr(0, pos);
+		clientBuffer.erase(0, pos);
+		message += delimiter;
+	}
+	else
+	{
+		pos = clientBuffer.find(delimiter);
+		message = clientBuffer.substr(0, pos);
+		clientBuffer.erase(0, pos);
+		message += delimiter;
+	}
+
+	// TEMP
+	if (message != delimiter)
+	{
+		message = client->getNickname() + ": " + message;
+		client->broadcastMessageToChannel(client->getActiveChannel(), message);
+	}
+	*/
+
 }
 
 void	Server::notice(const t_commandParams &commandParams)
@@ -586,48 +633,57 @@ void	Server::kick(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 2)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
+	Client			*source = commandParams.source;
+	Channel			*targetChannel;
 	Channel::User	*sourceUser = NULL;
 	Channel::User	*targetUser = NULL;
-	Channel			*targetChannel = NULL;
+
+	std::string		nickname;
 
 	if (commandParams.arguments.size() == 1)
 	{
-		if (commandParams.arguments[0][0] != '#')
-		{
-			targetChannel = commandParams.source->getActiveChannel();
-			targetUser = targetChannel->getUser(commandParams.arguments[0]);
-			sourceUser = targetChannel->getUser(commandParams.source->getNickname());
-		}
+		nickname = commandParams.arguments[0];
+
+		if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
+			serverResponse(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
+
+		targetChannel = source->getActiveChannel();
+		if (!targetChannel)
+			serverResponse(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+
+		targetUser = targetChannel->getUser(nickname);
+		if (!targetUser)
+			serverResponse(source, ERR_USERNOTINCHANNEL, targetChannel->getName(),
+				"User not in that channel");
 	}
 	else if (commandParams.arguments.size() == 2)
 	{
-		if (commandParams.arguments[0][0] == '#' && commandParams.arguments[1][0] != '#')
-		{
-			std::string	channelName = commandParams.arguments[0];
-			channelName.erase(0, 1);
+		const std::string	&channelName = commandParams.arguments[0];
+		nickname = commandParams.arguments[1];
 
-			Channels			&joinedChannels = commandParams.source->getJoinedChannels();
-			ChannelsIterator	it = joinedChannels.find(channelName);
+		if (channelName[0] != '#')
+			serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+		else if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
+			serverResponse(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
-			if (it != joinedChannels.end())
-			{
-				targetChannel = it->second;
-				targetUser = targetChannel->getUser(commandParams.arguments[1]);
-				sourceUser = targetChannel->getUser(commandParams.source->getNickname());
-			}
-		}
+		targetChannel = getChannel(channelName);
+		if (!targetChannel)
+			serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+
+		targetUser = targetChannel->getUser(nickname);
+		if (!targetUser)
+			serverResponse(source, ERR_USERNOTINCHANNEL, channelName, "User not in that channel");
 	}
 
-	if (targetChannel == NULL)
-		serverResponse(commandParams.source, ERR_NOSUCHCHANNEL, "", "No such channel");
-	else if (targetUser == NULL)
-		serverResponse(commandParams.source, ERR_NOSUCHNICK, "", "No such nickname");
-	else if (areBitsNotSet(sourceUser->permissionsMask, Channel::KICK) || sourceUser == NULL)
-		serverResponse(commandParams.source, ERR_CHANOPRIVSNEEDED,
-			"", "You're not a channel operator");
+	sourceUser = targetChannel->getUser(source->getNickname());
+
+	if (!sourceUser || areBitsNotSet(sourceUser->permissionsMask, Channel::KICK))
+		serverResponse(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
+			"Not enough privileges");
 
 	targetChannel->removeUser(targetUser->client);
 
+	// TEMP
 	std::string	response;
 	response = ":" + sourceUser->client->getNickname();
 	response += " KICK";
@@ -635,8 +691,9 @@ void	Server::kick(const t_commandParams &commandParams)
 	response += " " + targetUser->client->getNickname();
 	if (areBitsSet(commandParams.mask, MESSAGE))
 		response += " :" + commandParams.message;
+	response += DELIMITER;
 
-	targetUser->client->receiveMessage(response + DELIMITER);
+	targetUser->client->receiveMessage(response);
 }
 
 void	Server::mode(const t_commandParams &commandParams)
@@ -861,6 +918,28 @@ void	Server::serverResponse(const Client *client, const std::string &code,
 	/* Public */
 	/* Protected */
 	/* Private */
+
+Client	*Server::getClient(const std::string &nickname)
+{
+	ClientsIterator	it = _clients.begin();
+
+	while (it != _clients.end() && (*it)->getNickname() != nickname)
+		it++;
+
+	if (it == _clients.end())
+		return (NULL);
+	return (*it);
+}
+
+Channel	*Server::getChannel(const std::string &name)
+{
+	ChannelsIterator	it = _channels.find(name);
+
+	if (it == _channels.end())
+		return (NULL);
+	return (it->second);
+
+}
 
 /* Setters */
 
