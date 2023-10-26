@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 19:47:51 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 19:12:14 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,8 @@ void	Client::receiveMessage(const std::string &message) const
 	send(getSocketFd(), message.c_str(), message.length(), 0);
 }
 
-void	Client::broadcastMessageToChannel(const std::string &message) const
+/*
+void	Client::broadcastMessageToActiveChannel(const std::string &message) const
 {
 	if (!_activeChannel)
 		return ;
@@ -139,6 +140,23 @@ void	Client::broadcastMessageToChannel(const std::string &message) const
 	for (Channel::UsersIterator it = users.begin(); it != users.end(); it++)
 	{
 		if (_activeChannel == it->client->getActiveChannel() && this != it->client)
+			it->client->receiveMessage(message);
+	}
+}
+*/
+
+void	Client::broadcastMessageToChannel(const Channel *channel,
+	const std::string &message) const
+{
+	if (!channel)
+		return ;
+
+	std::string	response;
+	Channel::Users	users = channel->getUsers();
+
+	for (Channel::UsersIterator it = users.begin(); it != users.end(); it++)
+	{
+		if (this != it->client)
 			it->client->receiveMessage(message);
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 18:44:51 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 19:16:42 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -528,12 +528,42 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE))
-		serverResponse(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// Sends a message to the target (Channel or Client).
-	std::cout << "PRIVMSG command executed." << std::endl;
+	const Client		*source = commandParams.source;
+	const std::string	&targetName = commandParams.arguments[0];
+
+	std::string			response;
+	response += ":" + source->getNickname();
+	response += " PRIVMSG ";
+	response += targetName;
+	response += " :" + commandParams.message;
+	response += DELIMITER;
+
+	if (targetName[0] == '#')
+	{
+		// Channel
+		Channel::ChannelsIterator	itChannel = _channels.find(targetName);
+		if (itChannel == _channels.end())
+			serverResponse(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
+
+		Channel *targetChannel = itChannel->second;
+		source->broadcastMessageToChannel(targetChannel, response);
+	}
+	else
+	{
+		// User
+		ClientsIterator	it = _clients.begin();
+		while (it != _clients.end() && targetName != (*it)->getNickname())
+			it++;
+		if (it == _clients.end())
+			serverResponse(source, ERR_NOSUCHNICK, targetName, "No such nickname");
+
+		Client *targetClient = *it;
+		targetClient->receiveMessage(response);
+	}
 }
 
 void	Server::notice(const t_commandParams &commandParams)
@@ -759,7 +789,7 @@ void	Server::putMessage(Client *client, const std::string &delimiter, size_t &po
 	if (message != delimiter)
 	{
 		message = client->getNickname() + ": " + message;
-		client->broadcastMessageToChannel(message);
+		client->broadcastMessageToChannel(client->getActiveChannel(), message);
 	}
 }
 

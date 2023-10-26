@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 19:47:13 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 18:57:40 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,9 @@ class	Client
 		void				addToJoinedChannels(Channel *channel);
 
 		void				receiveMessage(const std::string &message) const;
-		void				broadcastMessageToChannel(const std::string &message) const;
+		void				broadcastMessageToChannel(const Channel *channel,
+								const std::string &message) const;
+		//void				broadcastMessageToActiveChannel(const std::string &message) const;
 
 		// Getter
 		std::string			&getBuffer(void);
