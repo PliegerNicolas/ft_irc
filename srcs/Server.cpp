@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 21:55:54 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 22:29:00 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,8 +265,24 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 				std::cout << e.what() << std::endl;
 			}
 		}
+		else
+		{
+			try
+			{
+				Channel	*channel = client->getActiveChannel();
+				if (!channel)
+					serverResponse(client, ERR_NOTONCHANNEL, "", "You are not on a channel");
 
-		clientBuffer.erase(0, delimiter.length());
+				clientBuffer = "/PRIVMSG " + channel->getName() + " :" + clientBuffer;
+				executeCommand(client, &pollFd, clientBuffer, delimiter);
+			}
+			catch (const std::exception &e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+		}
+
+		clientBuffer.erase(0, pos + delimiter.length());
 	}
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
 
@@ -528,87 +544,54 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-
-	const std::string	&targetName = commandParams.arguments[0];
-	if (targetName[0] == '#')
-	{
-
-	}
-	else
-	{
-
-	}
-
-	/*
 	const Client		*source = commandParams.source;
 	const std::string	&targetName = commandParams.arguments[0];
-
-	std::string			response;
-	response += ":" + source->getNickname();
-	response += " PRIVMSG ";
-	response += targetName;
-	response += " :" + commandParams.message;
-	response += DELIMITER;
+	Channel				*targetChannel = NULL;
+	Client				*targetClient = NULL;
 
 	if (targetName[0] == '#')
 	{
-		// Channel
-		Channel::ChannelsIterator	itChannel = _channels.find(targetName);
-		if (itChannel == _channels.end())
+		targetChannel = getChannel(targetName);
+		if (!targetChannel)
 			serverResponse(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
-
-		Channel *targetChannel = itChannel->second;
-		source->broadcastMessageToChannel(targetChannel, response);
 	}
 	else
 	{
-		// User
-		ClientsIterator	it = _clients.begin();
-		while (it != _clients.end() && targetName != (*it)->getNickname())
-			it++;
-		if (it == _clients.end())
-			serverResponse(source, ERR_NOSUCHNICK, targetName, "No such nickname");
-
-		Client *targetClient = *it;
-		targetClient->receiveMessage(response);
-	}
-	*/
-
-	/*
-	std::string			&clientBuffer = client->getBuffer();
-
-	if (verifyServerPermissions(client, VERIFIED | IDENTIFIED))
-	{
-		clientBuffer.clear();
-		return ;
+		targetClient = getClient(targetName);
+		if (!targetClient)
+			serverResponse(source, ERR_NOSUCHNICK, targetName, "No such user");
 	}
 
+	std::string			buffer = commandParams.message;
 	std::string			message;
+	const std::string	delimiter = DELIMITER;
+	size_t				pos;
 
-	if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+	do
 	{
-		pos = MSG_BUFFER_SIZE - delimiter.length();
-		pos = findLastChar(clientBuffer, pos);
-		message = clientBuffer.substr(0, pos);
-		clientBuffer.erase(0, pos);
-		message += delimiter;
-	}
-	else
-	{
-		pos = clientBuffer.find(delimiter);
-		message = clientBuffer.substr(0, pos);
-		clientBuffer.erase(0, pos);
-		message += delimiter;
-	}
+		if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+		{
+			pos = MSG_BUFFER_SIZE - delimiter.length();
+			pos = findLastChar(buffer, pos);
+			message = buffer.substr(0, pos);
+			buffer.erase(0, pos);
+		}
+		else
+		{
+			message = buffer.substr(0, pos);
+			buffer.erase(0, pos);
+		}
 
-	// TEMP
-	if (message != delimiter)
-	{
-		message = client->getNickname() + ": " + message;
-		client->broadcastMessageToChannel(client->getActiveChannel(), message);
-	}
-	*/
+		removeLeadingWhitespaces(buffer, delimiter);
+		buffer.erase(0, delimiter.length());
 
+		// Should be formatted
+		if (targetChannel)
+			source->broadcastMessageToChannel(targetChannel, message + delimiter);
+		else if (targetClient)
+			targetClient->receiveMessage(message + delimiter);
+	}
+	while ((pos = buffer.find(delimiter)) != std::string::npos);
 }
 
 void	Server::notice(const t_commandParams &commandParams)
