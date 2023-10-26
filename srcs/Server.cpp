@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 18:31:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 18:44:51 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,6 +272,9 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 	}
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
 
+	if (areBitsSet(pollFd.revents, POLLHUP))
+		return (CLIENT_DISCONNECTED);
+
 	return (CLIENT_CONNECTED);
 }
 
@@ -451,12 +454,14 @@ void	Server::user(const t_commandParams &commandParams)
 
 void	Server::quit(const t_commandParams &commandParams)
 {
-	if (areBitsNotSet(commandParams.mask, SOURCE))
+	if (areBitsNotSet(commandParams.mask, SOURCE | POLLFD))
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 0)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// This quits the server so destroys the affiliates client.
-	// See Server::handleClientDisconnection()
-	std::cout << "QUIT command executed." << std::endl;
+	// clear necessary data if needed ? No response expected.
+
+	commandParams.pollFd->revents |= POLLHUP;
 }
 
 void	Server::join(const t_commandParams &commandParams)

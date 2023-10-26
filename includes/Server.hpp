@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 18:30:04 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 18:36:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@
 #define CLIENT_CONNECTED 1
 #define CLIENT_DISCONNECTED 0
 
-#define DELIMITER "\r\n"			//"\r\n" for real IRC servers
+#define DELIMITER "\n"			//"\r\n" for real IRC servers
 #define MSG_BUFFER_SIZE 512
 #define MAX_CONNECTION_RETRIES 3
 
