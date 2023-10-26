@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 16:07:44 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/25 23:54:00 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -55,7 +55,8 @@ class	ServerSockets: public ASocket
 		const struct pollfd	generatePollFd(void);
 
 		// Getter
-		const Sockets	&getSockets(void) const;
+		const Sockets		&getSockets(void) const;
+		const std::string	&getHostname(void) const;
 
 		// Setter
 
@@ -68,7 +69,8 @@ class	ServerSockets: public ASocket
 
 	private:
 		/* Attributs */
-		Sockets		_sockets;
+		Sockets				_sockets;
+		const std::string	_hostname;
 
 		/* Constructors & Destructors */
 

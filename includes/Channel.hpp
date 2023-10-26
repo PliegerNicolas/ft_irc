@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/25 19:13:04 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 01:21:40 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,7 @@ class	Channel
 		void				addUser(Client* client, const int &mask);
 		void				removeUser(const Client* client);
 		bool				isUserRegistered(const Client* client) const;
+		bool				isFull(void) const;
 
 		// GETTERS
 

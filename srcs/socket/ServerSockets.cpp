@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 16:06:47 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/10/25 23:53:25 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -15,7 +15,8 @@
 
 	/* Public */
 ServerSockets::ServerSockets(void):
-	ASocket()
+	ASocket(),
+	_hostname("localhost")
 {
 	if (DEBUG)
 	{
@@ -32,7 +33,8 @@ ServerSockets::ServerSockets(void):
 }
 
 ServerSockets::ServerSockets(const t_serverconfig &serverConfig):
-	ASocket()
+	ASocket(),
+	_hostname(serverConfig.interface)
 {
 	if (DEBUG)
 	{
@@ -195,6 +197,11 @@ void	ServerSockets::verifyPort(const char *strPort)
 const ServerSockets::Sockets	&ServerSockets::getSockets(void) const
 {
 	return (_sockets);
+}
+
+const std::string	&ServerSockets::getHostname(void) const
+{
+	return (_hostname);
 }
 
 	/* Protected */
