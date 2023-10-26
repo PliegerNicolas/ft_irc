@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 21:52:40 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 21:55:54 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -790,18 +790,18 @@ void	Server::pass(const t_commandParams &commandParams)
 
 	if (areBitsSet(source->getServerPermissions(), VERIFIED))
 		serverResponse(source, ERR_ALREADYREGISTERED, "",
-			"You're already registered");
+			"You are already registered");
 	else if (source->getConnectionRetries() >= MAX_CONNECTION_RETRIES)
 	{
+		commandParams.pollFd->revents |= POLLHUP;
 		serverResponse(source, ERR_PASSWDMISMATCH, "",
-			"Too many password attempts. Access denied");
-		// FORCE DISCONNECTION HERE
+			"Acces denied. Too many password attempts.");
 	}
 	else if (_password != commandParams.arguments[0])
 	{
 		source->incrementConnectionRetries();
 		serverResponse(source, ERR_PASSWDMISMATCH, "",
-			"Password incorrect. Access denied");
+			"Access denied. Password incorrect.");
 
 	}
 	else
