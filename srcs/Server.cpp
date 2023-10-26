@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 19:16:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 19:27:34 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,11 +262,30 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 			}
 			catch (const std::exception &e)
 			{
-				std::cerr << e.what() << std::endl;
+				std::cout << e.what() << std::endl;
 			}
 		}
 		else
-			putMessage(client, delimiter, pos);
+		{
+			//putMessage(client, delimiter, pos);
+			try
+			{
+				const Channel	*channel = client->getActiveChannel();
+
+				if (!channel)
+					serverResponse(client, ERR_NOSUCHCHANNEL, "", "No such channel");
+
+				std::vector<std::string>	arguments;
+				arguments.push_back(channel->getName());
+
+				privmsg(buildCommandParams(client, &pollFd, arguments, clientBuffer));
+			}
+			catch (const std::exception &e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+			clientBuffer.erase(0, clientBuffer.find(delimiter));
+		}
 
 		clientBuffer.erase(0, delimiter.length());
 	}
@@ -757,6 +776,7 @@ void	Server::pass(const t_commandParams &commandParams)
 /* *                            Server utilities                            * */
 /* ************************************************************************** */
 
+/*
 void	Server::putMessage(Client *client, const std::string &delimiter, size_t &pos)
 {
 	std::string			&clientBuffer = client->getBuffer();
@@ -792,6 +812,7 @@ void	Server::putMessage(Client *client, const std::string &delimiter, size_t &po
 		client->broadcastMessageToChannel(client->getActiveChannel(), message);
 	}
 }
+*/
 
 bool	Server::isCommand(const std::string &clientBuffer)
 {

@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 18:36:56 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 19:18:39 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,7 +155,7 @@ class	Server
 		void			part(const t_commandParams &commandParams);
 		void			pass(const t_commandParams &commandParams);
 
-		void			putMessage(Client *client, const std::string &delimiter, size_t &pos);
+		//void			putMessage(Client *client, const std::string &delimiter, size_t &pos);
 		bool			isCommand(const std::string &clientBuffer);
 		bool			verifyServerPermissions(const Client *client, const int &mask);
 		void			serverResponse(const Client *client, const std::string &code,
