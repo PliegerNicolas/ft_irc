@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/26 00:06:27 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 00:48:51 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 02:21:07 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,7 @@
 #define ERR_WASNOSUCHNICK "406"
 #define ERR_TOOMANYTARGETS "407"
 #define ERR_NOORIGIN "409"
+#define ERR_CANTLOADMODULE "410"
 #define ERR_NORECIPIENT "411"
 #define ERR_NOTEXTTOSEND "412"
 #define ERR_NOTOPLEVEL "413"

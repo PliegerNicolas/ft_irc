@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 01:37:56 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 02:19:55 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,13 +272,6 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 	}
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
 
-	if ((~(client->getConnectionRetries()) & VERIFIED)
-		&& client->getConnectionRetries() >= MAX_CONNECTION_RETRIES)
-	{
-		std::cerr << "Error: Shesh too much retries (temp msg)." << std::endl;
-		return (CLIENT_DISCONNECTED);
-	}
-
 	return (CLIENT_CONNECTED);
 }
 
@@ -385,9 +378,29 @@ Server::t_commandParams	Server::parseCommand(Client *client, std::string &client
 
 void	Server::cap(const t_commandParams &commandParams)
 {
-	// Unclear
-	(void)commandParams;
-	std::cout << "CAP command executed." << std::endl;
+	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+
+	std::string	subcommand = commandParams.arguments[0];
+
+	if (subcommand == "LS")
+		serverResponse(commandParams.source, ERR_CANTLOADMODULE,
+			"CAP LS", "Capability negotiation is not supported");
+	else if (subcommand == "REQ")
+		serverResponse(commandParams.source, ERR_CANTLOADMODULE,
+			"CAP REQ", "Capability negotiation is not supported");
+	else if (subcommand == "ACK")
+		serverResponse(commandParams.source, ERR_CANTLOADMODULE,
+			"CAP ACK", "Capability negotiation is not supported");
+	else if (subcommand == "NAK")
+		serverResponse(commandParams.source, ERR_CANTLOADMODULE,
+			"CAP NAK", "Capability negotiation is not supported");
+	else if (subcommand == "END")
+		serverResponse(commandParams.source, RPL_ENDOFNAMES,
+			"CAP END", "End of CAP command");
+	else
+		serverResponse(commandParams.source, ERR_UNKNOWNCOMMAND,
+			"Unknown subcommand", subcommand);
 }
 
 void	Server::nick(const t_commandParams &commandParams)
@@ -720,25 +733,30 @@ void	Server::part(const t_commandParams &commandParams)
 
 void	Server::pass(const t_commandParams &commandParams)
 {
-	if (((commandParams.mask & (SOURCE | ARGUMENTS)) != (SOURCE | ARGUMENTS))
-		|| (commandParams.arguments.size() != 1))
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in PASS command (temp message)." << std::endl;
+	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 1)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client	*source = commandParams.source;
 
 	if (areBitsSet(source->getServerPermissions(), VERIFIED))
+		serverResponse(source, ERR_ALREADYREGISTERED, "",
+			"You're already registered");
+	else if (source->getConnectionRetries() >= MAX_CONNECTION_RETRIES)
 	{
-		std::cerr << "Error: already VERIFIED in PASS command (temp message)." << std::endl;
-		return ;
+		serverResponse(source, ERR_PASSWDMISMATCH, "",
+			"Too many password attempts. Access denied");
+		// FORCE DISCONNECTION HERE
 	}
 	else if (_password != commandParams.arguments[0])
 	{
-		std::cerr << "Error: wrong password PASS command (temp message)." << std::endl;
 		source->incrementConnectionRetries();
+		serverResponse(source, ERR_PASSWDMISMATCH, "",
+			"Password incorrect. Access denied");
+
 	}
 	else
 		source->setServerPermissions(VERIFIED);
@@ -810,15 +828,13 @@ bool	Server::verifyServerPermissions(const Client *client, const int &mask)
 	if (areBitsSet(mask, VERIFIED)
 		&& areBitsNotSet(client->getServerPermissions(), VERIFIED))
 	{
-		std::cerr << "Error: User isn't VERIFIED. Use PASS [password]";
-		std::cerr << " to verify your access permissions (temp)." << std::endl;
+		serverResponse(client, ERR_PASSWDMISMATCH, "", "You have not verified");
 		return (true);
 	}
 	else if (areBitsSet(mask, IDENTIFIED)
 		&& areBitsNotSet(client->getServerPermissions(), IDENTIFIED))
 	{
-		std::cerr << "Error: User isn't IDENTIFIED. Use NICK [nickname]";
-		std::cerr << " to verify your identity (temp)." << std::endl;
+		serverResponse(client, ERR_NOTREGISTERED, "", "You have not registered");
 		return (true);
 	}
 	return (false);
