@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 02:19:55 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 02:41:16 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -436,12 +436,10 @@ void	Server::user(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE)
-		|| commandParams.arguments.size() != 3)
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in USER command (temp message)." << std::endl;
-		return ;
-	}
+		|| commandParams.arguments.size() < 3)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 3)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// This command should set the user's nickname. Careful.
 	// Nicknames should be unique to ensure accessibility !
@@ -453,11 +451,7 @@ void	Server::user(const t_commandParams &commandParams)
 void	Server::quit(const t_commandParams &commandParams)
 {
 	if (areBitsNotSet(commandParams.mask, SOURCE))
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in QUIT command (temp message)." << std::endl;
-		return ;
-	}
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
 	// This quits the server so destroys the affiliates client.
 	// See Server::handleClientDisconnection()
@@ -511,13 +505,10 @@ void	Server::whois(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() != 1)
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in WHOIS command (temp message)." << std::endl;
-		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		serverResponse(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+	else if (commandParams.arguments.size() > 1)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Gets information about an existing user :
 	// nickname, name, blablabla ...
@@ -528,13 +519,10 @@ void	Server::privmsg(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE)
-		|| commandParams.arguments.size() != 1)
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in PRIVMSG command (temp message)." << std::endl;
-		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE))
+		serverResponse(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+	else if (commandParams.arguments.size() > 1)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Sends a message to the target (Channel or Client).
 	std::cout << "PRIVMSG command executed." << std::endl;
@@ -544,13 +532,10 @@ void	Server::notice(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE)
-		|| commandParams.arguments.size() != 1)
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in NOTICE command (temp message)." << std::endl;
-		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE))
+		serverResponse(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+	else if (commandParams.arguments.size() > 1)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Sends a server notice to a client, channel or everywhere.
 	std::cout << "NOTICE command executed." << std::endl;
@@ -560,17 +545,14 @@ void	Server::kick(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in KICK command (temp message)." << std::endl;
-		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 2)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	Channel			*targetChannel = NULL;
-	Channel::User	*targetUser = NULL;
 	Channel::User	*sourceUser = NULL;
+	Channel::User	*targetUser = NULL;
+	Channel			*targetChannel = NULL;
 
 	if (commandParams.arguments.size() == 1)
 	{
@@ -601,49 +583,34 @@ void	Server::kick(const t_commandParams &commandParams)
 	}
 
 	if (targetChannel == NULL)
-	{
-		std::cerr << "Error: channel not found (temp message)." << std::endl;
-		return ;
-	}
+		serverResponse(commandParams.source, ERR_NOSUCHCHANNEL, "", "No such channel");
 	else if (targetUser == NULL)
-	{
-		std::cerr << "Error: user not found (temp message)." << std::endl;
-		return ;
-	}
-	else if (sourceUser == NULL)
-	{
-		std::cerr << "Error: you're not member of that channel (temp message)." << std::endl;
-		return ;
-	}
-	else if (areBitsNotSet(sourceUser->permissionsMask, Channel::KICK))
-	{
-		std::cerr << "Error: not enough permissions (temp message)." << std::endl;
-		return ;
-	}
+		serverResponse(commandParams.source, ERR_NOSUCHNICK, "", "No such nickname");
+	else if (areBitsNotSet(sourceUser->permissionsMask, Channel::KICK) || sourceUser == NULL)
+		serverResponse(commandParams.source, ERR_CHANOPRIVSNEEDED,
+			"", "You're not a channel operator");
 
 	targetChannel->removeUser(targetUser->client);
 
-	std::string	message;
+	std::string	response;
+	response = ":" + sourceUser->client->getNickname();
+	response += " KICK";
+	response += " " + targetChannel->getName();
+	response += " " + targetUser->client->getNickname();
 	if (areBitsSet(commandParams.mask, MESSAGE))
-		message = ":" + sourceUser->client->getNickname() + " KICK "
-			+ targetChannel->getName() + " :" + commandParams.message + DELIMITER;
-	else
-		message = ":" + sourceUser->client->getNickname() + " KICK "
-			+ targetChannel->getName() + DELIMITER;
-	targetUser->client->receiveMessage(message);
+		response += " :" + commandParams.message;
+
+	targetUser->client->receiveMessage(response + DELIMITER);
 }
 
 void	Server::mode(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| (commandParams.arguments.size() < 1 || commandParams.arguments.size() > 2))
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in MODE command (temp message)." << std::endl;
-		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 2)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// ???
 	std::cout << "MODE command executed." << std::endl;
@@ -653,13 +620,10 @@ void	Server::topic(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE)
-		|| commandParams.arguments.size() != 1)
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in TOPIC command (temp message)." << std::endl;
-		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 1)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// ???
 	std::cout << "TOPIC command executed." << std::endl;
@@ -670,12 +634,10 @@ void	Server::invite(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() != 2)
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in INVITE command (temp message)." << std::endl;
-		return ;
-	}
+		|| commandParams.arguments.size() < 2)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 2)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Invites a client to a channel.
 	// My current commandParams aren't adapted to this.
@@ -686,13 +648,10 @@ void	Server::who(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() != 1)
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in WHO command (temp message)." << std::endl;
-		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 1)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	//  List the users in a channel (names, real names, server info, status, ...)
 	std::cout << "WHO command executed." << std::endl;
@@ -702,13 +661,10 @@ void	Server::names(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() != 1)
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in NAMES command (temp message)." << std::endl;
-		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 1)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Lists users of a channel (nicknames and status)
 	std::cout << "NAMES command executed." << std::endl;
@@ -718,13 +674,10 @@ void	Server::part(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() != 1)
-	{
-		std::cerr << "Error: invalid arguments";
-		std::cerr << " in PART command (temp message)." << std::endl;
-		return ;
-	}
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 1)
+		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Leaves a channel. A user can be member of multiple channels at the same time
 	// for persistence.
