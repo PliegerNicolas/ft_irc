@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/26 01:28:39 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 11:15:14 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,10 @@ void	Channel::removeUser(const Client* client)
 	for (; it != _users.end() && it->client != client; it++);
 
 	if (it != _users.end())
+	{
 		it->client->setActiveChannel(NULL);
+		_users.erase(it);
+	}
 }
 
 	/* Protected */

@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 02:41:16 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 18:31:43 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -258,7 +258,7 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 		{
 			try
 			{
-				executeCommand(client, clientBuffer, delimiter);
+				executeCommand(client, &pollFd, clientBuffer, delimiter);
 			}
 			catch (const std::exception &e)
 			{
@@ -328,8 +328,8 @@ void	Server::setCommands(void)
 	_commands["QUIT"] = &Server::quit;
 }
 
-void	Server::executeCommand(Client *client, std::string &clientBuffer,
-	const std::string &delimiter)
+void	Server::executeCommand(Client *client, struct pollfd *pollFd,
+	std::string &clientBuffer, const std::string &delimiter)
 {
 	CommandFunction				command;
 	t_commandParams				commandParams;
@@ -342,12 +342,12 @@ void	Server::executeCommand(Client *client, std::string &clientBuffer,
 		command = _commands.find(word)->second;
 	}
 
-	commandParams = parseCommand(client, clientBuffer, delimiter);
+	commandParams = parseCommand(client, pollFd, clientBuffer, delimiter);
 	(this->*command)(commandParams);
 }
 
-Server::t_commandParams	Server::parseCommand(Client *client, std::string &clientBuffer,
-	const std::string &delimiter)
+Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *pollFd,
+	std::string &clientBuffer, const std::string &delimiter)
 {
 	t_commandParams				commandParams;
 	std::string					word;
@@ -369,7 +369,7 @@ Server::t_commandParams	Server::parseCommand(Client *client, std::string &client
 		clientBuffer.erase(0, pos);
 	}
 
-	return (buildCommandParams(client, parameters, message));
+	return (buildCommandParams(client, pollFd, parameters, message));
 }
 
 /* ************************************************************************** */
@@ -445,7 +445,8 @@ void	Server::user(const t_commandParams &commandParams)
 	// Nicknames should be unique to ensure accessibility !
 	// Nicknames are freed on client disconnection. There is not
 	// persistence.
-	std::cout << "USER command executed." << std::endl;
+	//std::cout << "USER command executed." << std::endl;
+	serverResponse(commandParams.source, RPL_WELCOME, "", "TEMP");
 }
 
 void	Server::quit(const t_commandParams &commandParams)
@@ -496,6 +497,8 @@ void	Server::join(const t_commandParams &commandParams)
 	source->addToJoinedChannels(channel);
 
 	// TEMP
+	source->receiveMessage(":" + source->getNickname() + " JOIN " + channelName);
+	serverResponse(source, RPL_TOPIC, channelName, "topic"); // get topic
 	serverResponse(source, RPL_TOPIC, channelName, "topic"); // get topic
 	serverResponse(source, RPL_NAMREPLY, "= " + channelName, "usr1 user2 user3"); // get users list
 	serverResponse(source, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
@@ -836,7 +839,7 @@ void	Server::serverResponse(const Client *client, const std::string &code,
 	/* Protected */
 	/* Private */
 
-Server::t_commandParams	Server::buildCommandParams(Client *source,
+Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd *pollFd,
 	std::vector<std::string> &arguments, std::string &message)
 {
 	t_commandParams	commandParameters;
@@ -850,6 +853,14 @@ Server::t_commandParams	Server::buildCommandParams(Client *source,
 	}
 	else
 		commandParameters.source = NULL;
+
+	if (pollFd)
+	{
+		commandParameters.mask |= POLLFD;
+		commandParameters.pollFd = pollFd;
+	}
+	else
+		commandParameters.pollFd = NULL;
 
 	if (arguments.size() > 0)
 	{

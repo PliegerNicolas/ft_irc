@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 00:45:02 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 18:30:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@
 #define CLIENT_CONNECTED 1
 #define CLIENT_DISCONNECTED 0
 
-#define DELIMITER "\n"			//"\r\n" for real IRC servers
+#define DELIMITER "\r\n"			//"\r\n" for real IRC servers
 #define MSG_BUFFER_SIZE 512
 #define MAX_CONNECTION_RETRIES 3
 
@@ -51,19 +51,21 @@ class	Server
 		typedef enum setCommandParameters
 		{
 			SOURCE = (1 << 0),
-			ARGUMENTS = (1 << 1),
-			MESSAGE = (1 << 2)
+			POLLFD = (1 << 1),
+			ARGUMENTS = (1 << 2),
+			MESSAGE = (1 << 3)
 		}	t_setCommandParams;
 
 		typedef struct CommandParameters
 		{
 			int							mask;
 			Client						*source;
+			struct pollfd				*pollFd;
 			std::vector<std::string>	arguments;
 			std::string					message;
 		}	t_commandParams;
 
-		static t_commandParams	buildCommandParams(Client *source,
+		static t_commandParams	buildCommandParams(Client *source, struct pollfd *pollFd,
 			std::vector<std::string> &arguments, std::string &message);
 
 		typedef void (Server::*CommandFunction)(const t_commandParams &params);
@@ -131,10 +133,10 @@ class	Server
 
 		// Commands
 		void			setCommands(void);
-		void			executeCommand(Client *client, std::string &clientBuffer,
-							const std::string &delimiter);
-		t_commandParams	parseCommand(Client *client, std::string &clientBuffer,
-							const std::string &delimiter);
+		void			executeCommand(Client *client, struct pollfd *pollFd,
+							std::string &clientBuffer, const std::string &delimiter);
+		t_commandParams	parseCommand(Client *client, struct pollfd *pollFd,
+							std::string &clientBuffer, const std::string &delimiter);
 
 		void			cap(const t_commandParams &commandParams);
 		void			nick(const t_commandParams &commandParams);
