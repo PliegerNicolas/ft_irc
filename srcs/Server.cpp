@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 19:27:34 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/26 19:37:25 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -264,27 +264,6 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 			{
 				std::cout << e.what() << std::endl;
 			}
-		}
-		else
-		{
-			//putMessage(client, delimiter, pos);
-			try
-			{
-				const Channel	*channel = client->getActiveChannel();
-
-				if (!channel)
-					serverResponse(client, ERR_NOSUCHCHANNEL, "", "No such channel");
-
-				std::vector<std::string>	arguments;
-				arguments.push_back(channel->getName());
-
-				privmsg(buildCommandParams(client, &pollFd, arguments, clientBuffer));
-			}
-			catch (const std::exception &e)
-			{
-				std::cout << e.what() << std::endl;
-			}
-			clientBuffer.erase(0, clientBuffer.find(delimiter));
 		}
 
 		clientBuffer.erase(0, delimiter.length());
