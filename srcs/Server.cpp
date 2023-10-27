@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 22:29:00 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/27 20:12:41 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -565,7 +565,7 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	std::string			buffer = commandParams.message;
 	std::string			message;
 	const std::string	delimiter = DELIMITER;
-	size_t				pos;
+	size_t				pos = buffer.find(delimiter);
 
 	do
 	{
@@ -617,7 +617,7 @@ void	Server::kick(const t_commandParams &commandParams)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client			*source = commandParams.source;
-	Channel			*targetChannel;
+	Channel			*targetChannel = NULL;
 	Channel::User	*sourceUser = NULL;
 	Channel::User	*targetUser = NULL;
 
