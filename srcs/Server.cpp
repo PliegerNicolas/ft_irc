@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/28 05:30:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/28 05:50:24 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -552,37 +552,36 @@ void	Server::privmsg(const t_commandParams &commandParams)
 			serverResponse(source, ERR_NOSUCHNICK, targetName, "No such user");
 	}
 
+	const std::string	prefix = ":" + source->getNickname() + " PRIVMSG " + targetName + " :";
+	const std::string	delimiter = DELIMITER;
 	std::string			buffer = commandParams.message;
 	std::string			message;
-	const std::string	delimiter = DELIMITER;
-	size_t				pos = buffer.find(delimiter);
+	size_t				pos;
 
-	do
+	removeLeadingWhitespaces(buffer, delimiter);
+
+	while (!buffer.empty())
 	{
-		if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+		if (buffer.length() >= (MSG_BUFFER_SIZE - prefix.length()))
 		{
-			pos = MSG_BUFFER_SIZE - delimiter.length();
+			pos = MSG_BUFFER_SIZE - prefix.length();
 			pos = findLastChar(buffer, pos);
 			message = buffer.substr(0, pos);
 			buffer.erase(0, pos);
 		}
 		else
 		{
-			message = buffer.substr(0, pos);
-			buffer.erase(0, pos);
+			message = buffer;
+			buffer.clear();
 		}
 
-		removeLeadingWhitespaces(buffer, delimiter);
-		buffer.erase(0, delimiter.length());
-
-		// Should be formatted
 		if (targetChannel)
-			source->broadcastMessageToChannel(targetChannel, source->getNickname()
-				+ ": " + message + delimiter);
+			source->broadcastMessageToChannel(targetChannel, prefix + message + delimiter);
 		else if (targetClient)
-			targetClient->receiveMessage(source->getNickname() + ": " + message + delimiter);
+			targetClient->receiveMessage(prefix + message + delimiter);
+
+		removeLeadingWhitespaces(buffer, delimiter);
 	}
-	while ((pos = buffer.find(delimiter)) != std::string::npos);
 }
 
 void	Server::notice(const t_commandParams &commandParams)
