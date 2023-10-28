@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 22:29:00 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/28 05:50:24 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -254,35 +254,24 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 
 	do
 	{
-		if (isCommand(clientBuffer))
+		try
 		{
-			try
-			{
-				executeCommand(client, &pollFd, clientBuffer, delimiter);
-			}
-			catch (const std::exception &e)
-			{
-				std::cout << e.what() << std::endl;
-			}
-		}
-		else
-		{
-			try
+			if (!isCommand(clientBuffer))
 			{
 				Channel	*channel = client->getActiveChannel();
 				if (!channel)
+				{
+					clientBuffer.clear();
 					serverResponse(client, ERR_NOTONCHANNEL, "", "You are not on a channel");
-
+				}
 				clientBuffer = "/PRIVMSG " + channel->getName() + " :" + clientBuffer;
-				executeCommand(client, &pollFd, clientBuffer, delimiter);
 			}
-			catch (const std::exception &e)
-			{
-				std::cout << e.what() << std::endl;
-			}
+			executeCommand(client, &pollFd, clientBuffer, delimiter);
 		}
-
-		clientBuffer.erase(0, pos + delimiter.length());
+		catch (const std::exception &e)
+		{
+			std::cout << e.what() << std::endl;
+		}
 	}
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
 
@@ -377,14 +366,15 @@ Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *poll
 		parameters.push_back(word);
 	}
 
+	size_t	pos = clientBuffer.find(delimiter);
+
 	if (clientBuffer[0] == ':')
 	{
-		size_t	pos;
 		clientBuffer.erase(0, 1);
-		pos = clientBuffer.find(delimiter);
-		message = clientBuffer.substr(0, pos);
-		clientBuffer.erase(0, pos);
+		message = clientBuffer.substr(0, --pos);
 	}
+
+	clientBuffer.erase(0, pos + delimiter.length());
 
 	return (buildCommandParams(client, pollFd, parameters, message));
 }
@@ -562,36 +552,36 @@ void	Server::privmsg(const t_commandParams &commandParams)
 			serverResponse(source, ERR_NOSUCHNICK, targetName, "No such user");
 	}
 
+	const std::string	prefix = ":" + source->getNickname() + " PRIVMSG " + targetName + " :";
+	const std::string	delimiter = DELIMITER;
 	std::string			buffer = commandParams.message;
 	std::string			message;
-	const std::string	delimiter = DELIMITER;
 	size_t				pos;
 
-	do
+	removeLeadingWhitespaces(buffer, delimiter);
+
+	while (!buffer.empty())
 	{
-		if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
+		if (buffer.length() >= (MSG_BUFFER_SIZE - prefix.length()))
 		{
-			pos = MSG_BUFFER_SIZE - delimiter.length();
+			pos = MSG_BUFFER_SIZE - prefix.length();
 			pos = findLastChar(buffer, pos);
 			message = buffer.substr(0, pos);
 			buffer.erase(0, pos);
 		}
 		else
 		{
-			message = buffer.substr(0, pos);
-			buffer.erase(0, pos);
+			message = buffer;
+			buffer.clear();
 		}
 
-		removeLeadingWhitespaces(buffer, delimiter);
-		buffer.erase(0, delimiter.length());
-
-		// Should be formatted
 		if (targetChannel)
-			source->broadcastMessageToChannel(targetChannel, message + delimiter);
+			source->broadcastMessageToChannel(targetChannel, prefix + message + delimiter);
 		else if (targetClient)
-			targetClient->receiveMessage(message + delimiter);
+			targetClient->receiveMessage(prefix + message + delimiter);
+
+		removeLeadingWhitespaces(buffer, delimiter);
 	}
-	while ((pos = buffer.find(delimiter)) != std::string::npos);
 }
 
 void	Server::notice(const t_commandParams &commandParams)
@@ -617,7 +607,7 @@ void	Server::kick(const t_commandParams &commandParams)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client			*source = commandParams.source;
-	Channel			*targetChannel;
+	Channel			*targetChannel = NULL;
 	Channel::User	*sourceUser = NULL;
 	Channel::User	*targetUser = NULL;
 
