@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/27 20:12:41 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/28 05:30:42 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -254,35 +254,24 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 
 	do
 	{
-		if (isCommand(clientBuffer))
+		try
 		{
-			try
-			{
-				executeCommand(client, &pollFd, clientBuffer, delimiter);
-			}
-			catch (const std::exception &e)
-			{
-				std::cout << e.what() << std::endl;
-			}
-		}
-		else
-		{
-			try
+			if (!isCommand(clientBuffer))
 			{
 				Channel	*channel = client->getActiveChannel();
 				if (!channel)
+				{
+					clientBuffer.clear();
 					serverResponse(client, ERR_NOTONCHANNEL, "", "You are not on a channel");
-
+				}
 				clientBuffer = "/PRIVMSG " + channel->getName() + " :" + clientBuffer;
-				executeCommand(client, &pollFd, clientBuffer, delimiter);
 			}
-			catch (const std::exception &e)
-			{
-				std::cout << e.what() << std::endl;
-			}
+			executeCommand(client, &pollFd, clientBuffer, delimiter);
 		}
-
-		clientBuffer.erase(0, pos + delimiter.length());
+		catch (const std::exception &e)
+		{
+			std::cout << e.what() << std::endl;
+		}
 	}
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
 
@@ -377,14 +366,15 @@ Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *poll
 		parameters.push_back(word);
 	}
 
+	size_t	pos = clientBuffer.find(delimiter);
+
 	if (clientBuffer[0] == ':')
 	{
-		size_t	pos;
 		clientBuffer.erase(0, 1);
-		pos = clientBuffer.find(delimiter);
-		message = clientBuffer.substr(0, pos);
-		clientBuffer.erase(0, pos);
+		message = clientBuffer.substr(0, --pos);
 	}
+
+	clientBuffer.erase(0, pos + delimiter.length());
 
 	return (buildCommandParams(client, pollFd, parameters, message));
 }
@@ -587,9 +577,10 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 		// Should be formatted
 		if (targetChannel)
-			source->broadcastMessageToChannel(targetChannel, message + delimiter);
+			source->broadcastMessageToChannel(targetChannel, source->getNickname()
+				+ ": " + message + delimiter);
 		else if (targetClient)
-			targetClient->receiveMessage(message + delimiter);
+			targetClient->receiveMessage(source->getNickname() + ": " + message + delimiter);
 	}
 	while ((pos = buffer.find(delimiter)) != std::string::npos);
 }
