@@ -960,7 +960,7 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 
 	if (source)
 	{
-		commandParameters.mask |= SOURCE;
+		setBits(commandParameters.mask, SOURCE);
 		commandParameters.source = source;
 	}
 	else
@@ -968,7 +968,7 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 
 	if (pollFd)
 	{
-		commandParameters.mask |= POLLFD;
+		setBits(commandParameters.mask, POLLFD);
 		commandParameters.pollFd = pollFd;
 	}
 	else
@@ -976,14 +976,15 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 
 	if (arguments.size() > 0)
 	{
-		commandParameters.mask |= ARGUMENTS;
+		setBits(commandParameters.mask, ARGUMENTS);
 		commandParameters.arguments = arguments;
 	}
 
 	if (!message.empty())
 	{
-		commandParameters.mask |= MESSAGE;
-		message.erase(0, 1);
+
+		setBits(commandParameters.mask, MESSAGE);
+    message.erase(0, 1);
 		commandParameters.message = message;
 	}
 

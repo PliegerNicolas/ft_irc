@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
+/*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/10/21 13:30:31 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/25 18:44:13 by nicolas          ###   ########.fr       */
+/*   Created: 2023/10/29 11:14:21 by nicolas           #+#    #+#             */
+/*   Updated: 2023/10/29 11:14:50 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,19 +83,4 @@ bool	areBitsNotSet(const int &mask, const int &bits)
 	if ((mask & bits) != bits)
 		return (true);
 	return (false);
-}
-
-inline void	toggleBits(int &mask, const int &bits)
-{
-	mask ^= bits;
-}
-
-inline void	setBits(int &mask, const int &bits)
-{
-	mask |= bits;
-}
-
-inline void	removeBits(int &mask, const int &bits)
-{
-	mask &= ~bits;
 }
