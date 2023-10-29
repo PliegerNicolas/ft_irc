@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/26 11:15:14 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/29 11:59:55 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,6 +144,11 @@ const std::string	&Channel::getName(void) const
 	return (_name);
 }
 
+const std::string	&Channel::getTopic(void) const
+{
+	return (_topic);
+}
+
 Channel::User	*Channel::getUser(const std::string &nickname)
 {
 	UsersIterator	it = _users.begin();
@@ -186,5 +191,11 @@ const Channel::Users	&Channel::getUsers(void) const
 /* Setters */
 
 	/* Public */
+
+void	Channel::setTopic(std::string const &topic)
+{
+	_topic = topic;
+}
+
 	/* Protected */
 	/* Private */

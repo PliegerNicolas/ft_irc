@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/28 05:50:24 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/29 11:56:34 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -691,8 +691,46 @@ void	Server::topic(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// ???
-	std::cout << "TOPIC command executed." << std::endl;
+	Channel::User		*tmp;
+	const std::string	&channelName = commandParams.arguments[0];
+	const std::string	&topic = commandParams.message;
+	Client				*source = commandParams.source;
+	Channel				*channel = getChannel(channelName);
+
+	if (channelName[0] != '#' || !channel)
+		serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+	tmp = channel->getUser(source->getNickname());
+	if (!tmp)
+		serverResponse(source, ERR_USERNOTINCHANNEL, channelName, "User not in that channel");
+
+	// Querrying the current topic
+	if (areBitsNotSet(commandParams.mask, MESSAGE))
+	{
+		const std::string topic = channel->getTopic();
+		if (!topic.empty())
+			serverResponse(source, RPL_TOPIC, channelName, topic);
+		else
+			serverResponse(source, RPL_NOTOPIC, channelName, "No topic is set");
+	}
+
+	// Trying to set new topic
+	else
+	{
+		if (areBitsNotSet(tmp->permissionsMask, Channel::TOPIC)) // should also check if mode -t
+			serverResponse(source, ERR_CHANOPRIVSNEEDED, channel->getName(), "Not enough privileges");
+		channel->setTopic(topic);
+		serverResponse(source, RPL_TOPIC, channelName, topic);
+	}
+
+	// 0. Check Channel existence and membership
+	// 0.a. ERR_NOSUCHCHANNEL (403)
+	// 0.b. ERR_NOTONCHANNEL (442)
+	// 1. if no argument
+	// 1.a. There is a topic -> RPL_TOPIC (332)
+	// 1.b. There is no topic -> RPL_NOTOPIC (331)
+	// 2. if additional argument & permission if mode (ERR_CHANOPRIVSNEEDED (482))
+	// 2.a. if message.empty() -> clear topic
+	// 2.b. else -> set new topic
 }
 
 void	Server::invite(const t_commandParams &commandParams)

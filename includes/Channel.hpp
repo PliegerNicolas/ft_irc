@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/26 01:21:40 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/29 11:58:13 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ class	Channel
 		// GETTERS
 
 		const std::string	&getName(void) const;
+		const std::string	&getTopic(void) const;
 		const Users			&getUsers(void) const;
 		User				*getUser(const std::string &nickname);
 
@@ -92,6 +93,8 @@ class	Channel
 		int					getAdminPerms(void);
 
 		// SETTERS
+
+		void				setTopic(std::string const &topic);
 
 	protected:
 		/* Attributs */
@@ -103,6 +106,7 @@ class	Channel
 	private:
 		/* Attributs */
 		std::string	_name;
+		std::string _topic;
 
 		Users		_users;
 		int			_userLimit;
