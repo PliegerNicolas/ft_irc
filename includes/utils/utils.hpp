@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 13:30:05 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/24 12:55:46 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/29 11:12:26 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ std::string			getNextWord(std::string &str, const std::string &delimiter);
 bool				areBitsSet(const int &mask, const int &bits);
 bool				areBitsNotSet(const int &mask, const int &bits);
 
-void				toggleBits(int &mask, const int &bits);
-void				setBits(int &mask, const int &bits);
-void				removeBits(int &mask, const int &bits);
+inline void			toggleBits(int &mask, const int &bits);
+inline void			setBits(int &mask, const int &bits);
+inline void			removeBits(int &mask, const int &bits);
+
+#include "utils/utils.tpp"

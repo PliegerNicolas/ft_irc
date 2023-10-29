@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/28 05:50:24 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/29 10:57:54 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -935,7 +935,7 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 
 	if (source)
 	{
-		commandParameters.mask |= SOURCE;
+		setBits(commandParameters.mask, SOURCE);
 		commandParameters.source = source;
 	}
 	else
@@ -943,7 +943,7 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 
 	if (pollFd)
 	{
-		commandParameters.mask |= POLLFD;
+		setBits(commandParameters.mask, POLLFD);
 		commandParameters.pollFd = pollFd;
 	}
 	else
@@ -951,13 +951,13 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 
 	if (arguments.size() > 0)
 	{
-		commandParameters.mask |= ARGUMENTS;
+		setBits(commandParameters.mask, ARGUMENTS);
 		commandParameters.arguments = arguments;
 	}
 
 	if (!message.empty())
 	{
-		commandParameters.mask |= MESSAGE;
+		setBits(commandParameters.mask, MESSAGE);
 		commandParameters.message = message;
 	}
 
