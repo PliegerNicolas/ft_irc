@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/29 12:51:47 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/29 12:59:53 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -702,7 +702,6 @@ void	Server::topic(const t_commandParams &commandParams)
 	if (!tmp)
 		serverResponse(source, ERR_USERNOTINCHANNEL, channelName, "User not in that channel");
 
-	// Querrying the current topic
 	if (areBitsNotSet(commandParams.mask, MESSAGE))
 	{
 		const std::string topic = channel->getTopic();
@@ -712,7 +711,6 @@ void	Server::topic(const t_commandParams &commandParams)
 			serverResponse(source, RPL_NOTOPIC, channelName, "No topic is set");
 	}
 
-	// Trying to set new topic
 	else
 	{
 		if (areBitsNotSet(tmp->permissionsMask, Channel::TOPIC)) // should also check if mode -t
@@ -720,16 +718,6 @@ void	Server::topic(const t_commandParams &commandParams)
 		channel->setTopic(topic);
 		serverResponse(source, RPL_TOPIC, channelName, topic);
 	}
-
-	// 0. Check Channel existence and membership
-	// 0.a. ERR_NOSUCHCHANNEL (403)
-	// 0.b. ERR_NOTONCHANNEL (442)
-	// 1. if no argument
-	// 1.a. There is a topic -> RPL_TOPIC (332)
-	// 1.b. There is no topic -> RPL_NOTOPIC (331)
-	// 2. if additional argument & permission if mode (ERR_CHANOPRIVSNEEDED (482))
-	// 2.a. if message.empty() -> clear topic
-	// 2.b. else -> set new topic
 }
 
 void	Server::invite(const t_commandParams &commandParams)
