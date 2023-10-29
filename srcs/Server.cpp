@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/29 11:56:34 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/29 12:51:47 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -370,8 +370,7 @@ Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *poll
 
 	if (clientBuffer[0] == ':')
 	{
-		clientBuffer.erase(0, 1);
-		message = clientBuffer.substr(0, --pos);
+		message = clientBuffer.substr(0, pos);
 	}
 
 	clientBuffer.erase(0, pos + delimiter.length());
@@ -505,8 +504,8 @@ void	Server::join(const t_commandParams &commandParams)
 
 	// TEMP
 	source->receiveMessage(":" + source->getNickname() + " JOIN " + channelName);
-	serverResponse(source, RPL_TOPIC, channelName, "topic"); // get topic
-	serverResponse(source, RPL_TOPIC, channelName, "topic"); // get topic
+	serverResponse(source, RPL_TOPIC, channelName, channel->getTopic());
+	serverResponse(source, RPL_TOPIC, channelName, channel->getTopic());
 	serverResponse(source, RPL_NAMREPLY, "= " + channelName, "usr1 user2 user3"); // get users list
 	serverResponse(source, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
 }
@@ -996,6 +995,7 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 	if (!message.empty())
 	{
 		commandParameters.mask |= MESSAGE;
+		message.erase(0, 1);
 		commandParameters.message = message;
 	}
 
