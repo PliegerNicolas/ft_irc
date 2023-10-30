@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 12:22:49 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 13:18:53 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -383,33 +383,41 @@ Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *poll
 /* *                           Command Functions                            * */
 /* ************************************************************************** */
 
+/**
+ *	CAP and it's subcommands communicate capabilities of server.
+ *	No specific capabilities are available on our Server -yet-.
+**/
 void	Server::cap(const t_commandParams &commandParams)
 {
 	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
-	std::string	subcommand = commandParams.arguments[0];
+	const Client	*source = commandParams.source;
+	std::string		subcommand = commandParams.arguments[0];
 
 	if (subcommand == "LS")
-		errCommand(commandParams.source, ERR_CANTLOADMODULE,
-			"CAP LS", "Capability negotiation is not supported");
+		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
+			"CAP LS", "Capability negotiation is not supported"));
 	else if (subcommand == "REQ")
-		errCommand(commandParams.source, ERR_CANTLOADMODULE,
-			"CAP REQ", "Capability negotiation is not supported");
+		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
+			"CAP REQ", "Capability negotiation is not supported"));
 	else if (subcommand == "ACK")
-		errCommand(commandParams.source, ERR_CANTLOADMODULE,
-			"CAP ACK", "Capability negotiation is not supported");
+		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
+			"CAP ACK", "Capability negotiation is not supported"));
 	else if (subcommand == "NAK")
-		errCommand(commandParams.source, ERR_CANTLOADMODULE,
-			"CAP NAK", "Capability negotiation is not supported");
+		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
+			"CAP NAK", "Capability negotiation is not supported"));
 	else if (subcommand == "END")
-		errCommand(commandParams.source, RPL_ENDOFNAMES,
-			"CAP END", "End of CAP command");
+		source->receiveMessage(getServerResponse(source, RPL_ENDOFNAMES,
+			"CAP END", "End of CAP command"));
 	else
-		errCommand(commandParams.source, ERR_UNKNOWNCOMMAND,
-			"Unknown subcommand", subcommand);
+		source->receiveMessage(getServerResponse(source, ERR_UNKNOWNCOMMAND,
+			"Unknown subcommand", subcommand));
 }
 
+/**
+ *	NICK sets or changes the user's nickname. It's reference and unique identifier.
+**/
 void	Server::nick(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED))
@@ -420,22 +428,22 @@ void	Server::nick(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client				*source = commandParams.source;
-	const	std::string	&nickname = commandParams.arguments[0];
+	const std::string	&nickname = commandParams.arguments[0];
 
 	if (nickname.length() > MAX_NICKNAME_LENGTH || nickname[0] == '#')
-		errCommand(commandParams.source, ERR_ERRONEUSNICKNAME, nickname,
-			"Erroneous Nickname");
+		errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 	{
 		const Client	*concurrentNicknameHolder = getClient(nickname);
 		if (concurrentNicknameHolder)
-			errCommand(commandParams.source, ERR_NICKNAMEINUSE, nickname,
-				"Nickname is already in use");
+			errCommand(source, ERR_NICKNAMEINUSE, nickname, "Nickname is already in use");
 	}
 
 	source->setNickname(nickname);
 	source->setServerPermissions(IDENTIFIED);
-	errCommand(source, RPL_WELCOME, "", "You are now known as " + nickname);
+
+	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
+		"You are now known as " + nickname));
 }
 
 void	Server::user(const t_commandParams &commandParams)
@@ -448,12 +456,14 @@ void	Server::user(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 3)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
+	const Client	*source = commandParams.source;
+
 	// This command should set the user's nickname. Careful.
 	// Nicknames should be unique to ensure accessibility !
 	// Nicknames are freed on client disconnection. There is not
 	// persistence.
 	//std::cout << "USER command executed." << std::endl;
-	errCommand(commandParams.source, RPL_WELCOME, "", "TEMP");
+	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "", "TEMP"));
 }
 
 void	Server::quit(const t_commandParams &commandParams)
@@ -468,6 +478,9 @@ void	Server::quit(const t_commandParams &commandParams)
 	commandParams.pollFd->revents |= POLLHUP;
 }
 
+/**
+ *	JOIN handles connection tentatives to a Channel and Channel creation.
+**/
 void	Server::join(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -480,35 +493,34 @@ void	Server::join(const t_commandParams &commandParams)
 	Client				*source = commandParams.source;
 	const std::string	&channelName = commandParams.arguments[0];
 
+	// Implement password management also here.
+
 	if (channelName[0] != '#')
 		errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 
-	Channel	*channel = getChannel(channelName);
+	Channel	*targetChannel = getChannel(channelName);
 
-	if (channel)
+	if (targetChannel)
 	{
-		if (channel->isFull())
+		if (targetChannel->isFull())
 			errCommand(source, ERR_CHANNELISFULL, channelName, "Channel is full");
-		else if (channel == source->getActiveChannel())
+		else if (targetChannel == source->getActiveChannel())
 			errCommand(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
 		else
-			channel->addUser(source, channel->getUserPerms());
+			targetChannel->addUser(source, targetChannel->getUserPerms());
 	}
 	else
 	{
-		channel = new Channel(channelName, source);
-		_channels[channelName] = channel;
+		targetChannel = new Channel(channelName, source);
+		_channels[channelName] = targetChannel;
 	}
 
-	source->setActiveChannel(channel);
-	source->addToJoinedChannels(channel);
+	source->setActiveChannel(targetChannel);
+	source->addToJoinedChannels(targetChannel);
 
-	// TEMP
-	source->receiveMessage(":" + source->getNickname() + " JOIN " + channelName);
-	errCommand(source, RPL_TOPIC, channelName, "topic"); // get topic
-	errCommand(source, RPL_TOPIC, channelName, "topic"); // get topic
-	errCommand(source, RPL_NAMREPLY, "= " + channelName, "usr1 user2 user3"); // get users list
-	errCommand(source, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
+	source->receiveMessage(getCommandResponse(source, "JOIN", targetChannel, ""));
+	// Add additionnal channel info here.
+
 }
 
 void	Server::whois(const t_commandParams &commandParams)
@@ -525,6 +537,10 @@ void	Server::whois(const t_commandParams &commandParams)
 	std::cout << "WHOIS command executed." << std::endl;
 }
 
+/**
+ *	PRIVMSG handles communication between users and users/channels.
+ *	It is used by default and targets the user's active channel when no command is given.
+**/
 void	Server::privmsg(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -535,9 +551,20 @@ void	Server::privmsg(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	const Client		*source = commandParams.source;
-	const std::string	&targetName = commandParams.arguments[0];
+	std::string			targetName = commandParams.arguments[0];
 	Channel				*targetChannel = NULL;
 	Client				*targetClient = NULL;
+
+	{
+		const size_t	pos = targetName.find(":");
+
+		if (pos != std::string::npos)
+		{
+			if (targetName.substr(pos + 1) != _serverSockets.getHostname())
+				errCommand(source, ERR_NOPERMFORHOST, targetName, "Invalid hostname");
+			targetName = targetName.substr(0, pos);
+		}
+	}
 
 	if (targetName[0] == '#')
 	{
@@ -552,7 +579,6 @@ void	Server::privmsg(const t_commandParams &commandParams)
 			errCommand(source, ERR_NOSUCHNICK, targetName, "No such user");
 	}
 
-	const std::string	prefix = ":" + source->getNickname() + " PRIVMSG " + targetName + " :";
 	const std::string	delimiter = DELIMITER;
 	std::string			buffer = commandParams.message;
 	std::string			message;
@@ -562,9 +588,9 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 	while (!buffer.empty())
 	{
-		if (buffer.length() >= (MSG_BUFFER_SIZE - prefix.length()))
+		if (buffer.length() >= MSG_BUFFER_SIZE)
 		{
-			pos = MSG_BUFFER_SIZE - prefix.length();
+			pos = MSG_BUFFER_SIZE;
 			pos = findLastChar(buffer, pos);
 			message = buffer.substr(0, pos);
 			buffer.erase(0, pos);
@@ -576,15 +602,11 @@ void	Server::privmsg(const t_commandParams &commandParams)
 		}
 
 		if (targetChannel)
-		{
-			source->broadcastMessageToChannel(targetChannel, getCommandResponse(source, "PRIVMSG",
-				targetChannel, message));
-		}
+			source->broadcastMessageToChannel(targetChannel,
+				getCommandResponse(source, "PRIVMSG", targetChannel, message));
 		else if (targetClient)
-		{
 			targetClient->receiveMessage(getCommandResponse(source, "PRIVMSG",
 				targetClient, message));
-		}
 
 		removeLeadingWhitespaces(buffer, delimiter);
 	}
@@ -603,6 +625,9 @@ void	Server::notice(const t_commandParams &commandParams)
 	std::cout << "NOTICE command executed." << std::endl;
 }
 
+/**
+ *	KICK removes forcefully a user from a Channel, affecting also it's privileges.
+**/
 void	Server::kick(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -617,11 +642,9 @@ void	Server::kick(const t_commandParams &commandParams)
 	Channel::User	*sourceUser = NULL;
 	Channel::User	*targetUser = NULL;
 
-	std::string		nickname;
-
 	if (commandParams.arguments.size() == 1)
 	{
-		nickname = commandParams.arguments[0];
+		const std::string	&nickname = commandParams.arguments[0];
 
 		if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
 			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
@@ -638,7 +661,7 @@ void	Server::kick(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() == 2)
 	{
 		const std::string	&channelName = commandParams.arguments[0];
-		nickname = commandParams.arguments[1];
+		const std::string	&nickname = commandParams.arguments[1];
 
 		if (channelName[0] != '#')
 			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
@@ -662,9 +685,8 @@ void	Server::kick(const t_commandParams &commandParams)
 
 	targetChannel->removeUser(targetUser->client);
 
-	std::string	response = getCommandResponse(source, "KICK", targetUser->client,
-		commandParams.message);
-	targetUser->client->receiveMessage(response);
+	targetUser->client->receiveMessage(getCommandResponse(source, "KICK",
+		targetUser->client, commandParams.message));
 }
 
 void	Server::mode(const t_commandParams &commandParams)
@@ -880,7 +902,9 @@ Server::getServerResponse(const Client *client, const std::string &code,
 	if (!trailing.empty())
 		response += " :" + trailing;
 
-	return (response + DELIMITER);
+	response += DELIMITER;
+
+	return (response);
 }
 
 const std::string
@@ -937,22 +961,20 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 	t_commandParams	commandParameters;
 
 	commandParameters.mask = 0;
+	commandParameters.source = NULL;
+	commandParameters.pollFd = NULL;
 
 	if (source)
 	{
 		setBits(commandParameters.mask, SOURCE);
 		commandParameters.source = source;
 	}
-	else
-		commandParameters.source = NULL;
 
 	if (pollFd)
 	{
 		setBits(commandParameters.mask, POLLFD);
 		commandParameters.pollFd = pollFd;
 	}
-	else
-		commandParameters.pollFd = NULL;
 
 	if (arguments.size() > 0)
 	{
