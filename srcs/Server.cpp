@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 11:13:11 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 12:22:49 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,7 +262,7 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 				if (!channel)
 				{
 					clientBuffer.clear();
-					serverResponse(client, ERR_NOTONCHANNEL, "", "You are not on a channel");
+					errCommand(client, ERR_NOTONCHANNEL, "", "You are not on a channel");
 				}
 				clientBuffer = "/PRIVMSG " + channel->getName() + " :" + clientBuffer;
 			}
@@ -270,7 +270,7 @@ bool	Server::handleClientDataReception(Client *client, struct pollfd &pollFd)
 		}
 		catch (const std::exception &e)
 		{
-			std::cout << e.what() << std::endl;
+			std::cout << e.what();
 		}
 	}
 	while ((pos = clientBuffer.find(delimiter)) != std::string::npos);
@@ -386,27 +386,27 @@ Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *poll
 void	Server::cap(const t_commandParams &commandParams)
 {
 	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
 	std::string	subcommand = commandParams.arguments[0];
 
 	if (subcommand == "LS")
-		serverResponse(commandParams.source, ERR_CANTLOADMODULE,
+		errCommand(commandParams.source, ERR_CANTLOADMODULE,
 			"CAP LS", "Capability negotiation is not supported");
 	else if (subcommand == "REQ")
-		serverResponse(commandParams.source, ERR_CANTLOADMODULE,
+		errCommand(commandParams.source, ERR_CANTLOADMODULE,
 			"CAP REQ", "Capability negotiation is not supported");
 	else if (subcommand == "ACK")
-		serverResponse(commandParams.source, ERR_CANTLOADMODULE,
+		errCommand(commandParams.source, ERR_CANTLOADMODULE,
 			"CAP ACK", "Capability negotiation is not supported");
 	else if (subcommand == "NAK")
-		serverResponse(commandParams.source, ERR_CANTLOADMODULE,
+		errCommand(commandParams.source, ERR_CANTLOADMODULE,
 			"CAP NAK", "Capability negotiation is not supported");
 	else if (subcommand == "END")
-		serverResponse(commandParams.source, RPL_ENDOFNAMES,
+		errCommand(commandParams.source, RPL_ENDOFNAMES,
 			"CAP END", "End of CAP command");
 	else
-		serverResponse(commandParams.source, ERR_UNKNOWNCOMMAND,
+		errCommand(commandParams.source, ERR_UNKNOWNCOMMAND,
 			"Unknown subcommand", subcommand);
 }
 
@@ -415,27 +415,27 @@ void	Server::nick(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client				*source = commandParams.source;
 	const	std::string	&nickname = commandParams.arguments[0];
 
 	if (nickname.length() > MAX_NICKNAME_LENGTH || nickname[0] == '#')
-		serverResponse(commandParams.source, ERR_ERRONEUSNICKNAME, nickname,
+		errCommand(commandParams.source, ERR_ERRONEUSNICKNAME, nickname,
 			"Erroneous Nickname");
 
 	{
 		const Client	*concurrentNicknameHolder = getClient(nickname);
 		if (concurrentNicknameHolder)
-			serverResponse(commandParams.source, ERR_NICKNAMEINUSE, nickname,
+			errCommand(commandParams.source, ERR_NICKNAMEINUSE, nickname,
 				"Nickname is already in use");
 	}
 
 	source->setNickname(nickname);
 	source->setServerPermissions(IDENTIFIED);
-	serverResponse(source, RPL_WELCOME, "", "You are now known as " + nickname);
+	errCommand(source, RPL_WELCOME, "", "You are now known as " + nickname);
 }
 
 void	Server::user(const t_commandParams &commandParams)
@@ -444,24 +444,24 @@ void	Server::user(const t_commandParams &commandParams)
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE)
 		|| commandParams.arguments.size() < 3)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 3)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// This command should set the user's nickname. Careful.
 	// Nicknames should be unique to ensure accessibility !
 	// Nicknames are freed on client disconnection. There is not
 	// persistence.
 	//std::cout << "USER command executed." << std::endl;
-	serverResponse(commandParams.source, RPL_WELCOME, "", "TEMP");
+	errCommand(commandParams.source, RPL_WELCOME, "", "TEMP");
 }
 
 void	Server::quit(const t_commandParams &commandParams)
 {
 	if (areBitsNotSet(commandParams.mask, SOURCE | POLLFD))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 0)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// clear necessary data if needed ? No response expected.
 
@@ -473,24 +473,24 @@ void	Server::join(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client				*source = commandParams.source;
 	const std::string	&channelName = commandParams.arguments[0];
 
 	if (channelName[0] != '#')
-		serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+		errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 
 	Channel	*channel = getChannel(channelName);
 
 	if (channel)
 	{
 		if (channel->isFull())
-			serverResponse(source, ERR_CHANNELISFULL, channelName, "Channel is full");
+			errCommand(source, ERR_CHANNELISFULL, channelName, "Channel is full");
 		else if (channel == source->getActiveChannel())
-			serverResponse(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
+			errCommand(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
 		else
 			channel->addUser(source, channel->getUserPerms());
 	}
@@ -505,10 +505,10 @@ void	Server::join(const t_commandParams &commandParams)
 
 	// TEMP
 	source->receiveMessage(":" + source->getNickname() + " JOIN " + channelName);
-	serverResponse(source, RPL_TOPIC, channelName, "topic"); // get topic
-	serverResponse(source, RPL_TOPIC, channelName, "topic"); // get topic
-	serverResponse(source, RPL_NAMREPLY, "= " + channelName, "usr1 user2 user3"); // get users list
-	serverResponse(source, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
+	errCommand(source, RPL_TOPIC, channelName, "topic"); // get topic
+	errCommand(source, RPL_TOPIC, channelName, "topic"); // get topic
+	errCommand(source, RPL_NAMREPLY, "= " + channelName, "usr1 user2 user3"); // get users list
+	errCommand(source, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
 }
 
 void	Server::whois(const t_commandParams &commandParams)
@@ -516,9 +516,9 @@ void	Server::whois(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Gets information about an existing user :
 	// nickname, name, blablabla ...
@@ -530,9 +530,9 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	const Client		*source = commandParams.source;
 	const std::string	&targetName = commandParams.arguments[0];
@@ -543,13 +543,13 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	{
 		targetChannel = getChannel(targetName);
 		if (!targetChannel)
-			serverResponse(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
+			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
 	}
 	else
 	{
 		targetClient = getClient(targetName);
 		if (!targetClient)
-			serverResponse(source, ERR_NOSUCHNICK, targetName, "No such user");
+			errCommand(source, ERR_NOSUCHNICK, targetName, "No such user");
 	}
 
 	const std::string	prefix = ":" + source->getNickname() + " PRIVMSG " + targetName + " :";
@@ -577,13 +577,13 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 		if (targetChannel)
 		{
-			commandResponse(source, "PRIVMSG", targetChannel, message);
-			//source->broadcastMessageToChannel(targetChannel, prefix + message + delimiter);
+			source->broadcastMessageToChannel(targetChannel, getCommandResponse(source, "PRIVMSG",
+				targetChannel, message));
 		}
 		else if (targetClient)
 		{
-			commandResponse(source, "PRIVMSG", targetClient, message);
-			//targetClient->receiveMessage(prefix + message + delimiter);
+			targetClient->receiveMessage(getCommandResponse(source, "PRIVMSG",
+				targetClient, message));
 		}
 
 		removeLeadingWhitespaces(buffer, delimiter);
@@ -595,9 +595,9 @@ void	Server::notice(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE))
-		serverResponse(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Sends a server notice to a client, channel or everywhere.
 	std::cout << "NOTICE command executed." << std::endl;
@@ -608,9 +608,9 @@ void	Server::kick(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 2)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client			*source = commandParams.source;
 	Channel			*targetChannel = NULL;
@@ -624,15 +624,15 @@ void	Server::kick(const t_commandParams &commandParams)
 		nickname = commandParams.arguments[0];
 
 		if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
-			serverResponse(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
+			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = source->getActiveChannel();
 		if (!targetChannel)
-			serverResponse(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 
 		targetUser = targetChannel->getUser(nickname);
 		if (!targetUser)
-			serverResponse(source, ERR_USERNOTINCHANNEL, targetChannel->getName(),
+			errCommand(source, ERR_USERNOTINCHANNEL, targetChannel->getName(),
 				"User not in that channel");
 	}
 	else if (commandParams.arguments.size() == 2)
@@ -641,27 +641,30 @@ void	Server::kick(const t_commandParams &commandParams)
 		nickname = commandParams.arguments[1];
 
 		if (channelName[0] != '#')
-			serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 		else if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
-			serverResponse(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
+			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = getChannel(channelName);
 		if (!targetChannel)
-			serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 
 		targetUser = targetChannel->getUser(nickname);
 		if (!targetUser)
-			serverResponse(source, ERR_USERNOTINCHANNEL, channelName, "User not in that channel");
+			errCommand(source, ERR_USERNOTINCHANNEL, channelName, "User not in that channel");
 	}
 
 	sourceUser = targetChannel->getUser(source->getNickname());
 
 	if (!sourceUser || areBitsNotSet(sourceUser->permissionsMask, Channel::KICK))
-		serverResponse(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
+		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
 	targetChannel->removeUser(targetUser->client);
-	commandResponse(source, "KICK", targetUser->client, commandParams.message);
+
+	std::string	response = getCommandResponse(source, "KICK", targetUser->client,
+		commandParams.message);
+	targetUser->client->receiveMessage(response);
 }
 
 void	Server::mode(const t_commandParams &commandParams)
@@ -669,9 +672,9 @@ void	Server::mode(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 2)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// ???
 	std::cout << "MODE command executed." << std::endl;
@@ -682,9 +685,9 @@ void	Server::topic(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// ???
 	std::cout << "TOPIC command executed." << std::endl;
@@ -696,9 +699,9 @@ void	Server::invite(const t_commandParams &commandParams)
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
 		|| commandParams.arguments.size() < 2)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 2)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Invites a client to a channel.
 	// My current commandParams aren't adapted to this.
@@ -710,9 +713,9 @@ void	Server::who(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	//  List the users in a channel (names, real names, server info, status, ...)
 	std::cout << "WHO command executed." << std::endl;
@@ -723,9 +726,9 @@ void	Server::names(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Lists users of a channel (nicknames and status)
 	std::cout << "NAMES command executed." << std::endl;
@@ -736,9 +739,9 @@ void	Server::part(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Leaves a channel. A user can be member of multiple channels at the same time
 	// for persistence.
@@ -750,25 +753,25 @@ void	Server::pass(const t_commandParams &commandParams)
 	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client	*source = commandParams.source;
 
 	if (areBitsSet(source->getServerPermissions(), VERIFIED))
-		serverResponse(source, ERR_ALREADYREGISTERED, "",
+		errCommand(source, ERR_ALREADYREGISTERED, "",
 			"You are already registered");
 	else if (source->getConnectionRetries() >= MAX_CONNECTION_RETRIES)
 	{
 		commandParams.pollFd->revents |= POLLHUP;
-		serverResponse(source, ERR_PASSWDMISMATCH, "",
+		errCommand(source, ERR_PASSWDMISMATCH, "",
 			"Acces denied. Too many password attempts.");
 	}
 	else if (_password != commandParams.arguments[0])
 	{
 		source->incrementConnectionRetries();
-		serverResponse(source, ERR_PASSWDMISMATCH, "",
+		errCommand(source, ERR_PASSWDMISMATCH, "",
 			"Access denied. Password incorrect.");
 
 	}
@@ -779,44 +782,6 @@ void	Server::pass(const t_commandParams &commandParams)
 /* ************************************************************************** */
 /* *                            Server utilities                            * */
 /* ************************************************************************** */
-
-/*
-void	Server::putMessage(Client *client, const std::string &delimiter, size_t &pos)
-{
-	std::string			&clientBuffer = client->getBuffer();
-
-	if (verifyServerPermissions(client, VERIFIED | IDENTIFIED))
-	{
-		clientBuffer.clear();
-		return ;
-	}
-
-	std::string			message;
-
-	if (pos >= (MSG_BUFFER_SIZE - delimiter.length()))
-	{
-		pos = MSG_BUFFER_SIZE - delimiter.length();
-		pos = findLastChar(clientBuffer, pos);
-		message = clientBuffer.substr(0, pos);
-		clientBuffer.erase(0, pos);
-		message += delimiter;
-	}
-	else
-	{
-		pos = clientBuffer.find(delimiter);
-		message = clientBuffer.substr(0, pos);
-		clientBuffer.erase(0, pos);
-		message += delimiter;
-	}
-
-	// TEMP
-	if (message != delimiter)
-	{
-		message = client->getNickname() + ": " + message;
-		client->broadcastMessageToChannel(client->getActiveChannel(), message);
-	}
-}
-*/
 
 bool	Server::isCommand(const std::string &clientBuffer)
 {
@@ -844,70 +809,27 @@ bool	Server::verifyServerPermissions(const Client *client, const int &mask)
 	if (areBitsSet(mask, VERIFIED)
 		&& areBitsNotSet(client->getServerPermissions(), VERIFIED))
 	{
-		serverResponse(client, ERR_PASSWDMISMATCH, "", "You have not verified");
+		errCommand(client, ERR_PASSWDMISMATCH, "", "You have not verified");
 		return (true);
 	}
 	else if (areBitsSet(mask, IDENTIFIED)
 		&& areBitsNotSet(client->getServerPermissions(), IDENTIFIED))
 	{
-		serverResponse(client, ERR_NOTREGISTERED, "", "You have not registered");
+		errCommand(client, ERR_NOTREGISTERED, "", "You have not registered");
 		return (true);
 	}
 	return (false);
 }
 
-/*
-void	Server::serverResponse(const Client *client, const std::string &code,
-	const std::string &parameters, const std::string &trailing)
+void	Server::errCommand(const Client *client, const std::string &code,
+	const std::string &parameter, const std::string &trailing)
 {
 	std::string	response;
-	std::string	targetNickname = client->getNickname();
 
-
-	response += " " + code;
-
-	if (targetNickname.empty())
-		response += " *";
-	else
-		response += " " + targetNickname;
-
-	if (!parameters.empty())
-		response += " " + parameters;
-
-	if (!trailing.empty())
-		response += " :" + trailing;
-
-	client->receiveMessage(response + DELIMITER);
+	response = getServerResponse(client, code, parameter, trailing);
+	client->receiveMessage(response);
 	throw	std::runtime_error(response);
 }
-
-void	Server::commandResponse(const Client *client, const std::string &command,
-	const Channel *channel, const std::string &trailing)
-{
-	std::string	response;
-
-	response + ":" + client->getNickname();
-	response += " " + command;
-
-	(void)trailing;
-	std::string	response;
-	std::string	nickname = client->getNickname();
-
-	response = ":" + nickname;
-	response += " " + command;
-
-	if (!parameters.empty())
-		response += " " + parameters;
-
-	if (!trailing.empty())
-		response += " :" + trailing;
-
-	response += DELIMITER;
-
-	client->receiveMessage(response);
-	std::cout << response;
-}
-*/
 
 /* Getters */
 
@@ -958,7 +880,7 @@ Server::getServerResponse(const Client *client, const std::string &code,
 	if (!trailing.empty())
 		response += " :" + trailing;
 
-	return (response);
+	return (response + DELIMITER);
 }
 
 const std::string
@@ -973,6 +895,8 @@ Server::getCommandResponse(const Client *source, const std::string &command,
 
 	if (!trailing.empty())
 		response += " :" + trailing;
+
+	response += DELIMITER;
 
 	return (response);
 }
@@ -989,6 +913,8 @@ Server::getCommandResponse(const Client *source, const std::string &command,
 
 	if (!trailing.empty())
 		response += " :" + trailing;
+
+	response += DELIMITER;
 
 	return (response);
 }
