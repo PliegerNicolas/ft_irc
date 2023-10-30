@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 14:12:39 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 17:02:47 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -320,17 +320,17 @@ void	Server::setCommands(void)
 	_commands["NICK"] = &Server::nick;
 	_commands["USER"] = &Server::user;
 	_commands["JOIN"] = &Server::join;
-	_commands["INVITE"] = &Server::invite;
+	_commands["INVITE"] = &Server::invite; // a tester 
 	_commands["WHOIS"] = &Server::whois;
 	_commands["PRIVMSG"] = &Server::privmsg;
-	_commands["MODE"] = &Server::mode;
+	_commands["MODE"] = &Server::mode; // a faire
 	_commands["KICK"] = &Server::kick;
-	_commands["NOTICE"] = &Server::notice;
+	_commands["NOTICE"] = &Server::notice; // a faire, pour le bot ?
 	_commands["TOPIC"] = &Server::topic;
 	_commands["WHO"] = &Server::who;
 	_commands["NAMES"] = &Server::names;
-	_commands["PART"] = &Server::part;
-	_commands["CAP"] = &Server::cap;
+	_commands["PART"] = &Server::part; // a tester
+	_commands["CAP"] = &Server::cap; // a faire
 	_commands["QUIT"] = &Server::quit;
 }
 
@@ -760,13 +760,85 @@ void	Server::topic(const t_commandParams &commandParams)
 
 void	Server::invite(const t_commandParams &commandParams)
 {
+	// Syntax -> INVITE nickname channel
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() < 2)
+		|| commandParams.arguments.size() < 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 2)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+
+	Client			*source = commandParams.source;
+	Channel			*targetChannel = NULL;
+	Channel::User	*sourceUser = NULL;
+	Channel::User	*targetUser = NULL;
+
+	std::string		nickname;
+
+	if (commandParams.arguments.size() == 1)
+	{
+		nickname = commandParams.arguments[0];
+
+		if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
+			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
+
+		targetChannel = source->getActiveChannel();
+		if (!targetChannel)
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+
+
+		targetUser = targetChannel->getUser(nickname);
+		if (targetUser)
+			errCommand(source, RPL_AWAY, targetChannel->getName(),
+				"User already in that channel");
+	}
+	else if (commandParams.arguments.size() == 2)
+	{
+		const std::string	&channelName = commandParams.arguments[1];
+		nickname = commandParams.arguments[0];
+
+		if (channelName[0] != '#')
+			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+		else if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
+			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
+
+
+		targetChannel = getChannel(channelName);
+		if (!targetChannel)
+			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+
+		targetUser = targetChannel->getUser(nickname);
+		if (targetUser)
+			errCommand(targetUser->client, RPL_AWAY, channelName, "User already in that channel");
+	}
+
+	if (!targetChannel)
+		if (source->getActiveChannel())
+			targetChannel = source->getActiveChannel();
+
+	if (targetChannel)
+		sourceUser = targetChannel->getUser(source->getNickname());
+
+	if (!sourceUser || areBitsNotSet(sourceUser->permissionsMask, Channel::INVITE))
+		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
+			"Not enough privileges");
+
+	// if (channel est en mode +i) -> return errCommand("Channel not in mode +i")
+
+	// targetChannel->addUser(clientOnArgument, Channel::getUserPerms());
+
+	// TEMP
+	// std::string	response;
+	// response = ":" + sourceUser->client->getNickname();
+	// response += " INVITE";
+	// response += " " + targetChannel->getName();
+	// response += " " + targetUser->client->getNickname();
+	// if (areBitsSet(commandParams.mask, MESSAGE))
+	// 	response += " :" + commandParams.message;
+	// response += DELIMITER;
+
+	// targetUser->client->receiveMessage(response);
 
 	// Invites a client to a channel.
 	// My current commandParams aren't adapted to this.
@@ -801,6 +873,7 @@ void	Server::names(const t_commandParams &commandParams)
 
 void	Server::part(const t_commandParams &commandParams)
 {
+	// Syntax -> PART <channel1,channel2,...>
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
@@ -810,7 +883,54 @@ void	Server::part(const t_commandParams &commandParams)
 
 	// Leaves a channel. A user can be member of multiple channels at the same time
 	// for persistence.
-	std::cout << "PART command executed." << std::endl;
+
+	Client			*source = commandParams.source;
+	Channel			*targetChannel = NULL;
+	Channel::User	*targetUser = NULL;
+
+	// targetUser->client.get
+
+	if (commandParams.arguments.size() == 1)
+	{
+		const std::string			&targetName = commandParams.arguments[0];
+		std::vector<std::string>	channels_list;
+
+		if (commandParams.arguments[0][0] == '#')
+		{
+			std::string	channel_tmp;
+			for (size_t i = 1; i < commandParams.arguments[0].size(); ++i)
+			{
+				while ((i < commandParams.arguments[0].size()) && commandParams.arguments[0][i] != ',')
+					channel_tmp += commandParams.arguments[0][i++];
+
+				channels_list.push_back(channel_tmp);
+				channel_tmp.erase(0, channel_tmp.size());
+			}
+
+			for (std::vector<std::string>::iterator it = channels_list.begin(); it != channels_list.end(); ++it)
+			{
+				std::cerr << "channel = " << "#" + *it << std::endl; 
+				targetChannel = getChannel("#" + *it);
+				if (!targetChannel)
+					errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
+				else
+				{
+					targetUser = targetChannel->getUser(source->getNickname());
+					if (!targetUser)
+						errCommand(source, ERR_USERNOTINCHANNEL, targetChannel->getName(),
+							"User not in that channel");
+					else
+						targetChannel->removeUser(targetUser->client);
+				}
+			}
+			
+		}
+		else
+			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
+
+		std::cout << "PART command executed." << std::endl;
+	}
+
 }
 
 void	Server::pass(const t_commandParams &commandParams)

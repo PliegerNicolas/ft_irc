@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 13:28:22 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 15:57:17 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@
 #define MAX_NICKNAME_LEN 9
 #define MAX_TOPIC_LEN 306
 #define MAX_CHANNELNAME_LEN 50
+#define MAX_NICKNAME_LENGTH 10
 
 class	Client;
 class	Channel;

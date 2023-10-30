@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
+/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/30 13:23:49 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 15:57:36 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,7 @@ class	Channel
 		const Users			&getUsers(void) const;
 		User				*getUser(const std::string &nickname);
 
-		int					getUserPerms(void);
+		static int			getUserPerms(void);
 		int					getHalfOpsPerms(void);
 		int					getOpsPerms(void);
 		int					getAdminPerms(void);
