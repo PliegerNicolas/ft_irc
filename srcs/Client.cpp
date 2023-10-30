@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 19:12:14 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 12:31:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -239,7 +239,7 @@ void	Client::setNickname(const std::string &nickname)
 
 void	Client::setServerPermissions(const int &mask)
 {
-	_serverPermissions |= mask;
+	setBits(_serverPermissions, mask);
 }
 
 void	Client::setActiveChannel(Channel *channel)
