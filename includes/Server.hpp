@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/29 11:10:35 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 11:07:40 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,12 +160,21 @@ class	Server
 		//void			putMessage(Client *client, const std::string &delimiter, size_t &pos);
 		bool			isCommand(const std::string &clientBuffer);
 		bool			verifyServerPermissions(const Client *client, const int &mask);
-		void			serverResponse(const Client *client, const std::string &code,
-							const std::string &parameters, const std::string &trailing);
+		//void			serverResponse(const Client *client, const std::string &code,
+		//					const std::string &parameters, const std::string &trailing);
+		//void			commandResponse(const Client *client, const std::string &command,
+		//					const void *target, const std::string &trailing);
 
 		// Getters
-		Client	*getClient(const std::string &nickname);
-		Channel	*getChannel(const std::string &name);
+		Client				*getClient(const std::string &nickname);
+		Channel				*getChannel(const std::string &name);
+
+		const std::string	getServerResponse(const Client *client, const std::string &code,
+							const std::string &parameters, const std::string &trailing) const;
+		const std::string	getCommandResponse(const Client *source, const std::string &command,
+								const Client *target, const std::string &trailing) const;
+		const std::string	getCommandResponse(const Client *source, const std::string &command,
+								const Channel *target, const std::string &trailing) const;
 
 		// Setters
 };

@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/29 10:57:54 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 11:13:11 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -576,9 +576,15 @@ void	Server::privmsg(const t_commandParams &commandParams)
 		}
 
 		if (targetChannel)
-			source->broadcastMessageToChannel(targetChannel, prefix + message + delimiter);
+		{
+			commandResponse(source, "PRIVMSG", targetChannel, message);
+			//source->broadcastMessageToChannel(targetChannel, prefix + message + delimiter);
+		}
 		else if (targetClient)
-			targetClient->receiveMessage(prefix + message + delimiter);
+		{
+			commandResponse(source, "PRIVMSG", targetClient, message);
+			//targetClient->receiveMessage(prefix + message + delimiter);
+		}
 
 		removeLeadingWhitespaces(buffer, delimiter);
 	}
@@ -655,18 +661,7 @@ void	Server::kick(const t_commandParams &commandParams)
 			"Not enough privileges");
 
 	targetChannel->removeUser(targetUser->client);
-
-	// TEMP
-	std::string	response;
-	response = ":" + sourceUser->client->getNickname();
-	response += " KICK";
-	response += " " + targetChannel->getName();
-	response += " " + targetUser->client->getNickname();
-	if (areBitsSet(commandParams.mask, MESSAGE))
-		response += " :" + commandParams.message;
-	response += DELIMITER;
-
-	targetUser->client->receiveMessage(response);
+	commandResponse(source, "KICK", targetUser->client, commandParams.message);
 }
 
 void	Server::mode(const t_commandParams &commandParams)
@@ -861,13 +856,13 @@ bool	Server::verifyServerPermissions(const Client *client, const int &mask)
 	return (false);
 }
 
+/*
 void	Server::serverResponse(const Client *client, const std::string &code,
 	const std::string &parameters, const std::string &trailing)
 {
 	std::string	response;
 	std::string	targetNickname = client->getNickname();
 
-	response = ":" + _serverSockets.getHostname();
 
 	response += " " + code;
 
@@ -883,8 +878,36 @@ void	Server::serverResponse(const Client *client, const std::string &code,
 		response += " :" + trailing;
 
 	client->receiveMessage(response + DELIMITER);
-	throw std::runtime_error(response);
+	throw	std::runtime_error(response);
 }
+
+void	Server::commandResponse(const Client *client, const std::string &command,
+	const Channel *channel, const std::string &trailing)
+{
+	std::string	response;
+
+	response + ":" + client->getNickname();
+	response += " " + command;
+
+	(void)trailing;
+	std::string	response;
+	std::string	nickname = client->getNickname();
+
+	response = ":" + nickname;
+	response += " " + command;
+
+	if (!parameters.empty())
+		response += " " + parameters;
+
+	if (!trailing.empty())
+		response += " :" + trailing;
+
+	response += DELIMITER;
+
+	client->receiveMessage(response);
+	std::cout << response;
+}
+*/
 
 /* Getters */
 
@@ -912,6 +935,62 @@ Channel	*Server::getChannel(const std::string &name)
 		return (NULL);
 	return (it->second);
 
+}
+
+const std::string
+Server::getServerResponse(const Client *client, const std::string &code,
+	const std::string &parameters, const std::string &trailing) const
+{
+	std::string			response;
+	const std::string	targetNickname = client->getNickname();
+
+	response = ":" + _serverSockets.getHostname();
+	response += " " + code;
+
+	if (!targetNickname.empty())
+		response += " " + targetNickname;
+	else
+		response += " *";
+
+	if (!parameters.empty())
+		response += " " + parameters;
+
+	if (!trailing.empty())
+		response += " :" + trailing;
+
+	return (response);
+}
+
+const std::string
+Server::getCommandResponse(const Client *source, const std::string &command,
+	const Client *target, const std::string &trailing) const
+{
+	std::string			response;
+
+	response = ":" + source->getNickname();
+	response += " " + command;
+	response += " " + target->getNickname();
+
+	if (!trailing.empty())
+		response += " :" + trailing;
+
+	return (response);
+}
+
+const std::string
+Server::getCommandResponse(const Client *source, const std::string &command,
+	const Channel *target, const std::string &trailing) const
+{
+	std::string			response;
+
+	response = ":" + source->getNickname();
+	response += " " + command;
+	response += " " + target->getName();
+
+	if (!trailing.empty())
+		response += " :" + trailing;
+
+	return (response);
 }
 
 /* Setters */
