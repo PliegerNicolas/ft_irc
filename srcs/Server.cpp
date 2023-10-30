@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 18:32:25 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/30 18:56:12 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -773,7 +773,7 @@ void	Server::invite(const t_commandParams &commandParams)
 	Channel			*targetChannel = NULL;
 	Channel::User	*sourceUser = NULL;
 	Channel::User	*targetUser = NULL;
-	Client clientTarget = Client();
+	Client			clientTarget = Client();
 
 	std::string		nickname;
 
@@ -818,7 +818,7 @@ void	Server::invite(const t_commandParams &commandParams)
 	{
 		targetChannel = source->getActiveChannel();
 		sourceUser = targetChannel->getUser(source->getNickname());
-		clientTarget.setUsername(nickname);
+		clientTarget.setNickname(nickname);
 	}
 
 	if (!sourceUser || areBitsNotSet(sourceUser->permissionsMask, Channel::INVITE))
@@ -829,6 +829,15 @@ void	Server::invite(const t_commandParams &commandParams)
 
 	if (targetChannel)
 		targetChannel->addUser(&clientTarget, Channel::getUserPerms());
+
+	// Channel::UsersConstIterator it = targetChannel->getUsers().begin();
+	// Channel::UsersConstIterator it_end = targetChannel->getUsers().end();
+	// std::cerr << "contenu du channel: \n";
+	// while (it != it_end)
+	// {
+	// 	std::cerr << "sortie = " << it->client->getNickname() << std::endl;
+	// 	it++;
+	// }
 
 	// TEMP
 	// std::string	response;
