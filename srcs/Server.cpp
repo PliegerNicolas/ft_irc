@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 22:22:21 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 22:42:14 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -529,21 +529,22 @@ void	Server::join(const t_commandParams &commandParams)
 
 void	Server::whois(const t_commandParams &commandParams)
 {
-	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
+	const Client	*source = commandParams.source;
+
+	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+		errCommand(source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	const Client	*source = commandParams.source;
 	const Client	*targetUser = getClient(commandParams.arguments[0]);
 
 	if (!targetUser)
-		errCommand(commandParams.source, ERR_NOSUCHNICK, "", "No such nick/channel");
-	source->receiveMessage(getServerResponse(commandParams.source, RPL_WHOREPLY, targetUser->getNickname() + " ~" + targetUser->getUsername() + " *", targetUser->getRealname()));
+		errCommand(source, ERR_NOSUCHNICK, "", "No such nick/channel");
+	source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, targetUser->getNickname() + " ~" + targetUser->getUsername() + " *", targetUser->getRealname()));
 	// "<client> <nick> <username> <host> * :<realname>" --> should be adjusted to user without username or realname
-	source->receiveMessage(getServerResponse(commandParams.source, RPL_ENDOFWHOIS, commandParams.arguments[0], "End of /WHOIS list"));
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFWHOIS, commandParams.arguments[0], "End of /WHOIS list"));
 }
 
 /**
@@ -780,14 +781,15 @@ void	Server::invite(const t_commandParams &commandParams)
 
 void	Server::who(const t_commandParams &commandParams)
 {
-	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
+	const Client		*source = commandParams.source;
+
+	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	const Client		*source = commandParams.source;
 	const std::string	&target = commandParams.arguments[0];
 	Client				*targetUser = NULL;
 
@@ -795,7 +797,7 @@ void	Server::who(const t_commandParams &commandParams)
 	{
 		targetUser = getClient(target);
 		if (targetUser)
-			source->receiveMessage(getServerResponse(commandParams.source, RPL_WHOREPLY, "~" + targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
+			source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, "~" + targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
 	}
 	else
 	{
@@ -806,29 +808,45 @@ void	Server::who(const t_commandParams &commandParams)
 			while (it != targetChannel->getUsers().end())
 			{
 				targetUser = it->client;
-				source->receiveMessage(getServerResponse(commandParams.source, RPL_WHOREPLY, target + " ~" + targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
+				source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, target + " ~" + targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
 				it++;
 			}
 		}
 	}
-	source->receiveMessage(getServerResponse(commandParams.source, RPL_ENDOFWHO, target, "End of /WHO list"));
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFWHO, target, "End of /WHO list"));
 
-	// RPL_WHOREPLY format:
-	// "<client> <channel> <username> <host> <server> <nick> <flags> :<hopcount> <realname>"
+	// RPL_WHOREPLY ---> "<client> <channel> <username> <host> <server> <nick> <flags> :<hopcount> <realname>"
 	// Should add flags once mode is done
 }
 
 void	Server::names(const t_commandParams &commandParams)
 {
-	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
+	const Client		*source = commandParams.source;
+
+	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// Lists users of a channel (nicknames and status)
-	std::cout << "NAMES command executed." << std::endl;
+	Client		*targetUser = NULL;
+	Channel		*targetChannel = getChannel(commandParams.arguments[0]);
+
+	if (targetChannel)
+	{
+		Channel::UsersConstIterator	it = targetChannel->getUsers().begin();
+		while (it != targetChannel->getUsers().end())
+		{
+			targetUser = it->client;
+			source->receiveMessage(getServerResponse(source, RPL_NAMREPLY, commandParams.arguments[0], targetUser->getNickname()));
+			it++;
+		}
+	}
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFNAMES, commandParams.arguments[0], "End of /NAMES list"));
+	
+	// RPL_NAMEREPLY    --->  "<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"
+	// RPL_ENDNAMEREPLY --->  "<client> <channel> :End of /NAMES list"
 }
 
 void	Server::part(const t_commandParams &commandParams)
