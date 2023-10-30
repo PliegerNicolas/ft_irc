@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/26 11:15:14 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 13:29:43 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 	/* Public */
 
 Channel::Channel(const std::string &name, Client* channelCreator):
-	_name(name),
+	_name(truncate(name, MAX_CHANNELNAME_LEN)),
 	_userLimit(-1)
 {
 	if (DEBUG)
@@ -125,7 +125,7 @@ void	Channel::removeUser(const Client* client)
 	/* Protected */
 	/* Private */
 
-Channel::t_user	Channel::createUser(Client* client, const size_t &permissionsMask)
+Channel::t_user	Channel::createUser(Client* client, const int  &permissionsMask)
 {
 	t_user	user;
 
@@ -142,6 +142,11 @@ Channel::t_user	Channel::createUser(Client* client, const size_t &permissionsMas
 const std::string	&Channel::getName(void) const
 {
 	return (_name);
+}
+
+const std::string	&Channel::getTopic(void) const
+{
+	return (_topic);
 }
 
 Channel::User	*Channel::getUser(const std::string &nickname)
@@ -186,5 +191,11 @@ const Channel::Users	&Channel::getUsers(void) const
 /* Setters */
 
 	/* Public */
+
+void	Channel::setTopic(const std::string &topic)
+{
+	_topic = truncate(topic, MAX_TOPIC_LEN);
+}
+
 	/* Protected */
 	/* Private */

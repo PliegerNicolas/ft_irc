@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 18:57:40 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 12:15:55 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,8 @@ class	Client
 		int					getSocketFd(void) const;
 
 		const std::string	&getNickname(void) const;
+		const std::string	&getUsername(void) const;
+		const std::string	&getRealname(void) const;
 		short				&getConnectionRetries(void);
 		int					getServerPermissions(void) const;
 		Channels			&getJoinedChannels(void);
@@ -79,6 +81,8 @@ class	Client
 
 		// Setter
 		void				setNickname(const std::string &nickname);
+		void				setUsername(const std::string &username);
+		void				setRealname(const std::string &realname);
 		void				setServerPermissions(const int &mask);
 		void				setActiveChannel(Channel *channel);
 
