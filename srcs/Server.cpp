@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 17:02:47 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/30 18:10:36 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -813,12 +813,11 @@ void	Server::invite(const t_commandParams &commandParams)
 			errCommand(targetUser->client, RPL_AWAY, channelName, "User already in that channel");
 	}
 
-	if (!targetChannel)
-		if (source->getActiveChannel())
-			targetChannel = source->getActiveChannel();
-
-	if (targetChannel)
+	if (!targetChannel && source->getActiveChannel())
+	{
+		targetChannel = source->getActiveChannel();
 		sourceUser = targetChannel->getUser(source->getNickname());
+	}
 
 	if (!sourceUser || areBitsNotSet(sourceUser->permissionsMask, Channel::INVITE))
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
@@ -826,7 +825,8 @@ void	Server::invite(const t_commandParams &commandParams)
 
 	// if (channel est en mode +i) -> return errCommand("Channel not in mode +i")
 
-	// targetChannel->addUser(clientOnArgument, Channel::getUserPerms());
+	if (targetChannel && targetUser)
+		targetChannel->addUser(targetUser->client, Channel::getUserPerms());
 
 	// TEMP
 	// std::string	response;
