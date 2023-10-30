@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 12:07:26 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 13:28:22 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,10 +35,10 @@
 #define MSG_BUFFER_SIZE 512
 #define MAX_CONNECTION_RETRIES 3
 
-#define USERLEN 18
-#define NICKLEN 9
-#define TOPICLEN 306
-#define CHANNELLEN 50
+#define MAX_USERNAME_LEN 18
+#define MAX_NICKNAME_LEN 9
+#define MAX_TOPIC_LEN 306
+#define MAX_CHANNELNAME_LEN 50
 
 class	Client;
 class	Channel;

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 12:35:42 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 13:58:28 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -421,7 +421,7 @@ void	Server::nick(const t_commandParams &commandParams)
 	Client				*source = commandParams.source;
 	const	std::string	&nickname = commandParams.arguments[0];
 
-	if (nickname.length() > NICKLEN || nickname[0] == '#')
+	if (nickname.length() > MAX_NICKNAME_LEN || nickname[0] == '#')
 		serverResponse(commandParams.source, ERR_ERRONEUSNICKNAME, nickname,
 			"Erroneous Nickname");
 
@@ -615,7 +615,7 @@ void	Server::kick(const t_commandParams &commandParams)
 	{
 		nickname = commandParams.arguments[0];
 
-		if (nickname[0] == '#' || nickname.length() > NICKLEN)
+		if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LEN)
 			serverResponse(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = source->getActiveChannel();
@@ -634,7 +634,7 @@ void	Server::kick(const t_commandParams &commandParams)
 
 		if (channelName[0] != '#')
 			serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
-		else if (nickname[0] == '#' || nickname.length() > NICKLEN)
+		else if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LEN)
 			serverResponse(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = getChannel(channelName);
@@ -684,36 +684,51 @@ void	Server::topic(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (commandParams.arguments.size() > 1)
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+	else if (areBitsNotSet(commandParams.mask, SOURCE))
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (areBitsSet(commmandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 1)
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	const std::string	&channelName = commandParams.arguments[0];
-	const std::string	&topic = commandParams.message;
-	Client				*source = commandParams.source;
-	Channel				*channel = getChannel(channelName);
+	const Client	*source = commandParams.source;
+	Channel			*targetChannel = NULL;
 
-	if (channelName[0] != '#' || !channel)
-		serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
-	Channel::User		*user = channel->getUser(source->getNickname());
-	if (!user)
-		serverResponse(source, ERR_USERNOTINCHANNEL, channelName, "User not in that channel");
-	if (areBitsNotSet(commandParams.mask, MESSAGE))
+	if (commandParams.arguments.size() == 1)
 	{
-		const std::string current_topic = channel->getTopic();
-		if (!current_topic.empty())
-			serverResponse(source, RPL_TOPIC, channelName, current_topic);
-		else
-			serverResponse(source, RPL_NOTOPIC, channelName, "No topic is set");
+		const std::string	&targetName = commandParams.arguments[0];
+
+		if (targetName[0] != '#')
+			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
+		targetChannel = getChannel(targetName);
+		if (!targetChannel)
+			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
 	}
 	else
 	{
-		if (areBitsNotSet(user->permissionsMask, Channel::TOPIC)) // should also check if mode -t
-			serverResponse(source, ERR_CHANOPRIVSNEEDED, channel->getName(), "Not enough privileges");
-		channel->setTopic(topic);
-		serverResponse(source, RPL_TOPIC, channelName, topic);
+		targetChannel = source->getActiveChannel();
+		if (!targetChannel)
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 	}
+
+	{
+		const Channel::User *sourceUser = targetChannel->getUser(source->getNickname());
+		if (!sourceUser)
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+		else if (areBitsSet(commandParams.mask, MESSAGE)
+			&& areBitsNotSet(sourceUser->permissionsMask, Channel::TOPIC))
+			errCommand(source, ERR_CHANOPRIVSNEEDED, targetName, "Not enough privileges");
+	}
+
+	if (areBitsSet(commandParams.mask, MESSAGE))
+		targetChannel->setTopic(commandParams.message);
+
+	const std::string &topic = targetChannel->getTopic();
+
+	if (topic.empty())
+		source->receiveMessage(getServerResponse(source, RPL_NOTOPIC,
+			targetChannel->getName(), "No topic is set"));
+	else
+		source->receiveMessage(getServerResponse(source, RPL_TOPIC,
+			targetChannel->getName(), topic));
 }
 
 void	Server::invite(const t_commandParams &commandParams)
@@ -978,10 +993,8 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 
 	if (!message.empty())
 	{
-
 		setBits(commandParameters.mask, MESSAGE);
-		message.erase(0, 1);
-		commandParameters.message = message;
+		commandParameters.message = message.substr(1);
 	}
 
 	return (commandParameters);

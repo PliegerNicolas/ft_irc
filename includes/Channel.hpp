@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/29 11:58:13 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 13:23:49 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ class	Channel
 
 		// SETTERS
 
-		void				setTopic(std::string const &topic);
+		void				setTopic(const std::string &topic);
 
 	protected:
 		/* Attributs */
@@ -115,7 +115,7 @@ class	Channel
 		Channel(void);
 
 		/* Member functions */
-		t_user	createUser(Client* client, const size_t &permissionsMask);
+		t_user	createUser(Client* client, const int &permissionsMask);
 
 		// GETTERS
 

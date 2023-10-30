@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 12:16:32 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 13:29:15 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -244,12 +244,12 @@ int	Client::readAndStoreFdBuffer(Server &server, const struct pollfd &pollFd)
 
 void	Client::setNickname(const std::string &nickname)
 {
-	_nickname = truncateStr(nickname, NICKLEN);
+	_nickname = truncate(nickname, MAX_NICKNAME_LEN);
 }
 
 void	Client::setUsername(const std::string &username)
 {
-	_username = truncateStr(username, USERLEN);
+	_username = truncate(username, MAX_USERNAME_LEN);
 }
 
 void	Client::setRealname(const std::string &realname)
