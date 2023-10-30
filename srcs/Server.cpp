@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 13:58:28 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 14:12:39 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -453,24 +453,15 @@ void	Server::user(const t_commandParams &commandParams)
 		|| commandParams.arguments.size() < 3)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 3)
-    errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
-  
-  const Client	*source = commandParams.source;
-  
-		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
-	// Still need to decide on what to check with the second and third argument 0 * or * * or other
-	//if (!commandParams.source->getUsername().empty())
-	//	serverResponse(commandParams.source, ERR_ALREADYREGISTERED, "", "You may not reregister");
-	//commandParams.source->setUsername(commandParams.arguments[0]);
-	//commandParams.source->setRealname(commandParams.message);
-	//serverResponse(commandParams.source, RPL_WELCOME, "", "Welcome to our Internet Relay Chat Network");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// This command should set the user's nickname. Careful.
-	// Nicknames should be unique to ensure accessibility !
-	// Nicknames are freed on client disconnection. There is not
-	// persistence.
-	//std::cout << "USER command executed." << std::endl;
-	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "", "TEMP"));
+	Client	*source = commandParams.source;
+
+	source->setUsername(commandParams.arguments[0]);
+	source->setRealname(commandParams.message);
+
+	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
+		"Welcome to our Internet Relay Chat Network !"));
 }
 
 void	Server::quit(const t_commandParams &commandParams)
@@ -721,11 +712,11 @@ void	Server::topic(const t_commandParams &commandParams)
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (areBitsSet(commmandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 1)
+	else if (areBitsSet(commandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	const Client	*source = commandParams.source;
-	Channel			*targetChannel = NULL;
+	Client		*source = commandParams.source;
+	Channel		*targetChannel = NULL;
 
 	if (commandParams.arguments.size() == 1)
 	{
@@ -750,7 +741,8 @@ void	Server::topic(const t_commandParams &commandParams)
 			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 		else if (areBitsSet(commandParams.mask, MESSAGE)
 			&& areBitsNotSet(sourceUser->permissionsMask, Channel::TOPIC))
-			errCommand(source, ERR_CHANOPRIVSNEEDED, targetName, "Not enough privileges");
+			errCommand(source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
+				"Not enough privileges");
 	}
 
 	if (areBitsSet(commandParams.mask, MESSAGE))
