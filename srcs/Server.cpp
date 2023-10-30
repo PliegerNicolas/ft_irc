@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 12:03:16 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 12:35:42 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -446,13 +446,12 @@ void	Server::user(const t_commandParams &commandParams)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 3)
 		serverResponse(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
-
-	// This command should set the user's nickname. Careful.
-	// Nicknames should be unique to ensure accessibility !
-	// Nicknames are freed on client disconnection. There is not
-	// persistence.
-	//std::cout << "USER command executed." << std::endl;
-	serverResponse(commandParams.source, RPL_WELCOME, "", "TEMP");
+	// Still need to decide on what to check with the second and third argument 0 * or * * or other
+	if (!commandParams.source->getUsername().empty())
+		serverResponse(commandParams.source, ERR_ALREADYREGISTERED, "", "You may not reregister");
+	commandParams.source->setUsername(commandParams.arguments[0]);
+	commandParams.source->setRealname(commandParams.message);
+	serverResponse(commandParams.source, RPL_WELCOME, "", "Welcome to our Internet Relay Chat Network");
 }
 
 void	Server::quit(const t_commandParams &commandParams)
