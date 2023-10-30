@@ -33,4 +33,4 @@ inline void			toggleBits(int &mask, const int &bits);
 inline void			setBits(int &mask, const int &bits);
 inline void			removeBits(int &mask, const int &bits);
 
-#include "utils/utils.tpp"
+#include "utils/utils.ipp"

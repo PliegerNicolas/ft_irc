@@ -259,7 +259,7 @@ void	Client::setRealname(const std::string &realname)
 
 void	Client::setServerPermissions(const int &mask)
 {
-	_serverPermissions |= mask;
+	setBits(_serverPermissions, mask);
 }
 
 void	Client::setActiveChannel(Channel *channel)

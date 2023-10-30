@@ -161,15 +161,21 @@ class	Server
 		void			pass(const t_commandParams &commandParams);
 
 		// Command utilities
-		//void			putMessage(Client *client, const std::string &delimiter, size_t &pos);
 		bool			isCommand(const std::string &clientBuffer);
 		bool			verifyServerPermissions(const Client *client, const int &mask);
-		void			serverResponse(const Client *client, const std::string &code,
-							const std::string &parameters, const std::string &trailing);
+		void			errCommand(const Client *client, const std::string &code,
+							const std::string &parameter, const std::string &trailing);
 
 		// Getters
-		Client	*getClient(const std::string &nickname);
-		Channel	*getChannel(const std::string &name);
+		Client				*getClient(const std::string &nickname);
+		Channel				*getChannel(const std::string &name);
+
+		const std::string	getServerResponse(const Client *client, const std::string &code,
+							const std::string &parameters, const std::string &trailing) const;
+		const std::string	getCommandResponse(const Client *source, const std::string &command,
+								const Client *target, const std::string &trailing) const;
+		const std::string	getCommandResponse(const Client *source, const std::string &command,
+								const Channel *target, const std::string &trailing) const;
 
 		// Setters
 };
