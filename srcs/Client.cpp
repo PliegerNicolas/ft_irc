@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 19:12:14 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 12:16:32 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,6 +183,16 @@ const std::string	&Client::getNickname(void) const
 	return (_nickname);
 }
 
+const std::string	&Client::getUsername(void) const
+{
+	return (_username);
+}
+
+const std::string	&Client::getRealname(void) const
+{
+	return (_realname);
+}
+
 short	&Client::getConnectionRetries(void)
 {
 	return (_connectionRetries);
@@ -234,7 +244,17 @@ int	Client::readAndStoreFdBuffer(Server &server, const struct pollfd &pollFd)
 
 void	Client::setNickname(const std::string &nickname)
 {
-	_nickname = nickname;
+	_nickname = truncateStr(nickname, NICKLEN);
+}
+
+void	Client::setUsername(const std::string &username)
+{
+	_username = truncateStr(username, USERLEN);
+}
+
+void	Client::setRealname(const std::string &realname)
+{
+	_realname = realname;
 }
 
 void	Client::setServerPermissions(const int &mask)

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 11:54:46 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 12:03:16 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -421,7 +421,7 @@ void	Server::nick(const t_commandParams &commandParams)
 	Client				*source = commandParams.source;
 	const	std::string	&nickname = commandParams.arguments[0];
 
-	if (nickname.length() > MAX_NICKNAME_LENGTH || nickname[0] == '#')
+	if (nickname.length() > NICKLEN || nickname[0] == '#')
 		serverResponse(commandParams.source, ERR_ERRONEUSNICKNAME, nickname,
 			"Erroneous Nickname");
 
@@ -616,7 +616,7 @@ void	Server::kick(const t_commandParams &commandParams)
 	{
 		nickname = commandParams.arguments[0];
 
-		if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
+		if (nickname[0] == '#' || nickname.length() > NICKLEN)
 			serverResponse(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = source->getActiveChannel();
@@ -635,7 +635,7 @@ void	Server::kick(const t_commandParams &commandParams)
 
 		if (channelName[0] != '#')
 			serverResponse(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
-		else if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
+		else if (nickname[0] == '#' || nickname.length() > NICKLEN)
 			serverResponse(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = getChannel(channelName);

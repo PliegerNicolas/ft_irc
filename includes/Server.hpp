@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/29 11:10:35 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 12:07:26 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,11 @@
 #define DELIMITER "\n"			//"\r\n" for real IRC servers
 #define MSG_BUFFER_SIZE 512
 #define MAX_CONNECTION_RETRIES 3
-#define MAX_NICKNAME_LENGTH 9
+
+#define USERLEN 18
+#define NICKLEN 9
+#define TOPICLEN 306
+#define CHANNELLEN 50
 
 class	Client;
 class	Channel;

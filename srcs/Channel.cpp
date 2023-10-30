@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/30 11:55:39 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 12:08:23 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 	/* Public */
 
 Channel::Channel(const std::string &name, Client* channelCreator):
-	_name(name),
+	_name(truncateStr(name, CHANNELLEN)),
 	_userLimit(-1)
 {
 	if (DEBUG)
@@ -194,7 +194,7 @@ const Channel::Users	&Channel::getUsers(void) const
 
 void	Channel::setTopic(std::string const &topic)
 {
-	_topic = truncateStr(topic, 306);
+	_topic = truncateStr(topic, TOPICLEN);
 }
 
 	/* Protected */
