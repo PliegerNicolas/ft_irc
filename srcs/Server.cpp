@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 18:10:36 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/30 18:32:25 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -773,6 +773,7 @@ void	Server::invite(const t_commandParams &commandParams)
 	Channel			*targetChannel = NULL;
 	Channel::User	*sourceUser = NULL;
 	Channel::User	*targetUser = NULL;
+	Client clientTarget = Client();
 
 	std::string		nickname;
 
@@ -813,10 +814,11 @@ void	Server::invite(const t_commandParams &commandParams)
 			errCommand(targetUser->client, RPL_AWAY, channelName, "User already in that channel");
 	}
 
-	if (!targetChannel && source->getActiveChannel())
+	if (targetChannel && source->getActiveChannel())
 	{
 		targetChannel = source->getActiveChannel();
 		sourceUser = targetChannel->getUser(source->getNickname());
+		clientTarget.setUsername(nickname);
 	}
 
 	if (!sourceUser || areBitsNotSet(sourceUser->permissionsMask, Channel::INVITE))
@@ -825,8 +827,8 @@ void	Server::invite(const t_commandParams &commandParams)
 
 	// if (channel est en mode +i) -> return errCommand("Channel not in mode +i")
 
-	if (targetChannel && targetUser)
-		targetChannel->addUser(targetUser->client, Channel::getUserPerms());
+	if (targetChannel)
+		targetChannel->addUser(&clientTarget, Channel::getUserPerms());
 
 	// TEMP
 	// std::string	response;
