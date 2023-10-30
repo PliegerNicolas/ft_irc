@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 21:38:00 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 22:22:21 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -524,7 +524,7 @@ void	Server::join(const t_commandParams &commandParams)
 	//serverResponse(source, RPL_TOPIC, channelName, channel->getTopic());
 	//serverResponse(source, RPL_TOPIC, channelName, channel->getTopic());
 	//serverResponse(source, RPL_NAMREPLY, "= " + channelName, "usr1 user2 user3"); // get users list
-	//serverResponse(source, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
+	//serverResponse(source, RPL_ENDOFNAMES, channelName, "End of /NAMES who");
 }
 
 void	Server::whois(const t_commandParams &commandParams)
@@ -787,30 +787,35 @@ void	Server::who(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	const Client	*source = commandParams.source;
+	const Client		*source = commandParams.source;
 	const std::string	&target = commandParams.arguments[0];
+	Client				*targetUser = NULL;
 
 	if (target[0] != '#')
 	{
-		Client	*targetUser = getClient(target);
+		targetUser = getClient(target);
 		if (targetUser)
-			source->receiveMessage(getServerResponse(commandParams.source, RPL_WHOREPLY, targetUser->getUsername() + " " + targetUser->getNickname(), targetUser->getRealname()));
+			source->receiveMessage(getServerResponse(commandParams.source, RPL_WHOREPLY, "~" + targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
 	}
-	// else
-	// {
-	// 	Channel		*targetChannel = getChannel(target);
-	// 	if (targetChannel)
-	// 	{
-
-	// 	}
-
-	// }
+	else
+	{
+		Channel		*targetChannel = getChannel(target);
+		if (targetChannel)
+		{
+			Channel::UsersConstIterator	it = targetChannel->getUsers().begin();
+			while (it != targetChannel->getUsers().end())
+			{
+				targetUser = it->client;
+				source->receiveMessage(getServerResponse(commandParams.source, RPL_WHOREPLY, target + " ~" + targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
+				it++;
+			}
+		}
+	}
 	source->receiveMessage(getServerResponse(commandParams.source, RPL_ENDOFWHO, target, "End of /WHO list"));
 
-	// if arg[0][0] "#" -> list of channel members
-	// else -> single user
+	// RPL_WHOREPLY format:
 	// "<client> <channel> <username> <host> <server> <nick> <flags> :<hopcount> <realname>"
-	//  List the users in a channel (names, real names, server info, status, ...)
+	// Should add flags once mode is done
 }
 
 void	Server::names(const t_commandParams &commandParams)
