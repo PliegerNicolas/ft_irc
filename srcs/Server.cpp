@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 18:56:12 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/30 19:45:21 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -773,7 +773,7 @@ void	Server::invite(const t_commandParams &commandParams)
 	Channel			*targetChannel = NULL;
 	Channel::User	*sourceUser = NULL;
 	Channel::User	*targetUser = NULL;
-	Client			clientTarget = Client();
+	Client			*clientTarget;
 
 	std::string		nickname;
 
@@ -811,15 +811,20 @@ void	Server::invite(const t_commandParams &commandParams)
 
 		targetUser = targetChannel->getUser(nickname);
 		if (targetUser)
-			errCommand(targetUser->client, RPL_AWAY, channelName, "User already in that channel");
+			errCommand(targetUser->client, RPL_AWAY, channelName,
+				"User already in that channel");
 	}
 
-	if (targetChannel && source->getActiveChannel())
+	if (!targetChannel)
 	{
-		targetChannel = source->getActiveChannel();
-		sourceUser = targetChannel->getUser(source->getNickname());
-		clientTarget.setNickname(nickname);
+		if (source->getActiveChannel())
+			targetChannel = source->getActiveChannel();
+		else
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 	}
+
+	sourceUser = targetChannel->getUser(source->getNickname());
+	clientTarget = getClient(nickname);
 
 	if (!sourceUser || areBitsNotSet(sourceUser->permissionsMask, Channel::INVITE))
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
@@ -828,8 +833,9 @@ void	Server::invite(const t_commandParams &commandParams)
 	// if (channel est en mode +i) -> return errCommand("Channel not in mode +i")
 
 	if (targetChannel)
-		targetChannel->addUser(&clientTarget, Channel::getUserPerms());
+		targetChannel->addUser(clientTarget, Channel::getUserPerms());
 
+	// print all users of current channel
 	// Channel::UsersConstIterator it = targetChannel->getUsers().begin();
 	// Channel::UsersConstIterator it_end = targetChannel->getUsers().end();
 	// std::cerr << "contenu du channel: \n";
@@ -899,8 +905,6 @@ void	Server::part(const t_commandParams &commandParams)
 	Channel			*targetChannel = NULL;
 	Channel::User	*targetUser = NULL;
 
-	// targetUser->client.get
-
 	if (commandParams.arguments.size() == 1)
 	{
 		const std::string			&targetName = commandParams.arguments[0];
@@ -934,14 +938,12 @@ void	Server::part(const t_commandParams &commandParams)
 						targetChannel->removeUser(targetUser->client);
 				}
 			}
-			
 		}
 		else
 			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
 
 		std::cout << "PART command executed." << std::endl;
 	}
-
 }
 
 void	Server::pass(const t_commandParams &commandParams)
