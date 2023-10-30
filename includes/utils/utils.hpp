@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 13:30:05 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/29 11:12:26 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 11:50:35 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,5 +30,7 @@ bool				areBitsNotSet(const int &mask, const int &bits);
 inline void			toggleBits(int &mask, const int &bits);
 inline void			setBits(int &mask, const int &bits);
 inline void			removeBits(int &mask, const int &bits);
+
+std::string			truncateStr(std::string str, size_t width);
 
 #include "utils/utils.tpp"

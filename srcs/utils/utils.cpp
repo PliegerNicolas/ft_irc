@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/29 11:14:21 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/29 11:14:50 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/30 11:50:27 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,4 +83,14 @@ bool	areBitsNotSet(const int &mask, const int &bits)
 	if ((mask & bits) != bits)
 		return (true);
 	return (false);
+}
+
+/* ************************************************************************** */
+
+
+std::string truncateStr(std::string str, size_t width)
+{
+    if (str.length() > width)
+            return str.substr(0, width);
+    return str;
 }

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/29 11:59:55 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/30 11:55:39 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,7 +194,7 @@ const Channel::Users	&Channel::getUsers(void) const
 
 void	Channel::setTopic(std::string const &topic)
 {
-	_topic = topic;
+	_topic = truncateStr(topic, 306);
 }
 
 	/* Protected */
