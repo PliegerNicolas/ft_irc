@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 21:15:21 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 22:19:51 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -513,19 +513,20 @@ void	Server::join(const t_commandParams &commandParams)
 			errCommand(source, ERR_CHANNELISFULL, channelName, "Channel is full");
 		else if (targetChannel == source->getActiveChannel())
 			errCommand(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
+
+		if (targetChannel->isClientRegistered(source))
+			source->setActiveChannel(targetChannel);
 		else
-			targetChannel->addUser(source, targetChannel->getUserPerms());
+			source->joinChannel(targetChannel);
 	}
 	else
 	{
-		targetChannel = new Channel(channelName, source);
+		targetChannel = new Channel(channelName);
 		_channels[channelName] = targetChannel;
+		source->joinChannel(targetChannel);
 	}
 
-	source->setActiveChannel(targetChannel);
-	source->addToJoinedChannels(targetChannel);
-
-	std::string	commandResponse = getCommandResponse(source, "JOIN", targetChannel, "");
+	std::string	commandResponse = getCommandResponse(source, "JOIN", targetChannel->getName(), "");
 
 	source->receiveMessage(commandResponse);
 	source->broadcastMessageToChannel(targetChannel, commandResponse);
@@ -653,10 +654,10 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 		if (targetChannel)
 			source->broadcastMessageToChannel(targetChannel,
-				getCommandResponse(source, "PRIVMSG", targetChannel, message));
+				getCommandResponse(source, "PRIVMSG", targetChannel->getName(), message));
 		else if (targetClient)
 			targetClient->receiveMessage(getCommandResponse(source, "PRIVMSG",
-				targetClient, message));
+				targetClient->getNickname(), message));
 
 		removeLeadingWhitespaces(buffer, delimiter);
 	}
@@ -733,10 +734,14 @@ void	Server::kick(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
-	targetChannel->removeUser(targetUser->client);
+	targetUser->client->quitChannel(targetChannel);
 
-	targetUser->client->receiveMessage(getCommandResponse(source, "KICK",
-		targetUser->client, commandParams.message));
+	std::string		commandResponse = getCommandResponse(source, "KICK",
+						targetChannel->getName() + " " + targetUser->client->getNickname(),
+						commandParams.message);
+
+	source->receiveMessage(commandResponse);
+	targetUser->client->receiveMessage(commandResponse);
 }
 
 void	Server::mode(const t_commandParams &commandParams)
@@ -1141,31 +1146,15 @@ Server::getServerResponse(const Client *client, const std::string &code,
 
 const std::string
 Server::getCommandResponse(const Client *source, const std::string &command,
-	const Client *target, const std::string &trailing) const
+	const std::string &arguments, const std::string &trailing) const
 {
 	std::string			response;
 
 	response = ":" + source->getNickname();
 	response += " " + command;
-	response += " " + target->getNickname();
 
-	if (!trailing.empty())
-		response += " :" + trailing;
-
-	response += DELIMITER;
-
-	return (response);
-}
-
-const std::string
-Server::getCommandResponse(const Client *source, const std::string &command,
-	const Channel *target, const std::string &trailing) const
-{
-	std::string			response;
-
-	response = ":" + source->getNickname();
-	response += " " + command;
-	response += " " + target->getName();
+	if (!arguments.empty())
+		response += " " + arguments;
 
 	if (!trailing.empty())
 		response += " :" + trailing;

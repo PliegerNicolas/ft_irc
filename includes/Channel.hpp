@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/31 16:08:32 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 22:03:22 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ class	Channel
 		/* Attributs */
 
 		/* Constructors & Destructors */
-		Channel(const std::string &name, Client* channelCreator);
+		Channel(const std::string &name);
 
 		Channel(const Channel &other);
 		Channel	&operator=(const Channel &other);
@@ -75,10 +75,11 @@ class	Channel
 
 		/* Member functions */
 
+		bool				isClientRegistered(const Client* client) const;
 		void				addUser(Client* client, const int &mask);
 		void				removeUser(const Client* client);
-		bool				isUserRegistered(const Client* client) const;
 		bool				isFull(void) const;
+		bool				isEmpty(void) const;
 
 		// GETTERS
 

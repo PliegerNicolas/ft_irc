@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 14:50:29 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 21:58:48 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,14 +136,6 @@ void	Client::incrementConnectionRetries(void)
 	_connectionRetries++;
 }
 
-void	Client::addToJoinedChannels(Channel *channel)
-{
-	if (!channel)
-		return ;
-
-	_joinedChannels[channel->getName()] = channel;
-}
-
 void	Client::receiveMessage(const std::string &message) const
 {
 	send(getSocketFd(), message.c_str(), message.length(), 0);
@@ -163,6 +155,30 @@ void	Client::broadcastMessageToChannel(const Channel *channel,
 		if (this != it->client)
 			it->client->receiveMessage(message);
 	}
+}
+
+void	Client::joinChannel(Channel *channel)
+{
+	if (!channel || channel->isFull())
+		return ;
+
+	if (channel->isEmpty())
+		channel->addUser(this, channel->getAdminPerms());
+	else
+		channel->addUser(this, channel->getUserPerms());
+
+	_joinedChannels[channel->getName()] = channel;
+	_activeChannel = channel;
+}
+
+void	Client::quitChannel(Channel *channel)
+{
+	if (!channel)
+		return ;
+
+	channel->removeUser(this);
+	_joinedChannels.erase(channel->getName());
+	_activeChannel = NULL;
 }
 
 	/* Protected */

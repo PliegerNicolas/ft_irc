@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 15:03:20 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 22:18:05 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,9 +179,7 @@ class	Server
 		const std::string	getServerResponse(const Client *client, const std::string &code,
 							const std::string &parameters, const std::string &trailing) const;
 		const std::string	getCommandResponse(const Client *source, const std::string &command,
-								const Client *target, const std::string &trailing) const;
-		const std::string	getCommandResponse(const Client *source, const std::string &command,
-								const Channel *target, const std::string &trailing) const;
+								const std::string &arguments, const std::string &trailing) const;
 
 		// Setters
 };
