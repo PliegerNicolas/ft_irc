@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 17:44:06 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/31 18:35:06 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -778,24 +778,7 @@ void	Server::invite(const t_commandParams &commandParams)
 
 	std::string		nickname;
 
-	if (commandParams.arguments.size() == 1)
-	{
-		nickname = commandParams.arguments[0];
-
-		if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
-			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
-
-		targetChannel = source->getActiveChannel();
-		if (!targetChannel)
-			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
-
-
-		targetUser = targetChannel->getUser(nickname);
-		if (targetUser)
-			errCommand(source, RPL_AWAY, targetChannel->getName(),
-				"User already in that channel");
-	}
-	else if (commandParams.arguments.size() == 2)
+	if (commandParams.arguments.size() == 2)
 	{
 		const std::string	&channelName = commandParams.arguments[1];
 		nickname = commandParams.arguments[0];
@@ -805,13 +788,12 @@ void	Server::invite(const t_commandParams &commandParams)
 		else if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LENGTH)
 			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
-
 		targetChannel = getChannel(channelName);
 		if (!targetChannel)
 			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 
 		targetUser = targetChannel->getUser(nickname);
-		if (targetUser)
+		if (targetUser != NULL)
 			errCommand(targetUser->client, RPL_AWAY, channelName,
 				"User already in that channel");
 	}
@@ -834,17 +816,10 @@ void	Server::invite(const t_commandParams &commandParams)
 	// if (channel est en mode +i) -> return errCommand("Channel not in mode +i")
 
 	if (targetChannel)
+	{
 		targetChannel->addUser(clientTarget, Channel::getUserPerms());
-
-	// print all users of current channel
-	// Channel::UsersConstIterator it = targetChannel->getUsers().begin();
-	// Channel::UsersConstIterator it_end = targetChannel->getUsers().end();
-	// std::cerr << "contenu du channel: \n";
-	// while (it != it_end)
-	// {
-	// 	std::cerr << "sortie = " << it->client->getNickname() << std::endl;
-	// 	it++;
-	// }
+		clientTarget->setActiveChannel(targetChannel);
+	}
 
 	// TEMP
 	// std::string	response;
