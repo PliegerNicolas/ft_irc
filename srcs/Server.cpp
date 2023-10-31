@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 17:45:49 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 21:15:21 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -525,15 +525,12 @@ void	Server::join(const t_commandParams &commandParams)
 	source->setActiveChannel(targetChannel);
 	source->addToJoinedChannels(targetChannel);
 
-	source->receiveMessage(getCommandResponse(source, "JOIN", targetChannel, ""));
-	// Add additionnal channel info here.
+	std::string	commandResponse = getCommandResponse(source, "JOIN", targetChannel, "");
 
-	// TEMP
-	//source->receiveMessage(":" + source->getNickname() + " JOIN " + channelName);
-	//serverResponse(source, RPL_TOPIC, channelName, channel->getTopic());
-	//serverResponse(source, RPL_TOPIC, channelName, channel->getTopic());
-	//serverResponse(source, RPL_NAMREPLY, "= " + channelName, "usr1 user2 user3"); // get users list
-	//serverResponse(source, RPL_ENDOFNAMES, channelName, "End of /NAMES who");
+	source->receiveMessage(commandResponse);
+	source->broadcastMessageToChannel(targetChannel, commandResponse);
+	who(commandParams);
+	names(commandParams);
 }
 
 /**
@@ -874,11 +871,12 @@ void	Server::who(const t_commandParams &commandParams)
 			for (Channel::UsersConstIterator it = users.begin(); it != users.end(); it++)
 			{
 				info = targetName;
-				info += " " + it->client->getNickname();
-				info += " " + it->client->getHostname();
 				info += " " + it->client->getUsername();
+				info += " " + it->client->getHostname();
+				info += " " + it->client->getServername();
+				info += " " + it->client->getNickname();
 				// add info about role. Place holder is H.
-				info += " H";
+				info += " Hs@";
 
 				source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, info,
 					"0 " + it->client->getRealname()));
