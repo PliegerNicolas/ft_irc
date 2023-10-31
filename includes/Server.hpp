@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 12:23:24 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/31 15:03:20 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,8 @@
 #define MAX_NICKNAME_LEN 9
 #define MAX_TOPIC_LEN 306
 #define MAX_CHANNELNAME_LEN 50
+
+#define SERVER_VERSION "ircserv-1.0.0 (alpha)"
 
 class	Client;
 class	Channel;

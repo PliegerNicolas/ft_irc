@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 10:06:28 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/31 14:50:29 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,12 @@ Client::Client(const ASocket::t_socket &serverSocket):
 	_clientSocket(ClientSocket(serverSocket)),
 	_activeChannel(NULL),
 	_serverPermissions(0),
-	_connectionRetries(1)
+	_connectionRetries(1),
+	_nickname("*"),
+	_username("*"),
+	_hostname("*"),
+	_originServername("*"),
+	_realname("*")
 {
 	if (DEBUG)
 	{
@@ -34,7 +39,12 @@ Client::Client(const Client &other):
 	_clientSocket(other._clientSocket),
 	_activeChannel(other._activeChannel),
 	_serverPermissions(other._serverPermissions),
-	_connectionRetries(other._connectionRetries)
+	_connectionRetries(other._connectionRetries),
+	_nickname(other._nickname),
+	_username(other._username),
+	_hostname(other._hostname),
+	_originServername(other._originServername),
+	_realname(other._realname)
 {
 	if (DEBUG)
 	{
@@ -59,6 +69,11 @@ Client	&Client::operator=(const Client &other)
 		_activeChannel = other._activeChannel;
 		_serverPermissions = other._serverPermissions;
 		_connectionRetries = other._connectionRetries;
+		_nickname = other._nickname;
+		_username = other._username;
+		_hostname = other._hostname;
+		_originServername = other._originServername;
+		_realname = other._realname;
 	}
 
 	return (*this);
@@ -80,7 +95,12 @@ Client::Client(void):
 	_clientSocket(ClientSocket()),
 	_activeChannel(NULL),
 	_serverPermissions(0),
-	_connectionRetries(1)
+	_connectionRetries(1),
+	_nickname("*"),
+	_username("*"),
+	_hostname("*"),
+	_originServername("*"),
+	_realname("*")
 {
 	if (DEBUG)
 	{
@@ -129,22 +149,6 @@ void	Client::receiveMessage(const std::string &message) const
 	send(getSocketFd(), message.c_str(), message.length(), 0);
 }
 
-/*
-void	Client::broadcastMessageToActiveChannel(const std::string &message) const
-{
-	if (!_activeChannel)
-		return ;
-
-	Channel::Users	users = _activeChannel->getUsers();
-
-	for (Channel::UsersIterator it = users.begin(); it != users.end(); it++)
-	{
-		if (_activeChannel == it->client->getActiveChannel() && this != it->client)
-			it->client->receiveMessage(message);
-	}
-}
-*/
-
 void	Client::broadcastMessageToChannel(const Channel *channel,
 	const std::string &message) const
 {
@@ -186,6 +190,16 @@ const std::string	&Client::getNickname(void) const
 const std::string	&Client::getUsername(void) const
 {
 	return (_username);
+}
+
+const std::string	&Client::getHostname(void) const
+{
+	return (_hostname);
+}
+
+const std::string	&Client::getServername(void) const
+{
+	return (_originServername);
 }
 
 const std::string	&Client::getRealname(void) const
@@ -249,7 +263,17 @@ void	Client::setNickname(const std::string &nickname)
 
 void	Client::setUsername(const std::string &username)
 {
-	_username = "~" + truncate(username, MAX_USERNAME_LEN);
+	_username = truncate(username, MAX_USERNAME_LEN);
+}
+
+void	Client::setHostname(const std::string &hostname)
+{
+	_hostname = hostname;
+}
+
+void	Client::setServername(const std::string &servername)
+{
+	_originServername = servername;
 }
 
 void	Client::setRealname(const std::string &realname)

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 12:39:36 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/31 15:33:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -327,14 +327,14 @@ void	Server::setCommands(void)
 	_commands["MODE"] = &Server::mode;
 	_commands["KICK"] = &Server::kick;
 	_commands["NOTICE"] = &Server::notice;
-	_commands["TOPIC"] = &Server::topic;
+	_commands["LIST"] = &Server::list;
 	_commands["WHO"] = &Server::who;
 	_commands["NAMES"] = &Server::names;
+	_commands["TOPIC"] = &Server::topic;
+	_commands["MOTD"] = &Server::motd;
 	_commands["PART"] = &Server::part;
 	_commands["CAP"] = &Server::cap;
 	_commands["QUIT"] = &Server::quit;
-	_commands["LIST"] = &Server::list;
-	_commands["MOTD"] = &Server::motd;
 }
 
 void	Server::executeCommand(Client *client, struct pollfd *pollFd,
@@ -458,10 +458,16 @@ void	Server::user(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 3)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	Client	*source = commandParams.source;
+	Client				*source = commandParams.source;
+	const std::string	&username = commandParams.arguments[0];
+	const std::string	&hostname = commandParams.arguments[1];
+	const std::string	&servername = commandParams.arguments[2];
+	const std::string	&realname = commandParams.message;
 
-	source->setUsername(commandParams.arguments[0]);
-	source->setRealname(commandParams.message);
+	source->setUsername(username);
+	source->setHostname(hostname);
+	source->setServername(servername);
+	source->setRealname(realname);
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"Welcome to our Internet Relay Chat Network !"));
@@ -530,6 +536,9 @@ void	Server::join(const t_commandParams &commandParams)
 	//serverResponse(source, RPL_ENDOFNAMES, channelName, "End of /NAMES who");
 }
 
+/**
+ *	WHOIS shows information about a user.
+**/
 void	Server::whois(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -539,14 +548,46 @@ void	Server::whois(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	const Client	*source = commandParams.source;
-	const Client	*targetUser = getClient(commandParams.arguments[0]);
+	const Client		*source = commandParams.source;
+	const std::string	&targetName = commandParams.arguments[0];
+	std::string			info;
 
-	if (!targetUser)
-		errCommand(source, ERR_NOSUCHNICK, "", "No such nick/channel");
-	source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, targetUser->getNickname() + " " + targetUser->getUsername() + " *", targetUser->getRealname()));
-	// RPL_WHOREPLY --> "<client> <nick> <username> <host> * :<realname>"
-	source->receiveMessage(getServerResponse(source, RPL_ENDOFWHOIS, commandParams.arguments[0], "End of /WHOIS list"));
+	if (targetName[0] != '#')
+	{
+		Client	*targetClient = getClient(targetName);
+
+		std::cout << targetClient->getHostname() << std::endl;
+		std::cout << targetClient->getUsername() << std::endl;
+
+		if (targetClient)
+		{
+			info = targetName;
+			info += " " + targetClient->getHostname();
+			info += " " + targetClient->getServername();
+			info += " *";
+
+			source->receiveMessage(getServerResponse(source, RPL_WHOISUSER, info,
+				targetClient->getRealname()));
+
+			info = targetName;
+			info += " " + _serverSockets.getHostname();
+
+			source->receiveMessage(getServerResponse(source, RPL_WHOISSERVER, info,
+				SERVER_VERSION));
+
+			info = targetName;
+
+			Channel	*activeChannel = targetClient->getActiveChannel();
+			if (activeChannel)
+				source->receiveMessage(getServerResponse(source, RPL_WHOISCHANNELS, info,
+					activeChannel->getName()));
+		}
+	}
+	else
+		errCommand(source, ERR_NOSUCHNICK, targetName, "No such user");
+
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFWHOIS, targetName,
+		"End of /WHOIS list"));
 }
 
 /**
