@@ -459,9 +459,15 @@ void	Server::user(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client	*source = commandParams.source;
+	const std::string &username = commandParams.arguments[0];
+	const std::string &hostname = commandParams.arguments[1];
+	const std::string &servername = commandParams.arguments[2];
+	const std::string &realname = commandParams.message;
 
-	source->setUsername(commandParams.arguments[0]);
-	source->setRealname(commandParams.message);
+	source->setUsername(username);
+	source->setHostname(hostname);
+	source->setServername(servername);
+	source->setRealname(realname);
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"Welcome to our Internet Relay Chat Network !"));

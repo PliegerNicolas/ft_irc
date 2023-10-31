@@ -129,22 +129,6 @@ void	Client::receiveMessage(const std::string &message) const
 	send(getSocketFd(), message.c_str(), message.length(), 0);
 }
 
-/*
-void	Client::broadcastMessageToActiveChannel(const std::string &message) const
-{
-	if (!_activeChannel)
-		return ;
-
-	Channel::Users	users = _activeChannel->getUsers();
-
-	for (Channel::UsersIterator it = users.begin(); it != users.end(); it++)
-	{
-		if (_activeChannel == it->client->getActiveChannel() && this != it->client)
-			it->client->receiveMessage(message);
-	}
-}
-*/
-
 void	Client::broadcastMessageToChannel(const Channel *channel,
 	const std::string &message) const
 {
@@ -186,6 +170,16 @@ const std::string	&Client::getNickname(void) const
 const std::string	&Client::getUsername(void) const
 {
 	return (_username);
+}
+
+const std::string	&Client::getHostname(void) const
+{
+	return (_hostname);
+}
+
+const std::string	&Client::setServername(void) const
+{
+	return (_originServername);
 }
 
 const std::string	&Client::getRealname(void) const
@@ -250,6 +244,16 @@ void	Client::setNickname(const std::string &nickname)
 void	Client::setUsername(const std::string &username)
 {
 	_username = "~" + truncate(username, MAX_USERNAME_LEN);
+}
+
+void	Client::setHostname(const std::string &hostname)
+{
+	_hostname = hostname;
+}
+
+void	Client::setServername(const std::string &servername)
+{
+	_originServername = servername;
 }
 
 void	Client::setRealname(const std::string &realname)
