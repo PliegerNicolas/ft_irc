@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 13:29:15 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 10:06:28 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,7 +249,7 @@ void	Client::setNickname(const std::string &nickname)
 
 void	Client::setUsername(const std::string &username)
 {
-	_username = truncate(username, MAX_USERNAME_LEN);
+	_username = "~" + truncate(username, MAX_USERNAME_LEN);
 }
 
 void	Client::setRealname(const std::string &realname)

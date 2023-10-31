@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 22:42:14 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/31 10:13:45 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -542,8 +542,8 @@ void	Server::whois(const t_commandParams &commandParams)
 
 	if (!targetUser)
 		errCommand(source, ERR_NOSUCHNICK, "", "No such nick/channel");
-	source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, targetUser->getNickname() + " ~" + targetUser->getUsername() + " *", targetUser->getRealname()));
-	// "<client> <nick> <username> <host> * :<realname>" --> should be adjusted to user without username or realname
+	source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, targetUser->getNickname() + " " + targetUser->getUsername() + " *", targetUser->getRealname()));
+	// RPL_WHOREPLY --> "<client> <nick> <username> <host> * :<realname>"
 	source->receiveMessage(getServerResponse(source, RPL_ENDOFWHOIS, commandParams.arguments[0], "End of /WHOIS list"));
 }
 
@@ -797,7 +797,7 @@ void	Server::who(const t_commandParams &commandParams)
 	{
 		targetUser = getClient(target);
 		if (targetUser)
-			source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, "~" + targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
+			source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
 	}
 	else
 	{
@@ -808,15 +808,14 @@ void	Server::who(const t_commandParams &commandParams)
 			while (it != targetChannel->getUsers().end())
 			{
 				targetUser = it->client;
-				source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, target + " ~" + targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
+				source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, target + " " + targetUser->getUsername() + " " + targetUser->getNickname(), "0 " + targetUser->getRealname()));
 				it++;
 			}
 		}
 	}
 	source->receiveMessage(getServerResponse(source, RPL_ENDOFWHO, target, "End of /WHO list"));
-
 	// RPL_WHOREPLY ---> "<client> <channel> <username> <host> <server> <nick> <flags> :<hopcount> <realname>"
-	// Should add flags once mode is done
+	// Should add flags once mode is done and host
 }
 
 void	Server::names(const t_commandParams &commandParams)
@@ -830,7 +829,6 @@ void	Server::names(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		errCommand(source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	Client		*targetUser = NULL;
 	Channel		*targetChannel = getChannel(commandParams.arguments[0]);
 
 	if (targetChannel)
@@ -838,15 +836,12 @@ void	Server::names(const t_commandParams &commandParams)
 		Channel::UsersConstIterator	it = targetChannel->getUsers().begin();
 		while (it != targetChannel->getUsers().end())
 		{
-			targetUser = it->client;
-			source->receiveMessage(getServerResponse(source, RPL_NAMREPLY, commandParams.arguments[0], targetUser->getNickname()));
+			source->receiveMessage(getServerResponse(source, RPL_NAMREPLY, commandParams.arguments[0], it->client->getNickname()));
 			it++;
 		}
 	}
 	source->receiveMessage(getServerResponse(source, RPL_ENDOFNAMES, commandParams.arguments[0], "End of /NAMES list"));
-	
-	// RPL_NAMEREPLY    --->  "<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"
-	// RPL_ENDNAMEREPLY --->  "<client> <channel> :End of /NAMES list"
+	// RPL_NAMREPLY  --->  "<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"
 }
 
 void	Server::part(const t_commandParams &commandParams)
