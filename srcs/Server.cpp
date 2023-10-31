@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 12:02:52 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/31 12:39:36 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,8 @@
 Server::Server(const ServerSockets::t_serverconfig &serverConfig,
 	const std::string &password):
 	_serverSockets(ServerSockets(serverConfig)),
-	_password(password)
+	_password(password),
+	_motd("IRC commands: USER, WHO, WHOIS, JOIN, TOPIC, LIST, NAMES, NICK, etc.")
 {
 	if (DEBUG)
 	{
@@ -874,12 +875,15 @@ void	Server::motd(const t_commandParams &commandParams) {
 
 	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (commandParams.arguments.size() > 1)
-		errCommand(source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
-
-	std::cout << "MOTD command executed." << std::endl;
+	else if (areBitsNotSet(commandParams.mask, SOURCE))
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (!commandParams.arguments.empty())
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+	if (_motd.empty())
+		errCommand(commandParams.source, ERR_NOMOTD, "", "MOTD File is missing");
+	source->receiveMessage(getServerResponse(source, RPL_MOTDSTART, "", "- Message of the day -")); // add server name
+	source->receiveMessage(getServerResponse(source, RPL_MOTD, "", _motd));
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFMOTD, "", "End of /MOTD command")); // add server name
 }
 
 
@@ -1005,7 +1009,11 @@ Channel	*Server::getChannel(const std::string &name)
 	if (it == _channels.end())
 		return (NULL);
 	return (it->second);
+}
 
+std::string const	&Server::getMotd(void) const
+{
+	return (_motd);
 }
 
 const std::string
