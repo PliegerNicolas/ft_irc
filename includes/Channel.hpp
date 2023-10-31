@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/30 13:23:49 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 16:08:32 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ class	Channel
 	private:
 		/* Attributs */
 		std::string	_name;
-		std::string _topic;
+		std::string	_topic;
 
 		Users		_users;
 		int			_userLimit;
