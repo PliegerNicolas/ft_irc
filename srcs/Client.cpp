@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 13:29:15 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 14:02:12 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,6 +188,16 @@ const std::string	&Client::getUsername(void) const
 	return (_username);
 }
 
+const std::string	&Client::getHostname(void) const
+{
+	return (_hostname);
+}
+
+const std::string	&Client::setServername(void) const
+{
+	return (_originServername);
+}
+
 const std::string	&Client::getRealname(void) const
 {
 	return (_realname);
@@ -250,6 +260,16 @@ void	Client::setNickname(const std::string &nickname)
 void	Client::setUsername(const std::string &username)
 {
 	_username = truncate(username, MAX_USERNAME_LEN);
+}
+
+void	Client::setHostname(const std::string &hostname)
+{
+	_hostname = hostname;
+}
+
+void	Client::setServername(const std::string &servername)
+{
+	_originServername = servername;
 }
 
 void	Client::setRealname(const std::string &realname)

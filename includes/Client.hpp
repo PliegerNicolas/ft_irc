@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 12:15:55 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/31 14:01:20 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,8 @@ class	Client
 
 		const std::string	&getNickname(void) const;
 		const std::string	&getUsername(void) const;
+		const std::string	&getHostname(void) const;
+		const std::string	&setServername(void) const;
 		const std::string	&getRealname(void) const;
 		short				&getConnectionRetries(void);
 		int					getServerPermissions(void) const;
@@ -82,6 +84,8 @@ class	Client
 		// Setter
 		void				setNickname(const std::string &nickname);
 		void				setUsername(const std::string &username);
+		void				setHostname(const std::string &hostname);
+		void				setServername(const std::string &servername);
 		void				setRealname(const std::string &realname);
 		void				setServerPermissions(const int &mask);
 		void				setActiveChannel(Channel *channel);
@@ -105,11 +109,11 @@ class	Client
 
 		std::string			_nickname;
 		std::string			_username;
+		std::string			_hostname;
+		std::string			_originServername;
 		std::string			_realname;
 
-
 		std::string			_messageBuffer;
-		std::string			_messagePrefix;
 
 		/* Constructors & Destructors */
 		Client(void);
