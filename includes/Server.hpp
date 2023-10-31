@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 12:23:24 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/31 16:02:31 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 #include "ircProtocolCodes.hpp"
 
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <map>
 
@@ -120,7 +121,6 @@ class	Server
 		Channels		_channels;
 
 		std::string		_password;
-		std::string		_motd;
 
 		/* Constructors & Destructors */
 		Server(void);
@@ -172,7 +172,6 @@ class	Server
 		// Getters
 		Client				*getClient(const std::string &nickname);
 		Channel				*getChannel(const std::string &name);
-		std::string const	&getMotd(void) const;
 
 		const std::string	getServerResponse(const Client *client, const std::string &code,
 							const std::string &parameters, const std::string &trailing) const;
