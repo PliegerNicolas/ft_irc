@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 22:24:53 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 22:46:11 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -956,23 +956,33 @@ void	Server::list(const t_commandParams &commandParams) {
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	const Client		*source = commandParams.source;
+	std::string			info;
+
 	if (!_channels.empty())
 	{
-		source->receiveMessage(getServerResponse(source, RPL_LISTSTART, "Channel", "Users  Name"));
-		ChannelsIterator	it = _channels.begin();
-		while (it != _channels.end())
+		source->receiveMessage(getServerResponse(source, RPL_LISTSTART,
+			"Channel", "Users Name"));
+
+		for (ChannelsIterator it = _channels.begin(); it != _channels.end(); it++)
 		{
-			std::stringstream	s;
-			s << it->first << " " << it->second->getUsers().size();
-			std::string			info = s.str();
-			source->receiveMessage(getServerResponse(source, RPL_LIST, info, it->second->getTopic()));
-			it++;
+			const Channel		*targetChannel = it->second;
+			std::stringstream	ss;
+
+			ss << targetChannel->getUsers().size();
+			if (!targetChannel->getTopic().empty())
+				ss << " " << targetChannel->getTopic();
+
+			source->receiveMessage(getServerResponse(source, RPL_LIST,
+				targetChannel->getName(), ss.str()));
 		}
 	}
-	source->receiveMessage(getServerResponse(source, RPL_LISTEND, "", "End of /LIST"));
+
+	source->receiveMessage(getServerResponse(source, RPL_LISTEND,
+		"", "End of /LIST"));
 }
 
-void	Server::motd(const t_commandParams &commandParams) {
+void	Server::motd(const t_commandParams &commandParams)
+{
 	const Client		*source = commandParams.source;
 
 	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
