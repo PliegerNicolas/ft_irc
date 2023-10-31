@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 21:58:02 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 22:23:10 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,9 +113,7 @@ class	Client
 		std::string			_originServername;
 		std::string			_realname;
 
-
 		std::string			_messageBuffer;
-		std::string			_messagePrefix;
 
 		/* Constructors & Destructors */
 		Client(void);
