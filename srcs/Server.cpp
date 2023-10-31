@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 14:57:58 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/31 17:44:06 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -320,16 +320,16 @@ void	Server::setCommands(void)
 	_commands["NICK"] = &Server::nick;
 	_commands["USER"] = &Server::user;
 	_commands["JOIN"] = &Server::join;
-	_commands["INVITE"] = &Server::invite; // a tester
+	_commands["INVITE"] = &Server::invite;
 	_commands["WHOIS"] = &Server::whois;
 	_commands["PRIVMSG"] = &Server::privmsg;
-	_commands["MODE"] = &Server::mode; // a faire
+	_commands["MODE"] = &Server::mode;
 	_commands["KICK"] = &Server::kick;
-	_commands["NOTICE"] = &Server::notice; // a faire, pour le bot ?
+	_commands["NOTICE"] = &Server::notice;
 	_commands["TOPIC"] = &Server::topic;
 	_commands["WHO"] = &Server::who;
 	_commands["NAMES"] = &Server::names;
-	_commands["PART"] = &Server::part; // a tester
+	_commands["PART"] = &Server::part;
 	_commands["CAP"] = &Server::cap;
 	_commands["QUIT"] = &Server::quit;
 }
@@ -624,7 +624,7 @@ void	Server::notice(const t_commandParams &commandParams)
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE))
 		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");	
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	// Sends a server notice to a client, channel or everywhere.
 	std::cout << "NOTICE command executed." << std::endl;
@@ -765,7 +765,7 @@ void	Server::invite(const t_commandParams &commandParams)
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() < 1)
+		|| commandParams.arguments.size() < 2)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 2)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
