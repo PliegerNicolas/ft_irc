@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 10:13:45 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/31 12:02:52 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -332,6 +332,8 @@ void	Server::setCommands(void)
 	_commands["PART"] = &Server::part;
 	_commands["CAP"] = &Server::cap;
 	_commands["QUIT"] = &Server::quit;
+	_commands["LIST"] = &Server::list;
+	_commands["MOTD"] = &Server::motd;
 }
 
 void	Server::executeCommand(Client *client, struct pollfd *pollFd,
@@ -529,15 +531,14 @@ void	Server::join(const t_commandParams &commandParams)
 
 void	Server::whois(const t_commandParams &commandParams)
 {
-	const Client	*source = commandParams.source;
-
-	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		errCommand(source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
+	const Client	*source = commandParams.source;
 	const Client	*targetUser = getClient(commandParams.arguments[0]);
 
 	if (!targetUser)
@@ -781,15 +782,14 @@ void	Server::invite(const t_commandParams &commandParams)
 
 void	Server::who(const t_commandParams &commandParams)
 {
-	const Client		*source = commandParams.source;
-
-	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
+	const Client		*source = commandParams.source;
 	const std::string	&target = commandParams.arguments[0];
 	Client				*targetUser = NULL;
 
@@ -820,15 +820,14 @@ void	Server::who(const t_commandParams &commandParams)
 
 void	Server::names(const t_commandParams &commandParams)
 {
-	const Client		*source = commandParams.source;
-
-	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
+	const Client		*source = commandParams.source;
 	Channel		*targetChannel = getChannel(commandParams.arguments[0]);
 
 	if (targetChannel)
@@ -843,6 +842,46 @@ void	Server::names(const t_commandParams &commandParams)
 	source->receiveMessage(getServerResponse(source, RPL_ENDOFNAMES, commandParams.arguments[0], "End of /NAMES list"));
 	// RPL_NAMREPLY  --->  "<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"
 }
+
+void	Server::list(const t_commandParams &commandParams) {
+
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
+		return ;
+	else if (areBitsNotSet(commandParams.mask, SOURCE))
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (!commandParams.arguments.empty())
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+
+	const Client		*source = commandParams.source;
+	if (!_channels.empty())
+	{
+		source->receiveMessage(getServerResponse(source, RPL_LISTSTART, "Channel", "Users  Name"));
+		ChannelsIterator	it = _channels.begin();
+		while (it != _channels.end())
+		{
+			std::stringstream	s;
+			s << it->first << " " << it->second->getUsers().size();
+			std::string			info = s.str();
+			source->receiveMessage(getServerResponse(source, RPL_LIST, info, it->second->getTopic()));
+			it++;
+		}
+	}
+	source->receiveMessage(getServerResponse(source, RPL_LISTEND, "", "End of /LIST"));
+}
+
+void	Server::motd(const t_commandParams &commandParams) {
+	const Client		*source = commandParams.source;
+
+	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
+		return ;
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 1)
+		errCommand(source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+
+	std::cout << "MOTD command executed." << std::endl;
+}
+
 
 void	Server::part(const t_commandParams &commandParams)
 {
