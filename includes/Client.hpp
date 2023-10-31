@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 18:20:05 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/31 13:50:07 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,6 @@ class	Client
 
 		/* Constructors & Destructors */
 		Client(const ASocket::t_socket &serverSocket);
-		Client(void);
 
 		Client(const Client &other);
 		Client	&operator=(const Client &other);
@@ -113,6 +112,7 @@ class	Client
 		std::string			_messagePrefix;
 
 		/* Constructors & Destructors */
+		Client(void);
 
 		/* Member functions */
 };

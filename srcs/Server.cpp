@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 19:45:21 by mfaucheu         ###   ########.fr       */
+/*   Updated: 2023/10/31 14:57:58 by mfaucheu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -320,7 +320,7 @@ void	Server::setCommands(void)
 	_commands["NICK"] = &Server::nick;
 	_commands["USER"] = &Server::user;
 	_commands["JOIN"] = &Server::join;
-	_commands["INVITE"] = &Server::invite; // a tester 
+	_commands["INVITE"] = &Server::invite; // a tester
 	_commands["WHOIS"] = &Server::whois;
 	_commands["PRIVMSG"] = &Server::privmsg;
 	_commands["MODE"] = &Server::mode; // a faire
@@ -330,7 +330,7 @@ void	Server::setCommands(void)
 	_commands["WHO"] = &Server::who;
 	_commands["NAMES"] = &Server::names;
 	_commands["PART"] = &Server::part; // a tester
-	_commands["CAP"] = &Server::cap; // a faire
+	_commands["CAP"] = &Server::cap;
 	_commands["QUIT"] = &Server::quit;
 }
 
@@ -618,12 +618,13 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 void	Server::notice(const t_commandParams &commandParams)
 {
+	(void)commandParams;
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE))
 		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");	
 
 	// Sends a server notice to a client, channel or everywhere.
 	std::cout << "NOTICE command executed." << std::endl;
@@ -910,7 +911,7 @@ void	Server::part(const t_commandParams &commandParams)
 		const std::string			&targetName = commandParams.arguments[0];
 		std::vector<std::string>	channels_list;
 
-		if (commandParams.arguments[0][0] == '#')
+		if (commandParams.arguments[0][0] == '#' && commandParams.arguments[0].size() != 1)
 		{
 			std::string	channel_tmp;
 			for (size_t i = 1; i < commandParams.arguments[0].size(); ++i)
@@ -922,9 +923,11 @@ void	Server::part(const t_commandParams &commandParams)
 				channel_tmp.erase(0, channel_tmp.size());
 			}
 
+			// if (channel_tmp.size() < 1)
+			// 	errCommand(source, ERR_NEEDMOREPARAMS, targetName, "Not enough parameters");
+
 			for (std::vector<std::string>::iterator it = channels_list.begin(); it != channels_list.end(); ++it)
 			{
-				std::cerr << "channel = " << "#" + *it << std::endl; 
 				targetChannel = getChannel("#" + *it);
 				if (!targetChannel)
 					errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
