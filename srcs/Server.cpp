@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/01 02:01:50 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/01 02:21:17 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,7 @@
 Server::Server(const ServerSockets::t_serverconfig &serverConfig,
 	const std::string &password):
 	_serverSockets(ServerSockets(serverConfig)),
-	_password(password),
-	_motd("IRC commands: USER, WHO, WHOIS, JOIN, TOPIC, LIST, NAMES, NICK, etc.")
+	_password(password)
 {
 	if (DEBUG)
 	{
@@ -983,21 +982,28 @@ void	Server::list(const t_commandParams &commandParams) {
 
 void	Server::motd(const t_commandParams &commandParams)
 {
-	const Client		*source = commandParams.source;
-
-	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (!commandParams.arguments.empty())
+	else if (areBitsSet(commandParams.mask, ARGUMENTS | MESSAGE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
-	if (_motd.empty())
-		errCommand(commandParams.source, ERR_NOMOTD, "", "MOTD File is missing");
-	source->receiveMessage(getServerResponse(source, RPL_MOTDSTART, "", "- Message of the day -")); // add server name
-	source->receiveMessage(getServerResponse(source, RPL_MOTD, "", _motd));
-	source->receiveMessage(getServerResponse(source, RPL_ENDOFMOTD, "", "End of /MOTD command")); // add server name
-}
 
+	const Client	*source = commandParams.source;
+	std::ifstream	motdFile(MOTD_PATH);
+	std::string		line;
+
+	if (!motdFile.is_open())
+		errCommand(source, ERR_NOMOTD, "", strerror(errno));
+
+	source->receiveMessage(getServerResponse(source, RPL_MOTDSTART,
+		"", "- " + _serverSockets.getHostname() + " Message of the day -"));
+
+	while (getline(motdFile, line))
+		source->receiveMessage(getServerResponse(source, RPL_MOTD, "", line));
+
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFMOTD, "", "End of /MOTD command"));
+}
 
 void	Server::part(const t_commandParams &commandParams)
 {
@@ -1121,11 +1127,6 @@ Channel	*Server::getChannel(const std::string &name)
 	if (it == _channels.end())
 		return (NULL);
 	return (it->second);
-}
-
-std::string const	&Server::getMotd(void) const
-{
-	return (_motd);
 }
 
 const std::string
