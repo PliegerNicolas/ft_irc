@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/30 13:29:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 22:08:08 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 	/* Public */
 
-Channel::Channel(const std::string &name, Client* channelCreator):
+Channel::Channel(const std::string &name):
 	_name(truncate(name, MAX_CHANNELNAME_LEN)),
 	_userLimit(-1)
 {
@@ -26,8 +26,6 @@ Channel::Channel(const std::string &name, Client* channelCreator):
 		std::cout << "Channel: default constructor called.";
 		std::cout << WHITE;
 	}
-
-	_users.push_back(createUser(channelCreator, getAdminPerms()));
 }
 
 Channel::Channel(const Channel &other):
@@ -86,7 +84,7 @@ Channel::Channel(void):
 
 	/* Public */
 
-bool	Channel::isUserRegistered(const Client* client) const
+bool	Channel::isClientRegistered(const Client* client) const
 {
 	for (UsersConstIterator it = _users.begin(); it != _users.end(); ++it)
 	{
@@ -104,6 +102,13 @@ bool	Channel::isFull(void) const
 	return (true);
 }
 
+bool	Channel::isEmpty(void) const
+{
+	if (_users.size() == 0)
+		return (true);
+	return (false);
+}
+
 void	Channel::addUser(Client* client, const int &mask)
 {
 	_users.push_back(createUser(client, mask));
@@ -116,10 +121,7 @@ void	Channel::removeUser(const Client* client)
 	for (; it != _users.end() && it->client != client; it++);
 
 	if (it != _users.end())
-	{
-		it->client->setActiveChannel(NULL);
 		_users.erase(it);
-	}
 }
 
 	/* Protected */

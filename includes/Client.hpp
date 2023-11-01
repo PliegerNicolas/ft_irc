@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 14:01:20 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 22:23:10 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,12 +60,12 @@ class	Client
 								const struct pollfd &pollFd);
 		void				incrementConnectionRetries(void);
 
-		void				addToJoinedChannels(Channel *channel);
-
 		void				receiveMessage(const std::string &message) const;
 		void				broadcastMessageToChannel(const Channel *channel,
 								const std::string &message) const;
-		//void				broadcastMessageToActiveChannel(const std::string &message) const;
+
+		void				joinChannel(Channel *channel);
+		void				quitChannel(Channel *channel);
 
 		// Getter
 		std::string			&getBuffer(void);
@@ -74,7 +74,7 @@ class	Client
 		const std::string	&getNickname(void) const;
 		const std::string	&getUsername(void) const;
 		const std::string	&getHostname(void) const;
-		const std::string	&setServername(void) const;
+		const std::string	&getServername(void) const;
 		const std::string	&getRealname(void) const;
 		short				&getConnectionRetries(void);
 		int					getServerPermissions(void) const;

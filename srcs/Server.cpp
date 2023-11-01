@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 14:10:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/01 02:01:50 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,8 @@
 Server::Server(const ServerSockets::t_serverconfig &serverConfig,
 	const std::string &password):
 	_serverSockets(ServerSockets(serverConfig)),
-	_password(password)
+	_password(password),
+	_motd("IRC commands: USER, WHO, WHOIS, JOIN, TOPIC, LIST, NAMES, NICK, etc.")
 {
 	if (DEBUG)
 	{
@@ -326,9 +327,11 @@ void	Server::setCommands(void)
 	_commands["MODE"] = &Server::mode;
 	_commands["KICK"] = &Server::kick;
 	_commands["NOTICE"] = &Server::notice;
-	_commands["TOPIC"] = &Server::topic;
+	_commands["LIST"] = &Server::list;
 	_commands["WHO"] = &Server::who;
 	_commands["NAMES"] = &Server::names;
+	_commands["TOPIC"] = &Server::topic;
+	_commands["MOTD"] = &Server::motd;
 	_commands["PART"] = &Server::part;
 	_commands["CAP"] = &Server::cap;
 	_commands["QUIT"] = &Server::quit;
@@ -455,11 +458,11 @@ void	Server::user(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 3)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	Client	*source = commandParams.source;
-	const std::string &username = commandParams.arguments[0];
-	const std::string &hostname = commandParams.arguments[1];
-	const std::string &servername = commandParams.arguments[2];
-	const std::string &realname = commandParams.message;
+	Client				*source = commandParams.source;
+	const std::string	&username = commandParams.arguments[0];
+	const std::string	&hostname = commandParams.arguments[1];
+	const std::string	&servername = commandParams.arguments[2];
+	const std::string	&realname = commandParams.message;
 
 	source->setUsername(username);
 	source->setHostname(hostname);
@@ -510,29 +513,30 @@ void	Server::join(const t_commandParams &commandParams)
 			errCommand(source, ERR_CHANNELISFULL, channelName, "Channel is full");
 		else if (targetChannel == source->getActiveChannel())
 			errCommand(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
+
+		if (targetChannel->isClientRegistered(source))
+			source->setActiveChannel(targetChannel);
 		else
-			targetChannel->addUser(source, targetChannel->getUserPerms());
+			source->joinChannel(targetChannel);
 	}
 	else
 	{
-		targetChannel = new Channel(channelName, source);
+		targetChannel = new Channel(channelName);
 		_channels[channelName] = targetChannel;
+		source->joinChannel(targetChannel);
 	}
 
-	source->setActiveChannel(targetChannel);
-	source->addToJoinedChannels(targetChannel);
+	std::string	commandResponse = getCommandResponse(source, "JOIN", targetChannel->getName(), "");
 
-	source->receiveMessage(getCommandResponse(source, "JOIN", targetChannel, ""));
-	// Add additionnal channel info here.
-
-	// TEMP
-	//source->receiveMessage(":" + source->getNickname() + " JOIN " + channelName);
-	//serverResponse(source, RPL_TOPIC, channelName, channel->getTopic());
-	//serverResponse(source, RPL_TOPIC, channelName, channel->getTopic());
-	//serverResponse(source, RPL_NAMREPLY, "= " + channelName, "usr1 user2 user3"); // get users list
-	//serverResponse(source, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
+	source->receiveMessage(commandResponse);
+	source->broadcastMessageToChannel(targetChannel, commandResponse);
+	who(commandParams);
+	names(commandParams);
 }
 
+/**
+ *	WHOIS shows information about a user.
+**/
 void	Server::whois(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -542,9 +546,46 @@ void	Server::whois(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// Gets information about an existing user :
-	// nickname, name, blablabla ...
-	std::cout << "WHOIS command executed." << std::endl;
+	const Client		*source = commandParams.source;
+	const std::string	&targetName = commandParams.arguments[0];
+	std::string			info;
+
+	if (targetName[0] != '#')
+	{
+		Client	*targetClient = getClient(targetName);
+
+		std::cout << targetClient->getHostname() << std::endl;
+		std::cout << targetClient->getUsername() << std::endl;
+
+		if (targetClient)
+		{
+			info = targetName;
+			info += " " + targetClient->getHostname();
+			info += " " + targetClient->getServername();
+			info += " *";
+
+			source->receiveMessage(getServerResponse(source, RPL_WHOISUSER, info,
+				targetClient->getRealname()));
+
+			info = targetName;
+			info += " " + _serverSockets.getHostname();
+
+			source->receiveMessage(getServerResponse(source, RPL_WHOISSERVER, info,
+				SERVER_VERSION));
+
+			info = targetName;
+
+			Channel	*activeChannel = targetClient->getActiveChannel();
+			if (activeChannel)
+				source->receiveMessage(getServerResponse(source, RPL_WHOISCHANNELS, info,
+					activeChannel->getName()));
+		}
+	}
+	else
+		errCommand(source, ERR_NOSUCHNICK, targetName, "No such user");
+
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFWHOIS, targetName,
+		"End of /WHOIS list"));
 }
 
 /**
@@ -613,10 +654,10 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 		if (targetChannel)
 			source->broadcastMessageToChannel(targetChannel,
-				getCommandResponse(source, "PRIVMSG", targetChannel, message));
+				getCommandResponse(source, "PRIVMSG", targetChannel->getName(), message));
 		else if (targetClient)
 			targetClient->receiveMessage(getCommandResponse(source, "PRIVMSG",
-				targetClient, message));
+				targetClient->getNickname(), message));
 
 		removeLeadingWhitespaces(buffer, delimiter);
 	}
@@ -693,10 +734,14 @@ void	Server::kick(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
-	targetChannel->removeUser(targetUser->client);
+	targetUser->client->quitChannel(targetChannel);
 
-	targetUser->client->receiveMessage(getCommandResponse(source, "KICK",
-		targetUser->client, commandParams.message));
+	std::string		commandResponse = getCommandResponse(source, "KICK",
+						targetChannel->getName() + " " + targetUser->client->getNickname(),
+						commandParams.message);
+
+	source->receiveMessage(commandResponse);
+	targetUser->client->receiveMessage(commandResponse);
 }
 
 void	Server::mode(const t_commandParams &commandParams)
@@ -783,27 +828,176 @@ void	Server::who(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+	else if (areBitsNotSet(commandParams.mask, SOURCE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (commandParams.arguments.size() > 1)
+	else if (areBitsNotSet(commandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	//  List the users in a channel (names, real names, server info, status, ...)
-	std::cout << "WHO command executed." << std::endl;
+	Client			*source = commandParams.source;
+	std::string		targetName;
+	std::string		info;
+
+	if (areBitsSet(commandParams.mask, ARGUMENTS) && commandParams.arguments[0][0] != '#')
+	{
+		targetName = commandParams.arguments[0];
+		const Client		*targetClient = getClient(targetName);
+
+		if (targetClient)
+		{
+			info = targetName;
+			info += " " + targetClient->getHostname();
+			info += " " + targetClient->getUsername();
+
+			source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, info,
+				targetClient->getRealname()));
+		}
+	}
+	else
+	{
+		Channel	*targetChannel = NULL;
+
+		if (areBitsSet(commandParams.mask, ARGUMENTS))
+		{
+			targetName = commandParams.arguments[0];
+			targetChannel = getChannel(targetName);
+		}
+		else
+		{
+			targetChannel = source->getActiveChannel();
+			if (!targetChannel)
+				errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+			targetName = targetChannel->getName();
+		}
+
+		if (targetChannel)
+		{
+			const Channel::Users	&users = targetChannel->getUsers();
+
+			for (Channel::UsersConstIterator it = users.begin(); it != users.end(); it++)
+			{
+				info = targetName;
+				info += " " + it->client->getUsername();
+				info += " " + it->client->getHostname();
+				info += " " + it->client->getServername();
+				info += " " + it->client->getNickname();
+				// add info about role. Place holder is H.
+				info += " Hs@";
+
+				source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, info,
+					"0 " + it->client->getRealname()));
+			}
+		}
+	}
+
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFWHO, targetName,
+		"End of /WHO list"));
 }
 
 void	Server::names(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+	else if (areBitsNotSet(commandParams.mask, SOURCE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (commandParams.arguments.size() > 1)
+	else if (areBitsNotSet(commandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// Lists users of a channel (nicknames and status)
-	std::cout << "NAMES command executed." << std::endl;
+	Client			*source = commandParams.source;
+	Channel			*targetChannel = NULL;
+	std::string		targetName;
+	std::string		info;
+
+	if (areBitsSet(commandParams.mask, ARGUMENTS))
+	{
+		targetName = commandParams.arguments[0];
+
+		if (targetName[0] != '#')
+			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
+
+		targetChannel = getChannel(targetName);
+	}
+	else
+	{
+		targetChannel = source->getActiveChannel();
+		targetName = targetChannel->getName();
+
+		if (!targetChannel)
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+	}
+
+	if (targetChannel)
+	{
+		const Channel::Users	&users = targetChannel->getUsers();
+
+		for (Channel::UsersConstIterator it = users.begin(); it != users.end(); it++)
+		{
+			// add info about role as prefix. No placeholder yet.
+			if (it != users.begin())
+				info += " " + it->client->getNickname();
+			else
+				info += it->client->getUsername();
+		}
+
+		source->receiveMessage(getServerResponse(source, RPL_NAMREPLY,
+			"= " + targetName, info));
+	}
+
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFNAMES, targetName,
+		"End of /NAMES list"));
 }
+
+void	Server::list(const t_commandParams &commandParams) {
+
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
+		return ;
+	else if (areBitsNotSet(commandParams.mask, SOURCE))
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (!commandParams.arguments.empty())
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+
+	const Client		*source = commandParams.source;
+	std::string			info;
+
+	if (!_channels.empty())
+	{
+		source->receiveMessage(getServerResponse(source, RPL_LISTSTART,
+			"Channel", "Users Name"));
+
+		for (ChannelsIterator it = _channels.begin(); it != _channels.end(); it++)
+		{
+			const Channel		*targetChannel = it->second;
+			std::stringstream	ss;
+
+			ss << targetChannel->getName();
+			ss << " " << targetChannel->getUsers().size();
+			ss << " :";
+			if (!targetChannel->getTopic().empty())
+				ss << targetChannel->getTopic();
+
+			source->receiveMessage(getServerResponse(source, RPL_LIST, ss.str(), ""));
+		}
+	}
+
+	source->receiveMessage(getServerResponse(source, RPL_LISTEND, "", "End of /LIST"));
+}
+
+void	Server::motd(const t_commandParams &commandParams)
+{
+	const Client		*source = commandParams.source;
+
+	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
+		return ;
+	else if (areBitsNotSet(commandParams.mask, SOURCE))
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (!commandParams.arguments.empty())
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+	if (_motd.empty())
+		errCommand(commandParams.source, ERR_NOMOTD, "", "MOTD File is missing");
+	source->receiveMessage(getServerResponse(source, RPL_MOTDSTART, "", "- Message of the day -")); // add server name
+	source->receiveMessage(getServerResponse(source, RPL_MOTD, "", _motd));
+	source->receiveMessage(getServerResponse(source, RPL_ENDOFMOTD, "", "End of /MOTD command")); // add server name
+}
+
 
 void	Server::part(const t_commandParams &commandParams)
 {
@@ -927,7 +1121,11 @@ Channel	*Server::getChannel(const std::string &name)
 	if (it == _channels.end())
 		return (NULL);
 	return (it->second);
+}
 
+std::string const	&Server::getMotd(void) const
+{
+	return (_motd);
 }
 
 const std::string
@@ -958,31 +1156,15 @@ Server::getServerResponse(const Client *client, const std::string &code,
 
 const std::string
 Server::getCommandResponse(const Client *source, const std::string &command,
-	const Client *target, const std::string &trailing) const
+	const std::string &arguments, const std::string &trailing) const
 {
 	std::string			response;
 
 	response = ":" + source->getNickname();
 	response += " " + command;
-	response += " " + target->getNickname();
 
-	if (!trailing.empty())
-		response += " :" + trailing;
-
-	response += DELIMITER;
-
-	return (response);
-}
-
-const std::string
-Server::getCommandResponse(const Client *source, const std::string &command,
-	const Channel *target, const std::string &trailing) const
-{
-	std::string			response;
-
-	response = ":" + source->getNickname();
-	response += " " + command;
-	response += " " + target->getName();
+	if (!arguments.empty())
+		response += " " + arguments;
 
 	if (!trailing.empty())
 		response += " :" + trailing;

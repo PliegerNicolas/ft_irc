@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 13:28:22 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/10/31 22:18:05 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,8 @@
 #define MAX_NICKNAME_LEN 9
 #define MAX_TOPIC_LEN 306
 #define MAX_CHANNELNAME_LEN 50
+
+#define SERVER_VERSION "ircserv-1.0.0 (alpha)"
 
 class	Client;
 class	Channel;
@@ -120,6 +122,7 @@ class	Server
 		Channels		_channels;
 
 		std::string		_password;
+		std::string		_motd;
 
 		/* Constructors & Destructors */
 		Server(void);
@@ -157,6 +160,8 @@ class	Server
 		void			invite(const t_commandParams &commandParams);
 		void			who(const t_commandParams &commandParams);
 		void			names(const t_commandParams &commandParams);
+		void			list(const t_commandParams &commandParams);
+		void			motd(const t_commandParams &commandParams);
 		void			part(const t_commandParams &commandParams);
 		void			pass(const t_commandParams &commandParams);
 
@@ -169,13 +174,12 @@ class	Server
 		// Getters
 		Client				*getClient(const std::string &nickname);
 		Channel				*getChannel(const std::string &name);
+		std::string const	&getMotd(void) const;
 
 		const std::string	getServerResponse(const Client *client, const std::string &code,
 							const std::string &parameters, const std::string &trailing) const;
 		const std::string	getCommandResponse(const Client *source, const std::string &command,
-								const Client *target, const std::string &trailing) const;
-		const std::string	getCommandResponse(const Client *source, const std::string &command,
-								const Channel *target, const std::string &trailing) const;
+								const std::string &arguments, const std::string &trailing) const;
 
 		// Setters
 };
