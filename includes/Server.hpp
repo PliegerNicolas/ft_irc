@@ -43,6 +43,8 @@
 
 #define MOTD_PATH "./config/MOTD.config"
 
+#define SERVER_VERSION "ircserv-1.0.0 (alpha)"
+
 class	Client;
 class	Channel;
 
@@ -178,9 +180,7 @@ class	Server
 		const std::string	getServerResponse(const Client *client, const std::string &code,
 							const std::string &parameters, const std::string &trailing) const;
 		const std::string	getCommandResponse(const Client *source, const std::string &command,
-								const Client *target, const std::string &trailing) const;
-		const std::string	getCommandResponse(const Client *source, const std::string &command,
-								const Channel *target, const std::string &trailing) const;
+								const std::string &arguments, const std::string &trailing) const;
 
 		// Setters
 };

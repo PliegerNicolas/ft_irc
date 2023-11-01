@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 10:06:28 by hania            ###   ########.fr       */
+/*   Updated: 2023/10/31 22:34:21 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,12 @@ Client::Client(const ASocket::t_socket &serverSocket):
 	_clientSocket(ClientSocket(serverSocket)),
 	_activeChannel(NULL),
 	_serverPermissions(0),
-	_connectionRetries(1)
+	_connectionRetries(1),
+	_nickname("*"),
+	_username("*"),
+	_hostname("*"),
+	_originServername("*"),
+	_realname("*")
 {
 	if (DEBUG)
 	{
@@ -34,7 +39,12 @@ Client::Client(const Client &other):
 	_clientSocket(other._clientSocket),
 	_activeChannel(other._activeChannel),
 	_serverPermissions(other._serverPermissions),
-	_connectionRetries(other._connectionRetries)
+	_connectionRetries(other._connectionRetries),
+	_nickname(other._nickname),
+	_username(other._username),
+	_hostname(other._hostname),
+	_originServername(other._originServername),
+	_realname(other._realname)
 {
 	if (DEBUG)
 	{
@@ -59,6 +69,11 @@ Client	&Client::operator=(const Client &other)
 		_activeChannel = other._activeChannel;
 		_serverPermissions = other._serverPermissions;
 		_connectionRetries = other._connectionRetries;
+		_nickname = other._nickname;
+		_username = other._username;
+		_hostname = other._hostname;
+		_originServername = other._originServername;
+		_realname = other._realname;
 	}
 
 	return (*this);
@@ -80,7 +95,12 @@ Client::Client(void):
 	_clientSocket(ClientSocket()),
 	_activeChannel(NULL),
 	_serverPermissions(0),
-	_connectionRetries(1)
+	_connectionRetries(1),
+	_nickname("*"),
+	_username("*"),
+	_hostname("*"),
+	_originServername("*"),
+	_realname("*")
 {
 	if (DEBUG)
 	{
@@ -116,14 +136,6 @@ void	Client::incrementConnectionRetries(void)
 	_connectionRetries++;
 }
 
-void	Client::addToJoinedChannels(Channel *channel)
-{
-	if (!channel)
-		return ;
-
-	_joinedChannels[channel->getName()] = channel;
-}
-
 void	Client::receiveMessage(const std::string &message) const
 {
 	send(getSocketFd(), message.c_str(), message.length(), 0);
@@ -143,6 +155,30 @@ void	Client::broadcastMessageToChannel(const Channel *channel,
 		if (this != it->client)
 			it->client->receiveMessage(message);
 	}
+}
+
+void	Client::joinChannel(Channel *channel)
+{
+	if (!channel || channel->isFull())
+		return ;
+
+	if (channel->isEmpty())
+		channel->addUser(this, channel->getAdminPerms());
+	else
+		channel->addUser(this, channel->getUserPerms());
+
+	_joinedChannels[channel->getName()] = channel;
+	_activeChannel = channel;
+}
+
+void	Client::quitChannel(Channel *channel)
+{
+	if (!channel)
+		return ;
+
+	channel->removeUser(this);
+	_joinedChannels.erase(channel->getName());
+	_activeChannel = NULL;
 }
 
 	/* Protected */
@@ -177,7 +213,7 @@ const std::string	&Client::getHostname(void) const
 	return (_hostname);
 }
 
-const std::string	&Client::setServername(void) const
+const std::string	&Client::getServername(void) const
 {
 	return (_originServername);
 }
@@ -243,7 +279,7 @@ void	Client::setNickname(const std::string &nickname)
 
 void	Client::setUsername(const std::string &username)
 {
-	_username = "~" + truncate(username, MAX_USERNAME_LEN);
+	_username = truncate(username, MAX_USERNAME_LEN);
 }
 
 void	Client::setHostname(const std::string &hostname)
