@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 22:46:11 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/01 02:01:50 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -968,17 +968,17 @@ void	Server::list(const t_commandParams &commandParams) {
 			const Channel		*targetChannel = it->second;
 			std::stringstream	ss;
 
-			ss << targetChannel->getUsers().size();
+			ss << targetChannel->getName();
+			ss << " " << targetChannel->getUsers().size();
+			ss << " :";
 			if (!targetChannel->getTopic().empty())
-				ss << " " << targetChannel->getTopic();
+				ss << targetChannel->getTopic();
 
-			source->receiveMessage(getServerResponse(source, RPL_LIST,
-				targetChannel->getName(), ss.str()));
+			source->receiveMessage(getServerResponse(source, RPL_LIST, ss.str(), ""));
 		}
 	}
 
-	source->receiveMessage(getServerResponse(source, RPL_LISTEND,
-		"", "End of /LIST"));
+	source->receiveMessage(getServerResponse(source, RPL_LISTEND, "", "End of /LIST"));
 }
 
 void	Server::motd(const t_commandParams &commandParams)
