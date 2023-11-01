@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 16:03:04 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/01 02:21:17 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -875,28 +875,28 @@ void	Server::list(const t_commandParams &commandParams) {
 	source->receiveMessage(getServerResponse(source, RPL_LISTEND, "", "End of /LIST"));
 }
 
-void	Server::motd(const t_commandParams &commandParams) {
-	const Client		*source = commandParams.source;
-
-	if (verifyServerPermissions(source, VERIFIED | IDENTIFIED))
+void	Server::motd(const t_commandParams &commandParams)
+{
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (!commandParams.arguments.empty())
+	else if (areBitsSet(commandParams.mask, ARGUMENTS | MESSAGE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	std::ifstream	info;
-	char			file[24] = "srcs/config/motd.config";
+	const Client	*source = commandParams.source;
+	std::ifstream	motdFile(MOTD_PATH);
+	std::string		line;
 
-	info.open(file);
-	if (!info)
-		errCommand(commandParams.source, ERR_NOMOTD, "", "MOTD File is missing");
-	source->receiveMessage(getServerResponse(source, RPL_MOTDSTART, "", "- Message of the day -"));  //add server name
+	if (!motdFile.is_open())
+		errCommand(source, ERR_NOMOTD, "", strerror(errno));
 
-	std::string	line;
+	source->receiveMessage(getServerResponse(source, RPL_MOTDSTART,
+		"", "- " + _serverSockets.getHostname() + " Message of the day -"));
 
-	while (getline(info, line))
+	while (getline(motdFile, line))
 		source->receiveMessage(getServerResponse(source, RPL_MOTD, "", line));
+
 	source->receiveMessage(getServerResponse(source, RPL_ENDOFMOTD, "", "End of /MOTD command"));
 }
 

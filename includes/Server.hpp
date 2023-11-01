@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 16:02:31 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/01 02:08:25 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@
 #define MAX_NICKNAME_LEN 9
 #define MAX_TOPIC_LEN 306
 #define MAX_CHANNELNAME_LEN 50
+
+#define MOTD_PATH "./config/MOTD.config"
 
 class	Client;
 class	Channel;
