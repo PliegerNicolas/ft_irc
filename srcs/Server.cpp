@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/02 13:59:11 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 14:22:16 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -500,7 +500,7 @@ void	Server::join(const t_commandParams &commandParams)
 	Client				*source = commandParams.source;
 	const std::string	&channelName = commandParams.arguments[0];
 
-	// Implement password management also here.
+	// Implement +i management somewhere.
 
 	if (channelName[0] != '#')
 		errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
@@ -525,6 +525,11 @@ void	Server::join(const t_commandParams &commandParams)
 		_channels[channelName] = targetChannel;
 		source->joinChannel(targetChannel);
 	}
+
+	if (areBitsSet(targetChannel->getModeMask(), Channel::INVITE_ONLY)
+		&& targetChannel->isInvited(source))
+		errCommand(source, ERR_INVITEONLYCHAN, channelName,
+			"Cannot join channel (+i) - You must be invited");
 
 	std::string	commandResponse = getCommandResponse(source, "JOIN", targetChannel->getName(), "");
 
@@ -925,7 +930,7 @@ void	Server::uninvite(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_INVITING,
 		targetNickname + " " + targetChannel->getName(), ""));
-	targetClient->receiveMessage(getCommandResponse(source, "INVITE",
+	targetClient->receiveMessage(getCommandResponse(source, "UNINVITE",
 		targetNickname, targetChannel->getName()));
 }
 

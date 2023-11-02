@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/02 14:03:24 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 14:19:57 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,6 +120,17 @@ bool	Channel::isEmpty(void) const
 	return (false);
 }
 
+bool	Channel::isInvited(Client *client)
+{
+	ClientsIterator	it = _invitedClients.begin();
+
+	for (; it != _invitedClients.end() && *it != client; it++);
+
+	if (it != _invitedClients.end())
+		return (true);
+	return (false);
+}
+
 void	Channel::addUser(Client* client, const int &mask)
 {
 	_users.push_back(createUser(client, mask));
@@ -188,6 +199,11 @@ Channel::User	*Channel::getUser(const std::string &nickname)
 	return (NULL);
 }
 
+const int	&Channel::getModeMask(void) const
+{
+	return (_modeMask);
+}
+
 int	Channel::getUserPerms(void)
 {
 	return (0);
@@ -223,6 +239,11 @@ const Channel::Users	&Channel::getUsers(void) const
 void	Channel::setTopic(const std::string &topic)
 {
 	_topic = truncate(topic, MAX_TOPIC_LEN);
+}
+
+void	Channel::setModeMask(const int &mask)
+{
+	setBits(_modeMask, mask);
 }
 
 	/* Protected */

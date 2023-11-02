@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/02 14:03:04 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 14:19:49 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ class	Channel
 		void				removeInvitation(Client *client);
 		bool				isFull(void) const;
 		bool				isEmpty(void) const;
+		bool				isInvited(Client *client);
 
 		// GETTERS
 
@@ -90,6 +91,7 @@ class	Channel
 		const std::string	&getTopic(void) const;
 		const Users			&getUsers(void) const;
 		User				*getUser(const std::string &nickname);
+		const int			&getModeMask(void) const;
 
 		int					getUserPerms(void);
 		int					getHalfOpsPerms(void);
@@ -99,6 +101,7 @@ class	Channel
 		// SETTERS
 
 		void				setTopic(const std::string &topic);
+		void				setModeMask(const int &mask);
 
 	protected:
 		/* Attributs */
