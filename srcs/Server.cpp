@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/02 14:22:16 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 14:51:57 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -758,6 +758,17 @@ void	Server::mode(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 2)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
+	//Client	*source = commandParams.source;
+
+	if (commandParams.arguments.size() == 1)
+	{
+
+	}
+	else if (commandParams.arguments.size() == 2)
+	{
+
+	}
+
 	// ???
 	std::cout << "MODE command executed." << std::endl;
 }
@@ -774,27 +785,29 @@ void	Server::topic(const t_commandParams &commandParams)
 	Client		*source = commandParams.source;
 	Channel		*targetChannel = NULL;
 
-	if (commandParams.arguments.size() == 1)
-	{
-		const std::string	&targetName = commandParams.arguments[0];
-
-		if (targetName[0] != '#')
-			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
-		targetChannel = getChannel(targetName);
-		if (!targetChannel)
-			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
-	}
-	else
+	if (commandParams.arguments.size() == 0)
 	{
 		targetChannel = source->getActiveChannel();
 		if (!targetChannel)
 			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 	}
+	else if (commandParams.arguments.size() == 1)
+	{
+		const std::string	&targetName = commandParams.arguments[0];
+
+		if (targetName[0] != '#')
+			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
+
+		targetChannel = getChannel(targetName);
+		if (!targetChannel)
+			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
+	}
 
 	{
 		const Channel::User *sourceUser = targetChannel->getUser(source->getNickname());
+
 		if (!sourceUser)
-			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on that channel");
 		else if (areBitsSet(commandParams.mask, MESSAGE)
 			&& areBitsNotSet(sourceUser->permissionsMask, Channel::TOPIC))
 			errCommand(source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
