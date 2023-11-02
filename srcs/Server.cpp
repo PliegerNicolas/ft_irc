@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/02 16:08:48 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 00:36:13 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -755,14 +755,24 @@ void	Server::mode(const t_commandParams &commandParams)
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (areBitsSet(commandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 2)
+	else if (areBitsSet(commandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 3)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+
+	//MODE #channel +mode			// Add mode to channel
+	//MODE #channel +mode username	// Add channel mode for a user or remove with -
+	//MODE yournick +mode			// Add mode or remove if with - to yourself
+	//MODE #channel					// get channel modes
+	//MODE yournick 				// get my modes
+	//MODE #channel +				// list all options
+	//MODE yournick +				//list all options
 
 	Client			*source = commandParams.source;
 	Channel			*targetChannel = NULL;
 	Client			*targetClient = NULL;
-	std::string		modes;
+	std::string		modesStr;
+	char			modesSign;
 
+	/*
 	if (areBitsNotSet(commandParams.mask, ARGUMENTS))
 	{
 		targetChannel = source->getActiveChannel();
@@ -788,14 +798,16 @@ void	Server::mode(const t_commandParams &commandParams)
 						errCommand(source, ERR_NOSUCHCHANNEL, argument, "No such channel");
 					break ;
 				case '+':
-					if (!modes.empty())
+					if (!modesStr.empty())
 						errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
-					modes = argument;
+					modesSign = argument[0];
+					modesStr = argument.substr(1);
 					break ;
 				case '-':
-					if (!modes.empty())
+					if (!modesStr.empty())
 						errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
-					modes = argument;
+					modesSign = argument[0];
+					modesStr = argument.substr(1);
 					break ;
 				default:
 					if (targetClient)
@@ -807,6 +819,47 @@ void	Server::mode(const t_commandParams &commandParams)
 			}
 		}
 	}
+*/
+
+/*
+	if (!modesStr.empty())
+	{
+		for (size_t i = 0; i < modesStr.length(); i++)
+		{
+			if (strchr(MODE_CHARACTERS, modesStr[i]) == NULL)
+				errCommand(source, ERR_UNKNOWNMODE, modesStr.substr(i, 1),
+					"Is unknown mode char");
+			else if (targetChannel && targetClient)
+			{
+				// Set mode to user in channel
+				(void)modesSign;
+			}
+			else if (targetChannel && !targetClient)
+			{
+				// set mode to channel
+			}
+			else if (!targetChannel && targetClient)
+			{
+				// set mode to client
+			}
+			else
+				errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
+		}
+	}
+	else
+	{
+		if (targetChannel && !targetClient)
+		{
+			source->receiveMessage(getServerResponse(source, RPL_CHANNELMODEIS, argument, ""));
+		}
+		else if (!targetChannel && targetClient)
+		{
+			source->receiveMessage(getServerResponse(source, RPL_UMODEIS, argument, ""));
+		}
+		else
+			errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
+	}
+*/
 
 	// ???
 	std::cout << "MODE command executed." << std::endl;
@@ -1097,7 +1150,7 @@ void	Server::names(const t_commandParams &commandParams)
 			if (it != users.begin())
 				info += " " + it->client->getNickname();
 			else
-				info += it->client->getUsername();
+				info += it->client->getNickname();
 		}
 
 		source->receiveMessage(getServerResponse(source, RPL_NAMREPLY,

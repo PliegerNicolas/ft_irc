@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/02 13:54:24 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 23:56:52 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,8 @@
 #define MOTD_PATH "./config/MOTD.config"
 
 #define SERVER_VERSION "ircserv-1.0.0 (alpha)"
+
+#define MODE_CHARACTERS "tnimpsklcr"
 
 class	Client;
 class	Channel;

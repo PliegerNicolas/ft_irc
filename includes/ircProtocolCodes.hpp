@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/26 00:06:27 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/01 12:35:54 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 00:19:01 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #define RPL_CREATED "003"
 #define RPL_MYINFO "004"
 #define RPL_ISUPPORT "005"
+#define RPL_UMODEIS "221"
 #define RPL_LUSERCLIENT "251"
 #define RPL_LUSEROP "252"
 #define RPL_LUSERUNKNOWN "253"
