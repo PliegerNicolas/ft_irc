@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/02 13:57:27 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 14:03:24 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@
 
 Channel::Channel(const std::string &name):
 	_name(truncate(name, MAX_CHANNELNAME_LEN)),
-	_userLimit(-1)
+	_userLimit(-1),
+	_modeMask(0)
 {
 	if (DEBUG)
 	{
@@ -33,7 +34,8 @@ Channel::Channel(const Channel &other):
 	_topic(other._topic),
 	_users(other._users),
 	_invitedClients(other._invitedClients),
-	_userLimit(other._userLimit)
+	_userLimit(other._userLimit),
+	_modeMask(other._modeMask)
 {
 	if (DEBUG)
 	{
@@ -59,6 +61,7 @@ Channel	&Channel::operator=(const Channel &other)
 		_users = other._users;
 		_invitedClients = other._invitedClients;
 		_userLimit = other._userLimit;
+		_modeMask = other._modeMask;
 	}
 
 	return (*this);

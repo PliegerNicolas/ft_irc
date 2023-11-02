@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/02 13:58:12 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 14:03:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,12 +32,11 @@ class	Channel
 
 		typedef enum ChannelStatus
 		{
-			PASSWORD_PROTECTED = (1 << 0),		// Password needed to access.
-			RESTRICT_TOPIC = (1 << 1),			// Topic can only be modified by a moderator.
-			INVITE_ONLY = (1 << 2),				// Can only be accessed if invited by someone
+			RESTRICT_TOPIC = (1 << 0),			// Topic can only be modified by a moderator.
+			INVITE_ONLY = (1 << 1),				// Can only be accessed if invited by someone
 												// with invite privileges.
-			NO_EXTERNAL_MESSAGES = (1 << 3),	// No messages from outside but announcements.
-			SECRET = (1 << 4)					// Channel is hidden from channels list.
+			NO_EXTERNAL_MESSAGES = (1 << 2),	// No messages from outside but announcements.
+			SECRET = (1 << 3)					// Channel is hidden from channels list.
 		}	t_channelPerms;
 
 		typedef enum UserPermissions
@@ -115,7 +114,9 @@ class	Channel
 
 		Users		_users;
 		Clients		_invitedClients;
+
 		int			_userLimit;
+		int			_modeMask;
 
 		/* Constructors & Destructors */
 		Channel(void);
