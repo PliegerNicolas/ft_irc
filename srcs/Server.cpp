@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/02 14:51:57 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 16:08:48 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -753,20 +753,59 @@ void	Server::mode(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+	else if (areBitsNotSet(commandParams.mask, SOURCE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (commandParams.arguments.size() > 2)
+	else if (areBitsSet(commandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 2)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	//Client	*source = commandParams.source;
+	Client			*source = commandParams.source;
+	Channel			*targetChannel = NULL;
+	Client			*targetClient = NULL;
+	std::string		modes;
 
-	if (commandParams.arguments.size() == 1)
+	if (areBitsNotSet(commandParams.mask, ARGUMENTS))
 	{
+		targetChannel = source->getActiveChannel();
 
+		if (!targetChannel)
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 	}
-	else if (commandParams.arguments.size() == 2)
+	else
 	{
+		std::vector<std::string>::const_iterator	it = commandParams.arguments.begin();
 
+		for (; it != commandParams.arguments.end(); it++)
+		{
+			const std::string	&argument = *it;
+
+			switch (argument[0])
+			{
+				case '#':
+					if (targetChannel)
+						errCommand(source, ERR_UNKNOWNCOMMAND, argument, "Unknown command");
+					targetChannel = getChannel(argument);
+					if (!targetChannel)
+						errCommand(source, ERR_NOSUCHCHANNEL, argument, "No such channel");
+					break ;
+				case '+':
+					if (!modes.empty())
+						errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
+					modes = argument;
+					break ;
+				case '-':
+					if (!modes.empty())
+						errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
+					modes = argument;
+					break ;
+				default:
+					if (targetClient)
+						errCommand(source, ERR_UNKNOWNCOMMAND, argument, "Unknown command");
+					targetClient = getClient(argument);
+					if (!targetClient)
+						errCommand(source, ERR_NOSUCHNICK, argument, "No such user");
+					break ;
+			}
+		}
 	}
 
 	// ???
