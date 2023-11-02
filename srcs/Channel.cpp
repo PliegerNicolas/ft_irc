@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/31 22:08:08 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 13:57:27 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,10 @@ Channel::Channel(const std::string &name):
 }
 
 Channel::Channel(const Channel &other):
+	_name(other._name),
+	_topic(other._topic),
+	_users(other._users),
+	_invitedClients(other._invitedClients),
 	_userLimit(other._userLimit)
 {
 	if (DEBUG)
@@ -50,6 +54,10 @@ Channel	&Channel::operator=(const Channel &other)
 
 	if (this != &other)
 	{
+		_name = other._name;
+		_topic = other._topic;
+		_users = other._users;
+		_invitedClients = other._invitedClients;
 		_userLimit = other._userLimit;
 	}
 
@@ -114,6 +122,11 @@ void	Channel::addUser(Client* client, const int &mask)
 	_users.push_back(createUser(client, mask));
 }
 
+void	Channel::addInvitation(Client *client)
+{
+	_invitedClients.push_back(client);
+}
+
 void	Channel::removeUser(const Client* client)
 {
 	UsersIterator	it = _users.begin();
@@ -122,6 +135,16 @@ void	Channel::removeUser(const Client* client)
 
 	if (it != _users.end())
 		_users.erase(it);
+}
+
+void	Channel::removeInvitation(Client *client)
+{
+	ClientsIterator	it = _invitedClients.begin();
+
+	for (; it != _invitedClients.end() && client != *it; it++);
+
+	if (it != _invitedClients.end())
+		_invitedClients.erase(it);
 }
 
 	/* Protected */

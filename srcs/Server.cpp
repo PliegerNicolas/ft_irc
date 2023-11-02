@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/01 12:46:27 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 13:59:11 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,6 +321,7 @@ void	Server::setCommands(void)
 	_commands["USER"] = &Server::user;
 	_commands["JOIN"] = &Server::join;
 	_commands["INVITE"] = &Server::invite;
+	_commands["UNINVITE"] = &Server::uninvite;
 	_commands["WHOIS"] = &Server::whois;
 	_commands["PRIVMSG"] = &Server::privmsg;
 	_commands["MODE"] = &Server::mode;
@@ -735,9 +736,9 @@ void	Server::kick(const t_commandParams &commandParams)
 
 	targetUser->client->quitChannel(targetChannel);
 
-	std::string		commandResponse = getCommandResponse(source, "KICK",
-						targetChannel->getName() + " " + targetUser->client->getNickname(),
-						commandParams.message);
+	std::string		commandResponse;
+	commandResponse = getCommandResponse(source, "KICK", targetChannel->getName()
+						+ " " + targetUser->client->getNickname(), commandParams.message);
 
 	source->receiveMessage(commandResponse);
 	targetUser->client->receiveMessage(commandResponse);
@@ -860,8 +861,67 @@ void	Server::invite(const t_commandParams &commandParams)
 	if (!targetClient)
 		errCommand(source, ERR_NOSUCHNICK, targetNickname, "No such user");
 
-	// Implement invitation validation here and adapt join command.
-	// Implement channel options details here.
+	targetChannel->addInvitation(targetClient);
+
+	source->receiveMessage(getServerResponse(source, RPL_INVITING,
+		targetNickname + " " + targetChannel->getName(), ""));
+	targetClient->receiveMessage(getCommandResponse(source, "INVITE",
+		targetNickname, targetChannel->getName()));
+}
+
+void	Server::uninvite(const t_commandParams &commandParams)
+{
+	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
+		return ;
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
+		|| commandParams.arguments.size() < 1)
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 2)
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+
+	Client				*source = commandParams.source;
+	Channel::User		*sourceUser = NULL;
+	Client				*targetClient = NULL;
+	Channel				*targetChannel = NULL;
+
+	const std::string	&targetNickname = commandParams.arguments[0];
+
+	if (commandParams.arguments.size() == 1)
+	{
+		targetChannel = source->getActiveChannel();
+		if (!targetChannel)
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+	}
+	else if (commandParams.arguments.size() == 2)
+	{
+		const std::string	&targetChannelName = commandParams.arguments[1];
+
+		if (targetChannelName[0] != '#')
+			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
+
+		targetChannel = getChannel(targetChannelName);
+		if (!targetChannel)
+			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
+	}
+
+	if (targetNickname[0] == '#' || targetNickname.length() > MAX_NICKNAME_LEN)
+		errCommand(source, ERR_ERRONEUSNICKNAME, targetNickname, "Erroneous Nickname");
+	else if (targetChannel->getUser(targetNickname))
+		errCommand(source, ERR_USERONCHANNEL, targetNickname, "User already on channel");
+
+	sourceUser = targetChannel->getUser(source->getNickname());
+	if (!sourceUser)
+		errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
+			"You are not on that channel");
+	else if (areBitsNotSet(sourceUser->permissionsMask, Channel::INVITE))
+		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
+			"Not enough privileges");
+
+	targetClient = getClient(targetNickname);
+	if (!targetClient)
+		errCommand(source, ERR_NOSUCHNICK, targetNickname, "No such user");
+
+	targetChannel->removeInvitation(targetClient);
 
 	source->receiveMessage(getServerResponse(source, RPL_INVITING,
 		targetNickname + " " + targetChannel->getName(), ""));

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/01 02:08:25 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 13:54:24 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,6 +160,7 @@ class	Server
 		void			mode(const t_commandParams &commandParams);
 		void			topic(const t_commandParams &commandParams);
 		void			invite(const t_commandParams &commandParams);
+		void			uninvite(const t_commandParams &commandParams);
 		void			who(const t_commandParams &commandParams);
 		void			names(const t_commandParams &commandParams);
 		void			list(const t_commandParams &commandParams);

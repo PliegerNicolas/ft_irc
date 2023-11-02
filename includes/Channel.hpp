@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/10/31 22:03:22 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 13:58:12 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,10 +56,12 @@ class	Channel
 		}	t_user;
 
 		typedef std::map<std::string, Channel*>	Channels;
+		typedef std::vector<Client*>			Clients;
 		typedef t_user							User;
 		typedef std::vector<User>				Users;
 
 		typedef Channels::iterator				ChannelsIterator;
+		typedef Clients::iterator				ClientsIterator;
 		typedef Users::iterator					UsersIterator;
 		typedef Users::const_iterator			UsersConstIterator;
 
@@ -77,7 +79,9 @@ class	Channel
 
 		bool				isClientRegistered(const Client* client) const;
 		void				addUser(Client* client, const int &mask);
+		void				addInvitation(Client *client);
 		void				removeUser(const Client* client);
+		void				removeInvitation(Client *client);
 		bool				isFull(void) const;
 		bool				isEmpty(void) const;
 
@@ -110,6 +114,7 @@ class	Channel
 		std::string	_topic;
 
 		Users		_users;
+		Clients		_invitedClients;
 		int			_userLimit;
 
 		/* Constructors & Destructors */

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 22:34:21 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 13:52:19 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,8 @@ Client::Client(const Client &other):
 	_username(other._username),
 	_hostname(other._hostname),
 	_originServername(other._originServername),
-	_realname(other._realname)
+	_realname(other._realname),
+	_messageBuffer(other._messageBuffer)
 {
 	if (DEBUG)
 	{
@@ -74,6 +75,7 @@ Client	&Client::operator=(const Client &other)
 		_hostname = other._hostname;
 		_originServername = other._originServername;
 		_realname = other._realname;
+		_messageBuffer = other._messageBuffer;
 	}
 
 	return (*this);
