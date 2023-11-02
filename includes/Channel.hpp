@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/02 14:19:49 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/02 14:28:38 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,11 +32,17 @@ class	Channel
 
 		typedef enum ChannelStatus
 		{
-			RESTRICT_TOPIC = (1 << 0),			// Topic can only be modified by a moderator.
+			TOPIC_LOCK = (1 << 0),				// Topic can only be modified by a moderator.
 			INVITE_ONLY = (1 << 1),				// Can only be accessed if invited by someone
 												// with invite privileges.
 			NO_EXTERNAL_MESSAGES = (1 << 2),	// No messages from outside but announcements.
-			SECRET = (1 << 3)					// Channel is hidden from channels list.
+			MODERATED = (1 << 3),				// Only users with voice or higher modes are allowed
+												//to talk (PRIVMSG or NOTICE)
+			USER_LIMIT = (1 << 4),				// user limit is set.
+			KEY_PASS = (1 << 5),				// Needs a password to join.
+			PRIVATE = (1 << 6),					// Hidden from channels list.
+			SECRET = (1 << 7)					// Channel is hidden from channels list
+												// + disable NAMES.
 		}	t_channelPerms;
 
 		typedef enum UserPermissions
