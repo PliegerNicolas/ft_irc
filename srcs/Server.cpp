@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/03 00:36:13 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 00:39:36 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -770,7 +770,11 @@ void	Server::mode(const t_commandParams &commandParams)
 	Channel			*targetChannel = NULL;
 	Client			*targetClient = NULL;
 	std::string		modesStr;
-	char			modesSign;
+
+	(void)source;
+	(void)targetChannel;
+	(void)targetClient;
+	(void)modesStr;
 
 	/*
 	if (areBitsNotSet(commandParams.mask, ARGUMENTS))

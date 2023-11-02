@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/02 14:19:57 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 00:40:46 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,9 +131,9 @@ bool	Channel::isInvited(Client *client)
 	return (false);
 }
 
-void	Channel::addUser(Client* client, const int &mask)
+void	Channel::addUser(Client* client, const int &permissionsMask)
 {
-	_users.push_back(createUser(client, mask));
+	_users.push_back(createUser(client, permissionsMask));
 }
 
 void	Channel::addInvitation(Client *client)

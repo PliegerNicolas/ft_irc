@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/02 14:28:38 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 00:41:29 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ class	Channel
 	public:
 		/* Typedefs */
 
-		typedef enum ChannelStatus
+		typedef enum ChannelMode
 		{
 			TOPIC_LOCK = (1 << 0),				// Topic can only be modified by a moderator.
 			INVITE_ONLY = (1 << 1),				// Can only be accessed if invited by someone
@@ -45,19 +45,19 @@ class	Channel
 												// + disable NAMES.
 		}	t_channelPerms;
 
-		typedef enum UserPermissions
+		typedef enum UserMode
 		{
 			KICK = (1 << 0),
 			BAN = (1 << 1),
 			INVITE = (1 << 2),
 			TOPIC = (1 << 3),
 			MODE = (1 << 4)
-		}	t_userPerms;
+		}	t_mode;
 
 		typedef struct User
 		{
-			Client*	client;
-			size_t	permissionsMask;
+			Client*		client;
+			size_t		permissionsMask;
 		}	t_user;
 
 		typedef std::map<std::string, Channel*>	Channels;
@@ -83,7 +83,7 @@ class	Channel
 		/* Member functions */
 
 		bool				isClientRegistered(const Client* client) const;
-		void				addUser(Client* client, const int &mask);
+		void				addUser(Client* client, const int &permissionsMask);
 		void				addInvitation(Client *client);
 		void				removeUser(const Client* client);
 		void				removeInvitation(Client *client);
