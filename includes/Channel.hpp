@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 16:54:58 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 18:40:18 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,13 +106,13 @@ class	Channel
 		const std::string	&getName(void) const;
 		const std::string	&getTopic(void) const;
 
-		const int			&getModeMask(void) const; // temp ?
+		const int			&getModesMask(void) const; // temp ?
 
 		// SETTERS
 
 		void				setTopic(const std::string &topic);
 
-		void				setModeMask(const int &mask); // temp ?
+		void				setModesMask(const int &mask); // temp ?
 
 		/* Static functions */
 
@@ -144,7 +144,7 @@ class	Channel
 		Clients		_invitedClients;
 
 		int			_userLimit;
-		int			_modeMask;
+		int			_modesMask;
 
 		/* Constructors & Destructors */
 		Channel(void);

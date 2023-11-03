@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 03:15:02 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 18:41:17 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 Channel::Channel(const std::string &name):
 	_name(truncate(name, MAX_CHANNELNAME_LEN)),
 	_userLimit(-1),
-	_modeMask(NO_EXTERNAL_MESSAGES | TOPIC_LOCK)
+	_modesMask(NO_EXTERNAL_MESSAGES | TOPIC_LOCK)
 {
 	if (DEBUG)
 	{
@@ -35,7 +35,7 @@ Channel::Channel(const Channel &other):
 	_users(other._users),
 	_invitedClients(other._invitedClients),
 	_userLimit(other._userLimit),
-	_modeMask(other._modeMask)
+	_modesMask(other._modesMask)
 {
 	if (DEBUG)
 	{
@@ -61,7 +61,7 @@ Channel	&Channel::operator=(const Channel &other)
 		_users = other._users;
 		_invitedClients = other._invitedClients;
 		_userLimit = other._userLimit;
-		_modeMask = other._modeMask;
+		_modesMask = other._modesMask;
 	}
 
 	return (*this);
@@ -82,7 +82,7 @@ Channel::~Channel(void)
 Channel::Channel(void):
 	_name(""),
 	_userLimit(-1),
-	_modeMask(0)
+	_modesMask(0)
 {
 	if (DEBUG)
 	{
@@ -190,7 +190,7 @@ bool	Channel::canChangeTopic(const Client *client)
 
 	if (!user)
 		return (false);
-	if (areBitsNotSet(_modeMask, TOPIC_LOCK))
+	if (areBitsNotSet(_modesMask, TOPIC_LOCK))
 		return (true);
 	else if (areBitsSet(user->modesMask, OPERATOR | OWNER))
 		return (true);
@@ -235,9 +235,9 @@ Channel::User	*Channel::getUser(const std::string &nickname)
 	return (NULL);
 }
 
-const int	&Channel::getModeMask(void) const
+const int	&Channel::getModesMask(void) const
 {
-	return (_modeMask);
+	return (_modesMask);
 }
 
 const Channel::Users	&Channel::getUsers(void) const
@@ -257,9 +257,9 @@ void	Channel::setTopic(const std::string &topic)
 	_topic = truncate(topic, MAX_TOPIC_LEN);
 }
 
-void	Channel::setModeMask(const int &mask)
+void	Channel::setModesMask(const int &mask)
 {
-	setBits(_modeMask, mask);
+	setBits(_modesMask, mask);
 }
 
 	/* Protected */
