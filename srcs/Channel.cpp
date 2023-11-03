@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 01:30:38 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 01:59:03 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,42 +95,6 @@ Channel::Channel(void):
 
 	/* Public */
 
-bool	Channel::isClientRegistered(const Client* client) const
-{
-	for (UsersConstIterator it = _users.begin(); it != _users.end(); ++it)
-	{
-		if (client == it->client)
-			return (true);
-	}
-
-	return (false);
-}
-
-bool	Channel::isFull(void) const
-{
-	if (_userLimit == -1 || _userLimit > static_cast<int>(_users.size()))
-		return (false);
-	return (true);
-}
-
-bool	Channel::isEmpty(void) const
-{
-	if (_users.size() == 0)
-		return (true);
-	return (false);
-}
-
-bool	Channel::isInvited(Client *client)
-{
-	ClientsIterator	it = _invitedClients.begin();
-
-	for (; it != _invitedClients.end() && *it != client; it++);
-
-	if (it != _invitedClients.end())
-		return (true);
-	return (false);
-}
-
 void	Channel::addUser(Client* client, const int &permissionsMask)
 {
 	_users.push_back(createUser(client, permissionsMask));
@@ -161,15 +125,86 @@ void	Channel::removeInvitation(Client *client)
 		_invitedClients.erase(it);
 }
 
+bool	Channel::isFull(void) const
+{
+	if (_userLimit == -1 || _userLimit > static_cast<int>(_users.size()))
+		return (false);
+	return (true);
+}
+
+bool	Channel::isEmpty(void) const
+{
+	if (_users.size() == 0)
+		return (true);
+	return (false);
+}
+
+bool	Channel::isInvited(Client *client)
+{
+	ClientsIterator	it = _invitedClients.begin();
+
+	for (; it != _invitedClients.end() && *it != client; it++);
+
+	if (it != _invitedClients.end())
+		return (true);
+	return (false);
+}
+
+bool	Channel::isClientRegistered(const Client* client) const
+{
+	for (UsersConstIterator it = _users.begin(); it != _users.end(); ++it)
+	{
+		if (client == it->client)
+			return (true);
+	}
+
+	return (false);
+}
+
+bool	Channel::canKick(const Client *client)
+{
+	const User	*user = Channel::getUser(client->getNickname());
+
+	if (!user)
+		return (false);
+	if (areBitsSet(user->modesMask, OPERATOR | HALF_OPERATOR | OWNER))
+		return (true);
+	return (false);
+}
+
+bool	Channel::canInvite(const Client *client)
+{
+	const User	*user = Channel::getUser(client->getNickname());
+
+	if (!user)
+		return (false);
+	if (areBitsSet(user->modesMask, OPERATOR | HALF_OPERATOR | OWNER))
+		return (true);
+	return (false);
+}
+
+bool	Channel::canChangeTopic(const Client *client)
+{
+	const User	*user = Channel::getUser(client->getNickname());
+
+	if (!user)
+		return (false);
+	if (areBitsNotSet(_modeMask, TOPIC_LOCK))
+		return (true);
+	else if (areBitsSet(user->modesMask, OPERATOR | OWNER))
+		return (true);
+	return (false);
+}
+
 	/* Protected */
 	/* Private */
 
-Channel::t_user	Channel::createUser(Client* client, const int  &permissionsMask)
+Channel::t_user	Channel::createUser(Client* client, const int  &modesMask)
 {
 	t_user	user;
 
 	user.client = client;
-	user.permissionsMask = permissionsMask;
+	user.modesMask = modesMask;
 
 	return (user);
 }
@@ -233,22 +268,27 @@ void	Channel::setModeMask(const int &mask)
 
 int	Channel::defaultUserPerms(void)
 {
-	return (0);
+	return (INVISIBLE | WALLOPS | SERVER_NOTICE);
 }
 
 int	Channel::defaultHalfOpsPerms(void)
 {
-	return (KICK | INVITE);
+	return (INVISIBLE | WALLOPS | SERVER_NOTICE | HALF_OPERATOR);
 }
 
 int	Channel::defaultOpsPerms(void)
 {
-	return (KICK | BAN | INVITE | TOPIC);
+	return (INVISIBLE | WALLOPS | SERVER_NOTICE | VOICE | OPERATOR);
 }
 
 int	Channel::defaultAdminPerms(void)
 {
-	return (KICK | BAN | INVITE | TOPIC | MODE);
+	return (INVISIBLE | WALLOPS | SERVER_NOTICE | VOICE | ADMIN);
+}
+
+int	Channel::defaultOwnerPerms(void)
+{
+	return (INVISIBLE | WALLOPS | SERVER_NOTICE | VOICE | ADMIN | OWNER);
 }
 
 int	Channel::channelModesToMask(const std::string &modes)

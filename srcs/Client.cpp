@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/03 00:48:57 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 01:59:47 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,7 +165,7 @@ void	Client::joinChannel(Channel *channel)
 		return ;
 
 	if (channel->isEmpty())
-		channel->addUser(this, Channel::defaultAdminPerms());
+		channel->addUser(this, Channel::defaultOwnerPerms());
 	else
 		channel->addUser(this, Channel::defaultUserPerms());
 

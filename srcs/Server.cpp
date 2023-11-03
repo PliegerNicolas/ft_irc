@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/03 01:23:13 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 01:53:46 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -695,7 +695,6 @@ void	Server::kick(const t_commandParams &commandParams)
 
 	Client			*source = commandParams.source;
 	Channel			*targetChannel = NULL;
-	Channel::User	*sourceUser = NULL;
 	Channel::User	*targetUser = NULL;
 
 	if (commandParams.arguments.size() == 1)
@@ -733,9 +732,7 @@ void	Server::kick(const t_commandParams &commandParams)
 			errCommand(source, ERR_USERNOTINCHANNEL, channelName, "User not in that channel");
 	}
 
-	sourceUser = targetChannel->getUser(source->getNickname());
-
-	if (!sourceUser || areBitsNotSet(sourceUser->permissionsMask, Channel::KICK))
+	if (!targetChannel->canKick(source))
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
@@ -899,16 +896,9 @@ void	Server::topic(const t_commandParams &commandParams)
 			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
 	}
 
-	{
-		const Channel::User *sourceUser = targetChannel->getUser(source->getNickname());
-
-		if (!sourceUser)
-			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on that channel");
-		else if (areBitsSet(commandParams.mask, MESSAGE)
-			&& areBitsNotSet(sourceUser->permissionsMask, Channel::TOPIC))
-			errCommand(source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
-				"Not enough privileges");
-	}
+	if (areBitsSet(commandParams.mask, MESSAGE) && !targetChannel->canChangeTopic(source))
+		errCommand(source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
+			"Not enough privileges");
 
 	if (areBitsSet(commandParams.mask, MESSAGE))
 		targetChannel->setTopic(commandParams.message);
@@ -934,7 +924,6 @@ void	Server::invite(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client				*source = commandParams.source;
-	Channel::User		*sourceUser = NULL;
 	Client				*targetClient = NULL;
 	Channel				*targetChannel = NULL;
 
@@ -963,11 +952,7 @@ void	Server::invite(const t_commandParams &commandParams)
 	else if (targetChannel->getUser(targetNickname))
 		errCommand(source, ERR_USERONCHANNEL, targetNickname, "User already on channel");
 
-	sourceUser = targetChannel->getUser(source->getNickname());
-	if (!sourceUser)
-		errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
-			"You are not on that channel");
-	else if (areBitsNotSet(sourceUser->permissionsMask, Channel::INVITE))
+	if (!targetChannel->canInvite(source))
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
@@ -994,7 +979,6 @@ void	Server::uninvite(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client				*source = commandParams.source;
-	Channel::User		*sourceUser = NULL;
 	Client				*targetClient = NULL;
 	Channel				*targetChannel = NULL;
 
@@ -1023,11 +1007,7 @@ void	Server::uninvite(const t_commandParams &commandParams)
 	else if (targetChannel->getUser(targetNickname))
 		errCommand(source, ERR_USERONCHANNEL, targetNickname, "User already on channel");
 
-	sourceUser = targetChannel->getUser(source->getNickname());
-	if (!sourceUser)
-		errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
-			"You are not on that channel");
-	else if (areBitsNotSet(sourceUser->permissionsMask, Channel::INVITE))
+	if (!targetChannel->canInvite(source))
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 

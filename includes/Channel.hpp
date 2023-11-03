@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 01:30:56 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 01:59:14 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,17 +53,17 @@ class	Channel
 			SERVER_NOTICE = (1 << 1),
 			SSL_TLS = (1 << 2),
 			INVISIBLE = (1 << 3),
-			HALF_OPERATOR = (1 << 4),
-			OPERATOR = (1 << 5),
-			ADMIN = (1 << 6),
-			OWNER = (1 << 7)
+			VOICE = (1 << 4),
+			HALF_OPERATOR = (1 << 5),
+			OPERATOR = (1 << 6),
+			ADMIN = (1 << 7),
+			OWNER = (1 << 8)
 		}	t_mode;
 
 		typedef struct User
 		{
 			Client		*client;
-			std::string	modes;
-			size_t		permissionsMask;
+			size_t		modesMask;
 		}	t_user;
 
 		typedef std::map<std::string, Channel*>	Channels;
@@ -88,14 +88,18 @@ class	Channel
 
 		/* Member functions */
 
-		bool				isClientRegistered(const Client* client) const;
-		void				addUser(Client* client, const int &permissionsMask);
+		void				addUser(Client* client, const int &modesMask);
 		void				addInvitation(Client *client);
 		void				removeUser(const Client* client);
 		void				removeInvitation(Client *client);
 		bool				isFull(void) const;
 		bool				isEmpty(void) const;
 		bool				isInvited(Client *client);
+		bool				isClientRegistered(const Client* client) const;
+
+		bool				canKick(const Client *client);
+		bool				canInvite(const Client *client);
+		bool				canChangeTopic(const Client *client);
 
 		// GETTERS
 
@@ -118,6 +122,7 @@ class	Channel
 		static int			defaultHalfOpsPerms(void);
 		static int			defaultOpsPerms(void);
 		static int			defaultAdminPerms(void);
+		static int			defaultOwnerPerms(void);
 
 		static int			channelModesToMask(const std::string &modes);
 		static std::string	channelMaskToModes(const int &mask);
