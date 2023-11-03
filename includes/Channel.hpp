@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 01:19:15 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 01:30:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,11 +49,14 @@ class	Channel
 
 		typedef enum UserMode
 		{
-			KICK = (1 << 0),
-			BAN = (1 << 1),
-			INVITE = (1 << 2),
-			TOPIC = (1 << 3),
-			MODE = (1 << 4)
+			WALLOPS = (1 << 0),
+			SERVER_NOTICE = (1 << 1),
+			SSL_TLS = (1 << 2),
+			INVISIBLE = (1 << 3),
+			HALF_OPERATOR = (1 << 4),
+			OPERATOR = (1 << 5),
+			ADMIN = (1 << 6),
+			OWNER = (1 << 7)
 		}	t_mode;
 
 		typedef struct User
@@ -118,6 +121,9 @@ class	Channel
 
 		static int			channelModesToMask(const std::string &modes);
 		static std::string	channelMaskToModes(const int &mask);
+
+		static int			userModesToMask(const std::string &modes);
+		static std::string	userMaskToModes(const int &mask);
 
 	protected:
 		/* Attributs */

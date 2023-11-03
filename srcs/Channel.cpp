@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 01:19:27 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 01:30:38 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,59 +161,6 @@ void	Channel::removeInvitation(Client *client)
 		_invitedClients.erase(it);
 }
 
-int	Channel::channelModesToMask(const std::string &modes)
-{
-	int	mask = 0;
-
-	for (size_t i = 0; i < modes.length(); i++)
-	{
-		switch (modes[i])
-		{
-			case 't':
-				setBits(mask, TOPIC_LOCK);
-				break ;
-			case 'i':
-				setBits(mask, INVITE_ONLY);
-				break ;
-			case 'n':
-				setBits(mask, NO_EXTERNAL_MESSAGES);
-				break ;
-			case 'm':
-				setBits(mask, MODERATED);
-				break ;
-			case 'l':
-				setBits(mask, USER_LIMIT);
-				break ;
-			case 'k':
-				setBits(mask, KEY_PASS);
-				break ;
-			case 'p':
-				setBits(mask, PRIVATE);
-				break ;
-			case 's':
-				setBits(mask, SECRET);
-				break ;
-			default:
-				break ;
-		}
-	}
-	return (mask);
-}
-
-std::string	Channel::channelMaskToModes(const int &mask)
-{
-	std::string	modes;
-	const char	bitToChar[] = {'t', 'i', 'n', 'm', 'l', 'k', 'p', 's'};
-
-	for (size_t shift = 0; shift < 8; shift++)
-	{
-		if((mask >> shift) & 1)
-			modes += bitToChar[shift];
-	}
-
-	return (modes);
-}
-
 	/* Protected */
 	/* Private */
 
@@ -302,4 +249,110 @@ int	Channel::defaultOpsPerms(void)
 int	Channel::defaultAdminPerms(void)
 {
 	return (KICK | BAN | INVITE | TOPIC | MODE);
+}
+
+int	Channel::channelModesToMask(const std::string &modes)
+{
+	int	mask = 0;
+
+	for (size_t i = 0; i < modes.length(); i++)
+	{
+		switch (modes[i])
+		{
+			case 't':
+				setBits(mask, TOPIC_LOCK);
+				break ;
+			case 'i':
+				setBits(mask, INVITE_ONLY);
+				break ;
+			case 'n':
+				setBits(mask, NO_EXTERNAL_MESSAGES);
+				break ;
+			case 'm':
+				setBits(mask, MODERATED);
+				break ;
+			case 'l':
+				setBits(mask, USER_LIMIT);
+				break ;
+			case 'k':
+				setBits(mask, KEY_PASS);
+				break ;
+			case 'p':
+				setBits(mask, PRIVATE);
+				break ;
+			case 's':
+				setBits(mask, SECRET);
+				break ;
+			default:
+				break ;
+		}
+	}
+	return (mask);
+}
+
+std::string	Channel::channelMaskToModes(const int &mask)
+{
+	std::string	modes;
+	const char	bitToChar[] = {'t', 'i', 'n', 'm', 'l', 'k', 'p', 's'};
+
+	for (size_t shift = 0; shift < 8; shift++)
+	{
+		if((mask >> shift) & 1)
+			modes += bitToChar[shift];
+	}
+
+	return (modes);
+}
+
+int	Channel::userModesToMask(const std::string &modes)
+{
+	int	mask = 0;
+
+	for (size_t i = 0; i < modes.length(); i++)
+	{
+		switch (modes[i])
+		{
+			case 'w':
+				setBits(mask, WALLOPS);
+				break ;
+			case 's':
+				setBits(mask, SERVER_NOTICE);
+				break ;
+			case 'x':
+				setBits(mask, SSL_TLS); // not used
+				break ;
+			case 'i':
+				setBits(mask, INVISIBLE);
+				break ;
+			case 'h':
+				setBits(mask, HALF_OPERATOR);
+				break ;
+			case 'o':
+				setBits(mask, OPERATOR);
+				break ;
+			case 'a':
+				setBits(mask, ADMIN);
+				break ;
+			case 'q':
+				setBits(mask, OWNER);
+				break ;
+			default:
+				break ;
+		}
+	}
+	return (mask);
+}
+
+std::string	Channel::userMaskToModes(const int &mask)
+{
+	std::string	modes;
+	const char	bitToChar[] = {'w', 's', 'x', 'i', 'h', 'o', 'a', 'q'};
+
+	for (size_t shift = 0; shift < 8; shift++)
+	{
+		if((mask >> shift) & 1)
+			modes += bitToChar[shift];
+	}
+
+	return (modes);
 }
