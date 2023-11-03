@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 00:40:46 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 01:19:27 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,6 +161,59 @@ void	Channel::removeInvitation(Client *client)
 		_invitedClients.erase(it);
 }
 
+int	Channel::channelModesToMask(const std::string &modes)
+{
+	int	mask = 0;
+
+	for (size_t i = 0; i < modes.length(); i++)
+	{
+		switch (modes[i])
+		{
+			case 't':
+				setBits(mask, TOPIC_LOCK);
+				break ;
+			case 'i':
+				setBits(mask, INVITE_ONLY);
+				break ;
+			case 'n':
+				setBits(mask, NO_EXTERNAL_MESSAGES);
+				break ;
+			case 'm':
+				setBits(mask, MODERATED);
+				break ;
+			case 'l':
+				setBits(mask, USER_LIMIT);
+				break ;
+			case 'k':
+				setBits(mask, KEY_PASS);
+				break ;
+			case 'p':
+				setBits(mask, PRIVATE);
+				break ;
+			case 's':
+				setBits(mask, SECRET);
+				break ;
+			default:
+				break ;
+		}
+	}
+	return (mask);
+}
+
+std::string	Channel::channelMaskToModes(const int &mask)
+{
+	std::string	modes;
+	const char	bitToChar[] = {'t', 'i', 'n', 'm', 'l', 'k', 'p', 's'};
+
+	for (size_t shift = 0; shift < 8; shift++)
+	{
+		if((mask >> shift) & 1)
+			modes += bitToChar[shift];
+	}
+
+	return (modes);
+}
+
 	/* Protected */
 	/* Private */
 
@@ -204,26 +257,6 @@ const int	&Channel::getModeMask(void) const
 	return (_modeMask);
 }
 
-int	Channel::getUserPerms(void)
-{
-	return (0);
-}
-
-int	Channel::getHalfOpsPerms(void)
-{
-	return (KICK | INVITE);
-}
-
-int	Channel::getOpsPerms(void)
-{
-	return (KICK | BAN | INVITE | TOPIC);
-}
-
-int	Channel::getAdminPerms(void)
-{
-	return (KICK | BAN | INVITE | TOPIC | MODE);
-}
-
 const Channel::Users	&Channel::getUsers(void) const
 {
 	return (_users);
@@ -248,3 +281,25 @@ void	Channel::setModeMask(const int &mask)
 
 	/* Protected */
 	/* Private */
+
+/* Static functions */
+
+int	Channel::defaultUserPerms(void)
+{
+	return (0);
+}
+
+int	Channel::defaultHalfOpsPerms(void)
+{
+	return (KICK | INVITE);
+}
+
+int	Channel::defaultOpsPerms(void)
+{
+	return (KICK | BAN | INVITE | TOPIC);
+}
+
+int	Channel::defaultAdminPerms(void)
+{
+	return (KICK | BAN | INVITE | TOPIC | MODE);
+}

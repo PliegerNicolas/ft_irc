@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 00:41:29 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 01:19:15 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@
 #include <map>
 
 // MACROS
+
+#define MODE_CHARACTERS "tnimpsklcr"
 
 class	Server;
 class	Client;
@@ -56,7 +58,8 @@ class	Channel
 
 		typedef struct User
 		{
-			Client*		client;
+			Client		*client;
+			std::string	modes;
 			size_t		permissionsMask;
 		}	t_user;
 
@@ -97,17 +100,24 @@ class	Channel
 		const std::string	&getTopic(void) const;
 		const Users			&getUsers(void) const;
 		User				*getUser(const std::string &nickname);
-		const int			&getModeMask(void) const;
 
-		int					getUserPerms(void);
-		int					getHalfOpsPerms(void);
-		int					getOpsPerms(void);
-		int					getAdminPerms(void);
+		const int			&getModeMask(void) const; // temp ?
 
 		// SETTERS
 
 		void				setTopic(const std::string &topic);
-		void				setModeMask(const int &mask);
+
+		void				setModeMask(const int &mask); // temp ?
+
+		/* Static functions */
+
+		static int			defaultUserPerms(void);
+		static int			defaultHalfOpsPerms(void);
+		static int			defaultOpsPerms(void);
+		static int			defaultAdminPerms(void);
+
+		static int			channelModesToMask(const std::string &modes);
+		static std::string	channelMaskToModes(const int &mask);
 
 	protected:
 		/* Attributs */
