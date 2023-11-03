@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 01:59:03 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 03:15:02 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 Channel::Channel(const std::string &name):
 	_name(truncate(name, MAX_CHANNELNAME_LEN)),
 	_userLimit(-1),
-	_modeMask(0)
+	_modeMask(NO_EXTERNAL_MESSAGES | TOPIC_LOCK)
 {
 	if (DEBUG)
 	{
@@ -81,7 +81,8 @@ Channel::~Channel(void)
 
 Channel::Channel(void):
 	_name(""),
-	_userLimit(-1)
+	_userLimit(-1),
+	_modeMask(0)
 {
 	if (DEBUG)
 	{
@@ -268,27 +269,27 @@ void	Channel::setModeMask(const int &mask)
 
 int	Channel::defaultUserPerms(void)
 {
-	return (INVISIBLE | WALLOPS | SERVER_NOTICE);
+	return (INVISIBLE | SERVER_NOTICE);
 }
 
 int	Channel::defaultHalfOpsPerms(void)
 {
-	return (INVISIBLE | WALLOPS | SERVER_NOTICE | HALF_OPERATOR);
+	return (INVISIBLE | SERVER_NOTICE | HALF_OPERATOR);
 }
 
 int	Channel::defaultOpsPerms(void)
 {
-	return (INVISIBLE | WALLOPS | SERVER_NOTICE | VOICE | OPERATOR);
+	return (INVISIBLE | SERVER_NOTICE | VOICE | OPERATOR);
 }
 
 int	Channel::defaultAdminPerms(void)
 {
-	return (INVISIBLE | WALLOPS | SERVER_NOTICE | VOICE | ADMIN);
+	return (INVISIBLE | SERVER_NOTICE | VOICE | ADMIN);
 }
 
 int	Channel::defaultOwnerPerms(void)
 {
-	return (INVISIBLE | WALLOPS | SERVER_NOTICE | VOICE | ADMIN | OWNER);
+	return (INVISIBLE | SERVER_NOTICE | VOICE | ADMIN | OWNER);
 }
 
 int	Channel::channelModesToMask(const std::string &modes)
@@ -332,10 +333,10 @@ int	Channel::channelModesToMask(const std::string &modes)
 
 std::string	Channel::channelMaskToModes(const int &mask)
 {
-	std::string	modes;
+	std::string	modes = "+";
 	const char	bitToChar[] = {'t', 'i', 'n', 'm', 'l', 'k', 'p', 's'};
 
-	for (size_t shift = 0; shift < 8; shift++)
+	for (size_t shift = 0; shift < sizeof(bitToChar) / sizeof(*bitToChar); shift++)
 	{
 		if((mask >> shift) & 1)
 			modes += bitToChar[shift];
@@ -352,9 +353,6 @@ int	Channel::userModesToMask(const std::string &modes)
 	{
 		switch (modes[i])
 		{
-			case 'w':
-				setBits(mask, WALLOPS);
-				break ;
 			case 's':
 				setBits(mask, SERVER_NOTICE);
 				break ;
@@ -385,10 +383,10 @@ int	Channel::userModesToMask(const std::string &modes)
 
 std::string	Channel::userMaskToModes(const int &mask)
 {
-	std::string	modes;
-	const char	bitToChar[] = {'w', 's', 'x', 'i', 'h', 'o', 'a', 'q'};
+	std::string	modes = "+";
+	const char	bitToChar[] = {'s', 'x', 'i', 'h', 'o', 'a', 'q'};
 
-	for (size_t shift = 0; shift < 8; shift++)
+	for (size_t shift = 0; shift < sizeof(bitToChar) / sizeof(*bitToChar); shift++)
 	{
 		if((mask >> shift) & 1)
 			modes += bitToChar[shift];

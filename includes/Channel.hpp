@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 01:59:14 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/03 16:54:58 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,6 @@
 #include <map>
 
 // MACROS
-
-#define MODE_CHARACTERS "tnimpsklcr"
 
 class	Server;
 class	Client;
@@ -45,20 +43,19 @@ class	Channel
 			PRIVATE = (1 << 6),					// Hidden from channels list.
 			SECRET = (1 << 7)					// Channel is hidden from channels list
 												// + disable NAMES.
-		}	t_channelPerms;
+		}	t_channelMode;
 
 		typedef enum UserMode
 		{
-			WALLOPS = (1 << 0),
-			SERVER_NOTICE = (1 << 1),
-			SSL_TLS = (1 << 2),
-			INVISIBLE = (1 << 3),
-			VOICE = (1 << 4),
-			HALF_OPERATOR = (1 << 5),
-			OPERATOR = (1 << 6),
-			ADMIN = (1 << 7),
-			OWNER = (1 << 8)
-		}	t_mode;
+			SERVER_NOTICE = (1 << 0),			// Receive notices.
+			SSL_TLS = (1 << 1),					// connected in SSL mode. Not used in our case.
+			INVISIBLE = (1 << 2),				// Not listed in user lists.
+			VOICE = (1 << 3),					// Can speed in moderated channels.
+			HALF_OPERATOR = (1 << 4),			// Become half channel operator.
+			OPERATOR = (1 << 5),				// become channel operator.
+			ADMIN = (1 << 6),					// become channel admin.
+			OWNER = (1 << 7)					// become channel owner.
+		}	t_userMode;
 
 		typedef struct User
 		{
@@ -103,10 +100,11 @@ class	Channel
 
 		// GETTERS
 
-		const std::string	&getName(void) const;
-		const std::string	&getTopic(void) const;
 		const Users			&getUsers(void) const;
 		User				*getUser(const std::string &nickname);
+
+		const std::string	&getName(void) const;
+		const std::string	&getTopic(void) const;
 
 		const int			&getModeMask(void) const; // temp ?
 
