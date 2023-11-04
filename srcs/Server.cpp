@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/04 17:11:25 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/04 17:14:49 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -817,13 +817,22 @@ void	Server::mode(const t_commandParams &commandParams)
 					break ;
 			}
 		}
+	}
 
+	if (!targetChannel)
+	{
+		targetChannel = source->getActiveChannel();
 		if (!targetChannel)
-		{
-			targetChannel = source->getActiveChannel();
-			if (!targetChannel)
-				errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
-		}
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+	}
+
+	if (modes.empty())
+	{
+
+	}
+	else
+	{
+
 	}
 
 	/*
