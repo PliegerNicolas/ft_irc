@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/04 17:14:49 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/04 17:25:25 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -826,13 +826,21 @@ void	Server::mode(const t_commandParams &commandParams)
 			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 	}
 
-	if (modes.empty())
+	if (targetChannel && !targetUser)
 	{
-
+		// display info about user modes in channel
+		if (modes.empty())
+			std::cout << "MODE: Display channel modes." << std::endl;
+		else
+			std::cout << "MODE: Update channel modes." << std::endl;
 	}
-	else
+	else if (targetChannel && targetUser)
 	{
-
+		// display info about user modes in channel
+		if (modes.empty())
+			std::cout << "MODE: Display user in channel modes." << std::endl;
+		else
+			std::cout << "MODE: Update user in channel modes." << std::endl;
 	}
 
 	/*
@@ -911,9 +919,6 @@ void	Server::mode(const t_commandParams &commandParams)
 		}
 	}
 	*/
-
-	// ???
-	std::cout << "MODE command executed." << std::endl;
 }
 
 void	Server::topic(const t_commandParams &commandParams)
