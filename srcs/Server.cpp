@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/03 19:10:09 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/04 17:11:25 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -755,74 +755,78 @@ void	Server::mode(const t_commandParams &commandParams)
 	else if (areBitsSet(commandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 3)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	//MODE #channel +mode			// Add mode to channel
-	//MODE #channel +mode username	// Add channel mode for a user or remove with -
-	//MODE yournick +mode			// Add mode or remove if with - to yourself
-	//MODE #channel					// get channel modes
-	//MODE yournick 				// get my modes
-	//MODE #channel +				// list all options
-	//MODE yournick +				//list all options
-	//MODE #channel i				// + is here presumed because no sign given.
+	Client							*source = commandParams.source;
+	const std::vector<std::string>	&args = commandParams.arguments;
 
-	Client			*source = commandParams.source;
-	Channel			*targetChannel = NULL;
-	Channel::User	*targetUser = NULL;
-	std::string		modes;
+	Channel::User					*targetUser = NULL;
+	Channel							*targetChannel = NULL;
 
-	const std::vector<std::string>				&args = commandParams.arguments;
-	std::vector<std::string>::const_iterator	it = args.begin();
+	std::string						modes;
 
 	if (areBitsSet(commandParams.mask, ARGUMENTS))
 	{
-		for (size_t i = 0; i < 2 && it != args.end(); it++, i++)
-		{
-			const std::string	&argument = *it;
+		std::vector<std::string>::const_iterator	it = args.begin();
 
-			switch (argument[0])
+		for (size_t i = 0; i < 2 && it != args.end(); i++, it++)
+		{
+			const std::string	&arg = *it;
+
+			switch (arg[0])
 			{
-				case '#':
-					if (targetChannel)
-						errCommand(source, ERR_UNKNOWNCOMMAND, argument, "Unknown command");
-					targetChannel = getChannel(argument);
-					if (!targetChannel)
-						errCommand(source, ERR_NOSUCHCHANNEL, argument, "No such channel");
-					break ;
 				case '+':
 					if (!modes.empty())
-						errCommand(source, ERR_UNKNOWNCOMMAND, argument, "Unknown command");
-					modes = argument;
+						errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
+					modes = arg;
 					break ;
 				case '-':
 					if (!modes.empty())
-						errCommand(source, ERR_UNKNOWNCOMMAND, argument, "Unknown command");
-					modes = argument;
+						errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
+					modes = arg;
+					break ;
+				case '#':
+					if (targetChannel)
+						errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
+					targetChannel = getChannel(arg);
+					if (!targetChannel)
+						errCommand(source, ERR_NOSUCHCHANNEL, arg, "No such channel");
 					break ;
 				default:
-					if (targetChannel)
-						errCommand(source, ERR_UNKNOWNCOMMAND, argument, "Unknown command");
-					targetChannel = source->getActiveChannel();
-					if (!targetChannel)
-						errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
-					targetUser = targetChannel->getUser(argument);
-					if (!targetUser)
+					if (getClient(arg))
+					{
+						if (!targetChannel)
+							targetChannel = source->getActiveChannel();
+
+						if (targetChannel)
+						{
+							targetUser = targetChannel->getUser(arg);
+							if (!targetUser)
+								errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
+									"User not found in channel");
+						}
+						else
+							errCommand(source, ERR_NOTONCHANNEL, "",
+								"You are not on target channel");
+					}
+					else
 					{
 						if (modes.empty())
-							modes = "+" + argument;
+							modes = arg;
 						else
-							errCommand(source, ERR_UNKNOWNCOMMAND, argument, "Unknown command");
+							errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
 					}
 					break ;
 			}
 		}
-	}
 
-	if (!targetChannel)
-	{
-		targetChannel = source->getActiveChannel();
 		if (!targetChannel)
-			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+		{
+			targetChannel = source->getActiveChannel();
+			if (!targetChannel)
+				errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+		}
 	}
 
+	/*
 	if (modes.empty())
 	{
 		std::string	info;
@@ -897,148 +901,7 @@ void	Server::mode(const t_commandParams &commandParams)
 			}
 		}
 	}
-
-	/*
-	if (modes.empty())
-	{
-		// read modes from target (user has no server modes yet).
-	}
-	else
-	{
-		const char	sign = modes[0];
-		(void)sign;
-
-		if (targetChannel)
-		{
-			for (size_t i = 1; i < modes.length(); i++)
-			{
-				const int	mode = Channel::channelModesToMask(std::string(1, modes[i]));
-
-				if (mode)
-				{
-					// set perms
-					std::cout << mode << std::endl;
-				}
-				else
-					errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown mode"); // temp
-			}
-		}
-		else if (targetClient)
-		{
-			targetChannel = source->getActiveChannel();
-
-			for (size_t i = 1; i < modes.length(); i++)
-			{
-				const int	mode = Channel::channelModesToMask(std::string(1, modes[i]));
-
-				if (mode)
-				{
-					if (targetChannel)
-					{
-						// set inside channel perms
-
-					}
-					else
-					{
-						// set global user perms
-					}
-					std::cout << mode << std::endl;
-				}
-				else
-					errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown mode"); // temp
-			}
-		}
-	}
 	*/
-
-	/*
-	if (areBitsNotSet(commandParams.mask, ARGUMENTS))
-	{
-		targetChannel = source->getActiveChannel();
-
-		if (!targetChannel)
-			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
-	}
-	else
-	{
-		std::vector<std::string>::const_iterator	it = commandParams.arguments.begin();
-
-		for (; it != commandParams.arguments.end(); it++)
-		{
-			const std::string	&argument = *it;
-
-			switch (argument[0])
-			{
-				case '#':
-					if (targetChannel)
-						errCommand(source, ERR_UNKNOWNCOMMAND, argument, "Unknown command");
-					targetChannel = getChannel(argument);
-					if (!targetChannel)
-						errCommand(source, ERR_NOSUCHCHANNEL, argument, "No such channel");
-					break ;
-				case '+':
-					if (!modesStr.empty())
-						errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
-					modesSign = argument[0];
-					modesStr = argument.substr(1);
-					break ;
-				case '-':
-					if (!modesStr.empty())
-						errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
-					modesSign = argument[0];
-					modesStr = argument.substr(1);
-					break ;
-				default:
-					if (targetClient)
-						errCommand(source, ERR_UNKNOWNCOMMAND, argument, "Unknown command");
-					targetClient = getClient(argument);
-					if (!targetClient)
-						errCommand(source, ERR_NOSUCHNICK, argument, "No such user");
-					break ;
-			}
-		}
-	}
-*/
-
-/*
-	if (!modesStr.empty())
-	{
-		for (size_t i = 0; i < modesStr.length(); i++)
-		{
-			if (strchr(MODE_CHARACTERS, modesStr[i]) == NULL)
-				errCommand(source, ERR_UNKNOWNMODE, modesStr.substr(i, 1),
-					"Is unknown mode char");
-			else if (targetChannel && targetClient)
-			{
-				// Set mode to user in channel
-				(void)modesSign;
-			}
-			else if (targetChannel && !targetClient)
-			{
-				// set mode to channel
-			}
-			else if (!targetChannel && targetClient)
-			{
-				// set mode to client
-			}
-			else
-				errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
-		}
-	}
-	else
-	{
-		if (targetChannel && !targetClient)
-		{
-			source->receiveMessage(getServerResponse(source, RPL_CHANNELMODEIS, argument, ""));
-		}
-		else if (!targetChannel && targetClient)
-		{
-			source->receiveMessage(getServerResponse(source, RPL_UMODEIS, argument, ""));
-		}
-		else
-			errCommand(source, ERR_UNKNOWNCOMMAND, "", "Unknown command");
-	}
-*/
 
 	// ???
 	std::cout << "MODE command executed." << std::endl;
