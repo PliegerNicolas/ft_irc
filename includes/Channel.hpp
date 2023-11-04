@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/03 18:40:18 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/04 18:21:46 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ class	Channel
 		typedef struct User
 		{
 			Client		*client;
-			size_t		modesMask;
+			int			modesMask;
 		}	t_user;
 
 		typedef std::map<std::string, Channel*>	Channels;
@@ -106,13 +106,23 @@ class	Channel
 		const std::string	&getName(void) const;
 		const std::string	&getTopic(void) const;
 
-		const int			&getModesMask(void) const; // temp ?
+		const std::string	getModes(void) const;
+		int					getModesMask(void) const;
+		const std::string	getModes(const Client *client);
+		int					getModesMask(const Client *client);
+
+		//const int			&getModesMask(void) const; // temp ?
 
 		// SETTERS
 
 		void				setTopic(const std::string &topic);
 
-		void				setModesMask(const int &mask); // temp ?
+		void				setModes(const std::string &modes);
+		void				setModesMask(const int &mask);
+		void				setModes(const Client *client, const std::string &modes);
+		void				setModesMask(const Client *client, const int &mask);
+
+		//void				setModesMask(const int &mask); // temp ?
 
 		/* Static functions */
 

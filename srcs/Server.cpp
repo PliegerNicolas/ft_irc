@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/04 17:25:25 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/04 18:04:01 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -826,99 +826,36 @@ void	Server::mode(const t_commandParams &commandParams)
 			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 	}
 
+	std::string	info;
+
 	if (targetChannel && !targetUser)
 	{
+		info = targetChannel->getName();
+
 		// display info about user modes in channel
 		if (modes.empty())
+		{
 			std::cout << "MODE: Display channel modes." << std::endl;
+		}
 		else
+		{
 			std::cout << "MODE: Update channel modes." << std::endl;
+		}
 	}
 	else if (targetChannel && targetUser)
 	{
+		info = targetUser->client->getNickname();
+
 		// display info about user modes in channel
 		if (modes.empty())
+		{
 			std::cout << "MODE: Display user in channel modes." << std::endl;
+		}
 		else
+		{
 			std::cout << "MODE: Update user in channel modes." << std::endl;
-	}
-
-	/*
-	if (modes.empty())
-	{
-		std::string	info;
-
-		if (targetChannel)
-		{
-			info = targetChannel->getName();
-			info += " " + Channel::channelMaskToModes(targetChannel->getModesMask());
-			source->receiveMessage(getServerResponse(source, RPL_CHANNELMODEIS, info, ""));
-		}
-		else if (targetUser)
-		{
-			info = targetUser->client->getNickname();
-			info += " " + Channel::userMaskToModes(targetUser->modesMask);
-			source->receiveMessage(getServerResponse(source, RPL_UMODEIS, info, ""));
 		}
 	}
-	else
-	{
-		char	sign;
-
-		if (strchr("+-", modes[0]) != NULL)
-		{
-			sign = modes[0];
-			modes = modes.substr(1);
-		}
-		else
-			sign = '+';
-
-		if (sign == '+')
-		{
-			for (size_t i = 0; i < modes.length(); i++)
-			{
-				if (targetChannel)
-				{
-					const int	mask = Channel::channelModesToMask(std::string(1, modes[0]));
-
-					if (!mask)
-						source->receiveMessage(getServerResponse(source, ERR_UNKNOWNMODE,
-							targetChannel->getName() + " " + modes[i], "Unknown mode"));
-				}
-				else if (targetUser)
-				{
-					const int	mask = Channel::userModesToMask(std::string(1, modes[0]));
-
-					if (!mask)
-						source->receiveMessage(getServerResponse(source, ERR_UNKNOWNMODE,
-							targetChannel->getName() + " " + modes[i], "Unknown mode"));
-				}
-			}
-		}
-		else if (sign == '-')
-		{
-			for (size_t i = 0; i < modes.length(); i++)
-			{
-				if (targetChannel)
-				{
-					const int	mask = Channel::channelModesToMask(std::string(1, modes[0]));
-
-					if (!mask)
-						source->receiveMessage(getServerResponse(source, ERR_UNKNOWNMODE,
-							targetChannel->getName() + " " + modes[i], "Unknown mode"));
-				}
-				else if (targetUser)
-				{
-					const int	mask = Channel::userModesToMask(std::string(1, modes[0]));
-
-					if (!mask)
-						source->receiveMessage(getServerResponse(source, ERR_UNKNOWNMODE,
-							targetChannel->getName() + " " + modes[i], "Unknown mode"));
-				}
-			}
-		}
-	}
-	*/
 }
 
 void	Server::topic(const t_commandParams &commandParams)
@@ -1476,4 +1413,3 @@ Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd
 
 	return (commandParameters);
 }
-
