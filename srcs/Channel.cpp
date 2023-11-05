@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/04 18:23:59 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 04:05:53 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -246,17 +246,17 @@ const Channel::Users	&Channel::getUsers(void) const
 
 
 
-const std::string	Channel::getModes(void) const
+const std::string	Channel::getChannelModes(void) const
 {
 	return (Channel::channelMaskToModes(_modesMask));
 }
 
-int	Channel::getModesMask(void) const
+int	Channel::getChannelModesMask(void) const
 {
 	return (_modesMask);
 }
 
-const std::string	Channel::getModes(const Client *client)
+const std::string	Channel::getUserModes(const Client *client)
 {
 	const User	*user = getUser(client->getNickname());
 
@@ -265,7 +265,7 @@ const std::string	Channel::getModes(const Client *client)
 	return (Channel::userMaskToModes(user->modesMask));
 }
 
-int	Channel::getModesMask(const Client *client)
+int	Channel::getUserModesMask(const Client *client)
 {
 	const User	*user = getUser(client->getNickname());
 
@@ -288,32 +288,30 @@ void	Channel::setTopic(const std::string &topic)
 
 
 
-void	Channel::setModes(const std::string &modes)
+void	Channel::setChannelModes(const std::string &modes)
 {
 	setBits(_modesMask, Channel::channelModesToMask(modes));
 }
 
-void	Channel::setModesMask(const int &mask)
+void	Channel::setChannelModesMask(const int &mask)
 {
 	setBits(_modesMask, mask);
 }
 
-void	Channel::setModes(const Client *client, const std::string &modes)
+void	Channel::setUserModes(User *targetUser, const std::string &modes)
 {
-	User	*user = getUser(client->getNickname());
-
-	if (!user)
+	if (!targetUser)
 		return ;
-	setBits(user->modesMask, Channel::userModesToMask(modes));
+
+	setBits(targetUser->modesMask, Channel::userModesToMask(modes));
 }
 
-void	Channel::setModesMask(const Client *client, const int &mask)
+void	Channel::setUserModesMask(User *targetUser, const int &mask)
 {
-	User	*user = getUser(client->getNickname());
-
-	if (!user)
+	if (!targetUser)
 		return ;
-	setBits(user->modesMask, mask);
+
+	setBits(targetUser->modesMask, mask);
 }
 
 	/* Protected */

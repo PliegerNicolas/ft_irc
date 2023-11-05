@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/04 18:21:46 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 04:06:03 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,10 +106,10 @@ class	Channel
 		const std::string	&getName(void) const;
 		const std::string	&getTopic(void) const;
 
-		const std::string	getModes(void) const;
-		int					getModesMask(void) const;
-		const std::string	getModes(const Client *client);
-		int					getModesMask(const Client *client);
+		const std::string	getChannelModes(void) const;
+		int					getChannelModesMask(void) const;
+		const std::string	getUserModes(const Client *client);
+		int					getUserModesMask(const Client *client);
 
 		//const int			&getModesMask(void) const; // temp ?
 
@@ -117,10 +117,10 @@ class	Channel
 
 		void				setTopic(const std::string &topic);
 
-		void				setModes(const std::string &modes);
-		void				setModesMask(const int &mask);
-		void				setModes(const Client *client, const std::string &modes);
-		void				setModesMask(const Client *client, const int &mask);
+		void				setChannelModes(const std::string &modes);
+		void				setChannelModesMask(const int &mask);
+		void				setUserModes(User *targetUser, const std::string &modes);
+		void				setUserModesMask(User *targetUser, const int &mask);
 
 		//void				setModesMask(const int &mask); // temp ?
 

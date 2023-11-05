@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/04 18:04:01 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 04:05:29 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -526,7 +526,7 @@ void	Server::join(const t_commandParams &commandParams)
 		source->joinChannel(targetChannel);
 	}
 
-	if (areBitsSet(targetChannel->getModesMask(), Channel::INVITE_ONLY)
+	if (areBitsSet(targetChannel->getChannelModesMask(), Channel::INVITE_ONLY)
 		&& targetChannel->isInvited(source))
 		errCommand(source, ERR_INVITEONLYCHAN, channelName,
 			"Cannot join channel (+i) - You must be invited");
@@ -839,6 +839,7 @@ void	Server::mode(const t_commandParams &commandParams)
 		}
 		else
 		{
+			targetChannel->setChannelModes(modes);
 			std::cout << "MODE: Update channel modes." << std::endl;
 		}
 	}
@@ -853,6 +854,7 @@ void	Server::mode(const t_commandParams &commandParams)
 		}
 		else
 		{
+			targetChannel->setUserModes(targetUser, modes);
 			std::cout << "MODE: Update user in channel modes." << std::endl;
 		}
 	}
