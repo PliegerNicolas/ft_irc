@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/05 04:37:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 23:39:28 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -198,32 +198,65 @@ bool	Channel::canChangeTopic(const Client *client)
 	return (false);
 }
 
-void	Channel::addChannelModes(const std::string &modes, std::string &invalidChars)
+
+
+
+int	Channel::addChannelMode(const char &mode, const std::string &argument)
 {
-	setBits(_modesMask, Channel::channelModesToMask(modes, invalidChars));
+	int	mask = Channel::channelModeToMask(mode);
+
+	(void)argument;
+
+	if (!mask)
+		return (MODE_INVALID);
+	else if (areBitsSet(_modesMask, mask))
+		return (MODE_UNCHANGED);
+	else
+		return (setBits(_modesMask, mask), MODE_CHANGED);
 }
 
-void	Channel::removeChannelModes(const std::string &modes, std::string &invalidChars)
+int	Channel::removeChannelMode(const char &mode)
 {
-	removeBits(_modesMask, Channel::channelModesToMask(modes, invalidChars));
+	int	mask = Channel::channelModeToMask(mode);
+
+	if (!mask)
+		return (MODE_INVALID);
+	else if (areBitsNotSet(_modesMask, mask))
+		return (MODE_UNCHANGED);
+	else
+		return (removeBits(_modesMask, mask), MODE_CHANGED);
 }
 
-void	Channel::addUserModes(User *targetUser, const std::string &modes,
-	std::string &invalidChars)
+int	Channel::addUserMode(User *targetUser, const char &mode, const std::string &argument)
 {
 	if (!targetUser)
-		return ;
+		return (MODE_UNCHANGED);
 
-	setBits(targetUser->modesMask, Channel::userModesToMask(modes, invalidChars));
+	(void)argument;
+
+	int	mask = Channel::userModeToMask(mode);
+
+	if (!mask)
+		return (MODE_INVALID);
+	else if (areBitsSet(targetUser->modesMask, mask))
+		return (MODE_UNCHANGED);
+	else
+		return (setBits(targetUser->modesMask, mask), MODE_CHANGED);
 }
 
-void	Channel::removeUserModes(User *targetUser, const std::string &modes,
-	std::string &invalidChars)
+int	Channel::removeUserMode(User *targetUser, const char &mode)
 {
 	if (!targetUser)
-		return ;
+		return (MODE_UNCHANGED);
 
-	removeBits(targetUser->modesMask, Channel::userModesToMask(modes, invalidChars));
+	int	mask = Channel::userModeToMask(mode);
+
+	if (!mask)
+		return (MODE_INVALID);
+	else if (areBitsNotSet(targetUser->modesMask, mask))
+		return (MODE_UNCHANGED);
+	else
+		return (removeBits(targetUser->modesMask, mask), MODE_CHANGED);
 }
 	/* Protected */
 	/* Private */
@@ -252,9 +285,6 @@ const std::string	&Channel::getTopic(void) const
 	return (_topic);
 }
 
-
-
-
 Channel::User	*Channel::getUser(const std::string &nickname)
 {
 	UsersIterator	it = _users.begin();
@@ -271,9 +301,6 @@ const Channel::Users	&Channel::getUsers(void) const
 	return (_users);
 }
 
-
-
-
 const std::string	Channel::getChannelModes(void) const
 {
 	return (Channel::channelMaskToModes(_modesMask));
@@ -284,22 +311,18 @@ int	Channel::getChannelModesMask(void) const
 	return (_modesMask);
 }
 
-const std::string	Channel::getUserModes(const Client *client)
+const std::string	Channel::getUserModes(const User *targetUser)
 {
-	const User	*user = getUser(client->getNickname());
-
-	if (!user)
+	if (!targetUser)
 		return ("");
-	return (Channel::userMaskToModes(user->modesMask));
+	return (Channel::userMaskToModes(targetUser->modesMask));
 }
 
-int	Channel::getUserModesMask(const Client *client)
+int	Channel::getUserModesMask(const User *targetUser)
 {
-	const User	*user = getUser(client->getNickname());
-
-	if (!user)
+	if (!targetUser)
 		return (0);
-	return (user->modesMask);
+	return (targetUser->modesMask);
 }
 
 	/* Protected */
@@ -313,8 +336,6 @@ void	Channel::setTopic(const std::string &topic)
 {
 	_topic = truncate(topic, MAX_TOPIC_LEN);
 }
-
-
 
 void	Channel::setChannelModesMask(const int &mask)
 {
@@ -359,49 +380,34 @@ int	Channel::defaultOwnerPerms(void)
 	return (INVISIBLE | SERVER_NOTICE | VOICE | ADMIN | OWNER);
 }
 
-int	Channel::channelModesToMask(const std::string &modes, std::string &invalidChars)
+int	Channel::channelModeToMask(const char &mode)
 {
-	int	mask = 0;
-
-	for (size_t i = 0; i < modes.length(); i++)
+	switch (mode)
 	{
-		switch (modes[i])
-		{
-			case 't':
-				setBits(mask, TOPIC_LOCK);
-				break ;
-			case 'i':
-				setBits(mask, INVITE_ONLY);
-				break ;
-			case 'n':
-				setBits(mask, NO_EXTERNAL_MESSAGES);
-				break ;
-			case 'm':
-				setBits(mask, MODERATED);
-				break ;
-			case 'l':
-				setBits(mask, USER_LIMIT);
-				break ;
-			case 'k':
-				setBits(mask, KEY_PASS);
-				break ;
-			case 'p':
-				setBits(mask, PRIVATE);
-				break ;
-			case 's':
-				setBits(mask, SECRET);
-				break ;
-			default:
-				invalidChars += modes[i];
-				break ;
-		}
+		case 't':
+			return (TOPIC_LOCK);
+		case 'i':
+			return (INVITE_ONLY);
+		case 'n':
+			return (NO_EXTERNAL_MESSAGES);
+		case 'm':
+			return (MODERATED);
+		case 'l':
+			return (USER_LIMIT);
+		case 'k':
+			return (KEY_PASS);
+		case 'p':
+			return (PRIVATE);
+		case 's':
+			return (SECRET);
+		default:
+			return (0);
 	}
-	return (mask);
 }
 
 std::string	Channel::channelMaskToModes(const int &mask)
 {
-	std::string	modes = "+";
+	std::string	modes;
 	const char	bitToChar[] = {'t', 'i', 'n', 'm', 'l', 'k', 'p', 's'};
 
 	for (size_t shift = 0; shift < sizeof(bitToChar) / sizeof(*bitToChar); shift++)
@@ -410,49 +416,37 @@ std::string	Channel::channelMaskToModes(const int &mask)
 			modes += bitToChar[shift];
 	}
 
-	return (modes);
+	if (modes.empty())
+		return ("");
+	return ("+" + modes);
 }
 
-int	Channel::userModesToMask(const std::string &modes, std::string &invalidChars)
+int	Channel::userModeToMask(const char &mode)
 {
-	int	mask = 0;
-
-	for (size_t i = 0; i < modes.length(); i++)
+	switch (mode)
 	{
-		switch (modes[i])
-		{
-			case 's':
-				setBits(mask, SERVER_NOTICE);
-				break ;
-			case 'x':
-				setBits(mask, SSL_TLS); // not used
-				break ;
-			case 'i':
-				setBits(mask, INVISIBLE);
-				break ;
-			case 'h':
-				setBits(mask, HALF_OPERATOR);
-				break ;
-			case 'o':
-				setBits(mask, OPERATOR);
-				break ;
-			case 'a':
-				setBits(mask, ADMIN);
-				break ;
-			case 'q':
-				setBits(mask, OWNER);
-				break ;
-			default:
-				invalidChars += modes[i];
-				break ;
-		}
+		case 's':
+			return (SERVER_NOTICE);
+		case 'x':
+			return (SSL_TLS); // not used
+		case 'i':
+			return (INVISIBLE);
+		case 'h':
+			return (HALF_OPERATOR);
+		case 'o':
+			return (OPERATOR);
+		case 'a':
+			return (ADMIN);
+		case 'q':
+			return (OWNER);
+		default:
+			return (0);
 	}
-	return (mask);
 }
 
 std::string	Channel::userMaskToModes(const int &mask)
 {
-	std::string	modes = "+";
+	std::string	modes;
 	const char	bitToChar[] = {'s', 'x', 'i', 'h', 'o', 'a', 'q'};
 
 	for (size_t shift = 0; shift < sizeof(bitToChar) / sizeof(*bitToChar); shift++)
@@ -461,5 +455,7 @@ std::string	Channel::userMaskToModes(const int &mask)
 			modes += bitToChar[shift];
 	}
 
-	return (modes);
+	if (modes.empty())
+		return ("");
+	return ("+" + modes);
 }

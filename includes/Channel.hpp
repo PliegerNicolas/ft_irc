@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/05 04:38:13 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 23:31:59 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,10 @@
 #include <map>
 
 // MACROS
+
+#define MODE_CHANGED 1
+#define MODE_UNCHANGED 0
+#define MODE_INVALID -1
 
 class	Server;
 class	Client;
@@ -98,12 +102,11 @@ class	Channel
 		bool				canInvite(const Client *client);
 		bool				canChangeTopic(const Client *client);
 
-		void				addChannelModes(const std::string &modes, std::string &invalidChars);
-		void				removeChannelModes(const std::string &modes, std::string &invalidChars);
-		void				addUserModes(User *targetUser, const std::string &modes,
-								std::string &invalidChars);
-		void				removeUserModes(User *targetUser, const std::string &modes,
-								std::string &invalidChars);
+		int					addChannelMode(const char &mode, const std::string &argument);
+		int					removeChannelMode(const char &mode);
+		int					addUserMode(User *targetUser, const char &mode,
+								const std::string &argument);
+		int					removeUserMode(User *targetUser, const char &modes);
 
 		// GETTERS
 
@@ -115,8 +118,8 @@ class	Channel
 
 		const std::string	getChannelModes(void) const;
 		int					getChannelModesMask(void) const;
-		const std::string	getUserModes(const Client *client);
-		int					getUserModesMask(const Client *client);
+		const std::string	getUserModes(const User *targetUser);
+		int					getUserModesMask(const User *targetUser);
 
 		// SETTERS
 
@@ -133,12 +136,10 @@ class	Channel
 		static int			defaultAdminPerms(void);
 		static int			defaultOwnerPerms(void);
 
-		static int			channelModesToMask(const std::string &modes,
-								std::string &invalidChars);
+		static int			channelModeToMask(const char &mode);
 		static std::string	channelMaskToModes(const int &mask);
 
-		static int			userModesToMask(const std::string &modes,
-								std::string &invalidChars);
+		static int			userModeToMask(const char &mode);
 		static std::string	userMaskToModes(const int &mask);
 
 	protected:

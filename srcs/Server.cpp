@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/05 04:46:23 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 23:32:08 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -763,62 +763,60 @@ void	Server::mode(const t_commandParams &commandParams)
 	parseMode(commandParams, targetUser, targetChannel, modes);
 
 	std::string						info;
-	std::string						invalidChars;
+	char							sign = '\0';
 
-	(void)source;
+	if (!modes.empty())
+	{
+		sign = modes[0];
+		modes = modes.substr(1);
+	}
 
 	if (targetChannel && !targetUser)
 	{
 		info = targetChannel->getName();
 
-		// display info about user modes in channel
 		if (modes.empty())
-		{
-			std::cout << "MODE: Display channel modes." << std::endl;
-		}
+			source->receiveMessage(getServerResponse(source, RPL_CHANNELMODEIS,
+				info + " " + targetChannel->getChannelModes(), ""));
 		else
 		{
-			if (modes[0] == '+')
-				targetChannel->addChannelModes(modes.substr(1), invalidChars);
-			else if (modes[0] == '-')
-				targetChannel->removeChannelModes(modes.substr(1), invalidChars);
+			int	modeStatus;
 
-			for (size_t i = 1; i < modes.length(); i++)
+			for (size_t i = 0; i < modes.length(); i++)
 			{
-				if (invalidChars.find(modes[i]) == std::string::npos)
-					source->receiveMessage("Valid character");
-				else
-					source->receiveMessage("Invalid Character");
-			}
+				if (sign == '+')
+					modeStatus = targetChannel->addChannelMode(modes[i], "");
+				else if (sign == '-')
+					modeStatus = targetChannel->removeChannelMode(modes[i]);
 
-			std::cout << "MODE: Update channel modes." << std::endl;
+				if (modeStatus == MODE_CHANGED)
+					source->receiveMessage(getCommandResponse(source, "MODE",
+						info + " " + sign + modes[i], ""));
+			}
 		}
 	}
 	else if (targetChannel && targetUser)
 	{
 		info = targetUser->client->getNickname();
 
-		// display info about user modes in channel
 		if (modes.empty())
-		{
-			std::cout << "MODE: Display user in channel modes." << std::endl;
-		}
+			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+				info + " " + targetChannel->getUserModes(targetUser), ""));
 		else
 		{
-			if (modes[0] == '+')
-				targetChannel->addUserModes(targetUser, modes.substr(1), invalidChars);
-			else if (modes[0] == '-')
-				targetChannel->removeUserModes(targetUser, modes.substr(1), invalidChars);
+			int	modeStatus;
 
-			for (size_t i = 1; i < modes.length(); i++)
+			for (size_t i = 0; i < modes.length(); i++)
 			{
-				if (invalidChars.find(modes[i]) == std::string::npos)
-					source->receiveMessage("Valid Character");
-				else
-					source->receiveMessage("Invalid Character");
-			}
+				if (sign == '+')
+					modeStatus = targetChannel->addUserMode(targetUser, modes[i], "");
+				else if (sign == '-')
+					modeStatus = targetChannel->removeUserMode(targetUser, modes[i]);
 
-			std::cout << "MODE: Update user in channel modes." << std::endl;
+				if (modeStatus == MODE_CHANGED)
+					source->receiveMessage(getCommandResponse(source, "MODE",
+						info + " " + sign + modes[i], ""));
+			}
 		}
 	}
 }
