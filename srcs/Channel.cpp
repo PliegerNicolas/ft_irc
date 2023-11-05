@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/05 04:22:54 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 04:37:42 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -198,6 +198,33 @@ bool	Channel::canChangeTopic(const Client *client)
 	return (false);
 }
 
+void	Channel::addChannelModes(const std::string &modes, std::string &invalidChars)
+{
+	setBits(_modesMask, Channel::channelModesToMask(modes, invalidChars));
+}
+
+void	Channel::removeChannelModes(const std::string &modes, std::string &invalidChars)
+{
+	removeBits(_modesMask, Channel::channelModesToMask(modes, invalidChars));
+}
+
+void	Channel::addUserModes(User *targetUser, const std::string &modes,
+	std::string &invalidChars)
+{
+	if (!targetUser)
+		return ;
+
+	setBits(targetUser->modesMask, Channel::userModesToMask(modes, invalidChars));
+}
+
+void	Channel::removeUserModes(User *targetUser, const std::string &modes,
+	std::string &invalidChars)
+{
+	if (!targetUser)
+		return ;
+
+	removeBits(targetUser->modesMask, Channel::userModesToMask(modes, invalidChars));
+}
 	/* Protected */
 	/* Private */
 
@@ -289,22 +316,9 @@ void	Channel::setTopic(const std::string &topic)
 
 
 
-void	Channel::setChannelModes(const std::string &modes)
-{
-	setBits(_modesMask, Channel::channelModesToMask(modes));
-}
-
 void	Channel::setChannelModesMask(const int &mask)
 {
 	setBits(_modesMask, mask);
-}
-
-void	Channel::setUserModes(User *targetUser, const std::string &modes)
-{
-	if (!targetUser)
-		return ;
-
-	setBits(targetUser->modesMask, Channel::userModesToMask(modes));
 }
 
 void	Channel::setUserModesMask(User *targetUser, const int &mask)
@@ -345,7 +359,7 @@ int	Channel::defaultOwnerPerms(void)
 	return (INVISIBLE | SERVER_NOTICE | VOICE | ADMIN | OWNER);
 }
 
-int	Channel::channelModesToMask(const std::string &modes)
+int	Channel::channelModesToMask(const std::string &modes, std::string &invalidChars)
 {
 	int	mask = 0;
 
@@ -378,6 +392,7 @@ int	Channel::channelModesToMask(const std::string &modes)
 				setBits(mask, SECRET);
 				break ;
 			default:
+				invalidChars += modes[i];
 				break ;
 		}
 	}
@@ -398,7 +413,7 @@ std::string	Channel::channelMaskToModes(const int &mask)
 	return (modes);
 }
 
-int	Channel::userModesToMask(const std::string &modes)
+int	Channel::userModesToMask(const std::string &modes, std::string &invalidChars)
 {
 	int	mask = 0;
 
@@ -428,6 +443,7 @@ int	Channel::userModesToMask(const std::string &modes)
 				setBits(mask, OWNER);
 				break ;
 			default:
+				invalidChars += modes[i];
 				break ;
 		}
 	}

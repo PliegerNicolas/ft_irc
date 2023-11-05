@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/05 04:29:08 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 04:46:23 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -763,6 +763,7 @@ void	Server::mode(const t_commandParams &commandParams)
 	parseMode(commandParams, targetUser, targetChannel, modes);
 
 	std::string						info;
+	std::string						invalidChars;
 
 	(void)source;
 
@@ -777,7 +778,19 @@ void	Server::mode(const t_commandParams &commandParams)
 		}
 		else
 		{
-			targetChannel->setChannelModes(modes);
+			if (modes[0] == '+')
+				targetChannel->addChannelModes(modes.substr(1), invalidChars);
+			else if (modes[0] == '-')
+				targetChannel->removeChannelModes(modes.substr(1), invalidChars);
+
+			for (size_t i = 1; i < modes.length(); i++)
+			{
+				if (invalidChars.find(modes[i]) == std::string::npos)
+					source->receiveMessage("Valid character");
+				else
+					source->receiveMessage("Invalid Character");
+			}
+
 			std::cout << "MODE: Update channel modes." << std::endl;
 		}
 	}
@@ -792,7 +805,19 @@ void	Server::mode(const t_commandParams &commandParams)
 		}
 		else
 		{
-			targetChannel->setUserModes(targetUser, modes);
+			if (modes[0] == '+')
+				targetChannel->addUserModes(targetUser, modes.substr(1), invalidChars);
+			else if (modes[0] == '-')
+				targetChannel->removeUserModes(targetUser, modes.substr(1), invalidChars);
+
+			for (size_t i = 1; i < modes.length(); i++)
+			{
+				if (invalidChars.find(modes[i]) == std::string::npos)
+					source->receiveMessage("Valid Character");
+				else
+					source->receiveMessage("Invalid Character");
+			}
+
 			std::cout << "MODE: Update user in channel modes." << std::endl;
 		}
 	}
