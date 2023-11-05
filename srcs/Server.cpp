@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/05 04:05:29 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 04:29:08 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -756,77 +756,15 @@ void	Server::mode(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client							*source = commandParams.source;
-	const std::vector<std::string>	&args = commandParams.arguments;
-
 	Channel::User					*targetUser = NULL;
 	Channel							*targetChannel = NULL;
-
 	std::string						modes;
 
-	if (areBitsSet(commandParams.mask, ARGUMENTS))
-	{
-		std::vector<std::string>::const_iterator	it = args.begin();
+	parseMode(commandParams, targetUser, targetChannel, modes);
 
-		for (size_t i = 0; i < 2 && it != args.end(); i++, it++)
-		{
-			const std::string	&arg = *it;
+	std::string						info;
 
-			switch (arg[0])
-			{
-				case '+':
-					if (!modes.empty())
-						errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
-					modes = arg;
-					break ;
-				case '-':
-					if (!modes.empty())
-						errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
-					modes = arg;
-					break ;
-				case '#':
-					if (targetChannel)
-						errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
-					targetChannel = getChannel(arg);
-					if (!targetChannel)
-						errCommand(source, ERR_NOSUCHCHANNEL, arg, "No such channel");
-					break ;
-				default:
-					if (getClient(arg))
-					{
-						if (!targetChannel)
-							targetChannel = source->getActiveChannel();
-
-						if (targetChannel)
-						{
-							targetUser = targetChannel->getUser(arg);
-							if (!targetUser)
-								errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
-									"User not found in channel");
-						}
-						else
-							errCommand(source, ERR_NOTONCHANNEL, "",
-								"You are not on target channel");
-					}
-					else
-					{
-						if (modes.empty())
-							modes = arg;
-						else
-							errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
-					}
-					break ;
-			}
-		}
-	}
-
-	if (!targetChannel)
-	{
-		targetChannel = source->getActiveChannel();
-		if (!targetChannel)
-			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
-	}
-
-	std::string	info;
+	(void)source;
 
 	if (targetChannel && !targetUser)
 	{
@@ -1366,6 +1304,76 @@ Server::getCommandResponse(const Client *source, const std::string &command,
 	response += DELIMITER;
 
 	return (response);
+}
+
+void	Server::parseMode(const t_commandParams commandParams, Channel::User *&targetUser,
+	Channel *&targetChannel, std::string &modes)
+{
+	Client							*source = commandParams.source;
+	const std::vector<std::string>	&args = commandParams.arguments;
+
+	if (areBitsSet(commandParams.mask, ARGUMENTS))
+	{
+		std::vector<std::string>::const_iterator	it = args.begin();
+
+		for (size_t i = 0; i < 2 && it != args.end(); i++, it++)
+		{
+			const std::string	&arg = *it;
+
+			switch (arg[0])
+			{
+				case '+':
+					if (!modes.empty())
+						errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
+					modes = arg;
+					break ;
+				case '-':
+					if (!modes.empty())
+						errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
+					modes = arg;
+					break ;
+				case '#':
+					if (targetChannel)
+						errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
+					targetChannel = getChannel(arg);
+					if (!targetChannel)
+						errCommand(source, ERR_NOSUCHCHANNEL, arg, "No such channel");
+					break ;
+				default:
+					if (getClient(arg))
+					{
+						if (!targetChannel)
+							targetChannel = source->getActiveChannel();
+
+						if (targetChannel)
+						{
+							targetUser = targetChannel->getUser(arg);
+							if (!targetUser)
+								errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
+									"User not found in channel");
+						}
+						else
+							errCommand(source, ERR_NOTONCHANNEL, "",
+								"You are not on target channel");
+					}
+					else
+					{
+						if (modes.empty())
+							modes = arg;
+						else
+							errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
+					}
+					break ;
+			}
+		}
+	}
+
+	if (!targetChannel)
+	{
+		targetChannel = source->getActiveChannel();
+		if (!targetChannel)
+			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+	}
 }
 
 /* Setters */

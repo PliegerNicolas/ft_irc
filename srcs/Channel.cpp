@@ -6,10 +6,11 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/05 04:05:53 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 04:22:54 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "Server.hpp"
 #include "Channel.hpp"
 
 /* Constructors & Destructors */

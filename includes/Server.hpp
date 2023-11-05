@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/04 17:04:57 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 04:29:17 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,6 +173,9 @@ class	Server
 		bool			verifyServerPermissions(const Client *client, const int &mask);
 		void			errCommand(const Client *client, const std::string &code,
 							const std::string &parameter, const std::string &trailing);
+
+		void			parseMode(const t_commandParams commandParams, Channel::User *&targetUser,
+							Channel *&targetChannel, std::string &modes);
 
 		// Getters
 		Client				*getClient(const std::string &nickname);
