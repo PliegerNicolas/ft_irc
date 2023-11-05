@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/05 23:32:08 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/05 23:52:47 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -797,7 +797,7 @@ void	Server::mode(const t_commandParams &commandParams)
 	}
 	else if (targetChannel && targetUser)
 	{
-		info = targetUser->client->getNickname();
+		info = targetChannel->getName() + " " + targetUser->client->getNickname();
 
 		if (modes.empty())
 			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
