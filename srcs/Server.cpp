@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/06 20:18:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/06 20:42:54 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -754,15 +754,15 @@ void	Server::mode(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
 	Client				*source = commandParams.source;
-	ArgumentsIterator	it = commandParams.arguments.begin();
-	ArgumentsIterator	itEnd = commandParams.arguments.end();
 	Channel::User		*targetUser = NULL;
 	Channel				*targetChannel = NULL;
 	std::string			modes;
 	std::string			info;
 	char				sign = '\0';
 
-	parseMode(commandParams, it, targetUser, targetChannel, modes);
+	ArgumentsIterator	it = parseMode(commandParams, targetUser, targetChannel, modes);
+	ArgumentsIterator	itEnd = commandParams.arguments.end();
+
 	stripDuplicateChars(modes);
 
 	if (!modes.empty())
@@ -1337,10 +1337,11 @@ Server::getCommandResponse(const Client *source, const std::string &command,
 	return (response);
 }
 
-void	Server::parseMode(const t_commandParams commandParams, ArgumentsIterator &it,
+Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams,
 	Channel::User *&targetUser, Channel *&targetChannel, std::string &modes)
 {
 	Client				*source = commandParams.source;
+	ArgumentsIterator	it = commandParams.arguments.begin();
 
 	if (areBitsSet(commandParams.mask, ARGUMENTS))
 	{
@@ -1402,6 +1403,8 @@ void	Server::parseMode(const t_commandParams commandParams, ArgumentsIterator &i
 		if (!targetChannel)
 			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 	}
+
+	return (it);
 }
 
 /* Setters */
