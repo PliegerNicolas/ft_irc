@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/05 23:39:28 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/06 20:15:42 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -205,7 +205,16 @@ int	Channel::addChannelMode(const char &mode, const std::string &argument)
 {
 	int	mask = Channel::channelModeToMask(mode);
 
-	(void)argument;
+	if (mask == USER_LIMIT)
+	{
+		(void)argument;
+		// Set user limit
+	}
+	else if (mask == KEY_PASS)
+	{
+		(void)argument;
+		// Set channel password
+	}
 
 	if (!mask)
 		return (MODE_INVALID);

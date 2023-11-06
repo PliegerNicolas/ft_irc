@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/06 16:12:56 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/06 20:18:43 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -754,14 +754,15 @@ void	Server::mode(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
 	Client				*source = commandParams.source;
+	ArgumentsIterator	it = commandParams.arguments.begin();
+	ArgumentsIterator	itEnd = commandParams.arguments.end();
 	Channel::User		*targetUser = NULL;
 	Channel				*targetChannel = NULL;
-	ArgumentsIterator	it;
 	std::string			modes;
 	std::string			info;
 	char				sign = '\0';
 
-	it = parseMode(commandParams, targetUser, targetChannel, modes);
+	parseMode(commandParams, it, targetUser, targetChannel, modes);
 	stripDuplicateChars(modes);
 
 	if (!modes.empty())
@@ -781,18 +782,18 @@ void	Server::mode(const t_commandParams &commandParams)
 		{
 			int	modeStatus = MODE_UNCHANGED;
 
-			// WTF ?
-			std::cout << std::distance(it, commandParams.arguments.end()) << " < ";
-			std::cout << validatePresenceInString(modes, "kl") << std::endl;
-
-			if (std::distance(it, commandParams.arguments.end())
-				< validatePresenceInString(modes, "kl"))
-				errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+			if (sign == '+' && std::distance(it, itEnd) < validatePresenceInString(modes, "kl"))
+				errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
 			for (size_t i = 0; i < modes.length(); i++)
 			{
 				if (sign == '+')
-					modeStatus = targetChannel->addChannelMode(modes[i], "");
+				{
+					if (modes[i] == 'k' || modes[i] == 'l')
+						modeStatus = targetChannel->addChannelMode(modes[i], *it++);
+					else
+						modeStatus = targetChannel->addChannelMode(modes[i], "");
+				}
 				else if (sign == '-')
 					modeStatus = targetChannel->removeChannelMode(modes[i]);
 
@@ -812,10 +813,6 @@ void	Server::mode(const t_commandParams &commandParams)
 		else
 		{
 			int	modeStatus = MODE_UNCHANGED;
-
-			if (std::distance(it, commandParams.arguments.end())
-				< validatePresenceInString(modes, "kl"))
-				errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
 			for (size_t i = 0; i < modes.length(); i++)
 			{
@@ -1340,16 +1337,14 @@ Server::getCommandResponse(const Client *source, const std::string &command,
 	return (response);
 }
 
-Server::ArgumentsIterator	Server::parseMode(const t_commandParams commandParams,
+void	Server::parseMode(const t_commandParams commandParams, ArgumentsIterator &it,
 	Channel::User *&targetUser, Channel *&targetChannel, std::string &modes)
 {
 	Client				*source = commandParams.source;
-	const Arguments		&args = commandParams.arguments;
-	ArgumentsIterator	it = args.begin();
 
 	if (areBitsSet(commandParams.mask, ARGUMENTS))
 	{
-		for (size_t i = 0; modes.empty() && it != args.end(); i++, it++)
+		for (; modes.empty() && it != commandParams.arguments.end(); it++)
 		{
 			const std::string	&arg = *it;
 
@@ -1392,7 +1387,7 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams commandParams,
 					else
 					{
 						if (modes.empty())
-							modes = arg;
+							modes = "+" + arg;
 						//else
 						//	errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
 					}
@@ -1407,8 +1402,6 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams commandParams,
 		if (!targetChannel)
 			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 	}
-
-	return (it);
 }
 
 /* Setters */

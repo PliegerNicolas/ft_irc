@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/06 14:49:10 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/06 19:49:44 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,9 +176,8 @@ class	Server
 		void			errCommand(const Client *client, const std::string &code,
 							const std::string &parameter, const std::string &trailing);
 
-		ArgumentsIterator	parseMode(const t_commandParams commandParams,
-								Channel::User *&targetUser, Channel *&targetChannel,
-								std::string &modes);
+		void			parseMode(const t_commandParams commandParams, ArgumentsIterator &it,
+							Channel::User *&targetUser, Channel *&targetChannel, std::string &modes);
 
 		// Getters
 		Client				*getClient(const std::string &nickname);
