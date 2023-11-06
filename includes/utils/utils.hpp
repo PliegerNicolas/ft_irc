@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 13:30:05 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/30 13:26:44 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/06 15:51:17 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@ void				capitalizeString(std::string &str);
 std::string			getNextWord(std::string &str, const std::string &delimiter);
 
 std::string			truncate(const std::string &str, const size_t &width);
+void				stripDuplicateChars(std::string &str);
+long int			validatePresenceInString(const std::string &str, const std::string &charset);
 
 /* ************************************************************************** */
 /* *                            BitMasks handling                           * */

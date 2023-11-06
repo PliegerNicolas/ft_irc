@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/05 04:29:17 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/06 14:49:10 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,11 +83,13 @@ class	Server
 		typedef std::map<std::string, CommandFunction>	Commands;
 		typedef std::vector<Client*>					Clients;
 		typedef std::map<std::string, Channel*>			Channels;
+		typedef std::vector<std::string>				Arguments;
 
 		typedef PollFds::iterator						PollFdsIterator;
 		typedef Commands::iterator						CommandsIterator;
 		typedef Clients::iterator						ClientsIterator;
 		typedef Channels::iterator						ChannelsIterator;
+		typedef Arguments::const_iterator				ArgumentsIterator;
 
 		/* Attributs */
 
@@ -174,8 +176,9 @@ class	Server
 		void			errCommand(const Client *client, const std::string &code,
 							const std::string &parameter, const std::string &trailing);
 
-		void			parseMode(const t_commandParams commandParams, Channel::User *&targetUser,
-							Channel *&targetChannel, std::string &modes);
+		ArgumentsIterator	parseMode(const t_commandParams commandParams,
+								Channel::User *&targetUser, Channel *&targetChannel,
+								std::string &modes);
 
 		// Getters
 		Client				*getClient(const std::string &nickname);

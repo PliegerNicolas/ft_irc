@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/05 23:52:47 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/06 16:12:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -752,18 +752,17 @@ void	Server::mode(const t_commandParams &commandParams)
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (areBitsSet(commandParams.mask, ARGUMENTS) && commandParams.arguments.size() > 3)
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	Client							*source = commandParams.source;
-	Channel::User					*targetUser = NULL;
-	Channel							*targetChannel = NULL;
-	std::string						modes;
+	Client				*source = commandParams.source;
+	Channel::User		*targetUser = NULL;
+	Channel				*targetChannel = NULL;
+	ArgumentsIterator	it;
+	std::string			modes;
+	std::string			info;
+	char				sign = '\0';
 
-	parseMode(commandParams, targetUser, targetChannel, modes);
-
-	std::string						info;
-	char							sign = '\0';
+	it = parseMode(commandParams, targetUser, targetChannel, modes);
+	stripDuplicateChars(modes);
 
 	if (!modes.empty())
 	{
@@ -780,7 +779,15 @@ void	Server::mode(const t_commandParams &commandParams)
 				info + " " + targetChannel->getChannelModes(), ""));
 		else
 		{
-			int	modeStatus;
+			int	modeStatus = MODE_UNCHANGED;
+
+			// WTF ?
+			std::cout << std::distance(it, commandParams.arguments.end()) << " < ";
+			std::cout << validatePresenceInString(modes, "kl") << std::endl;
+
+			if (std::distance(it, commandParams.arguments.end())
+				< validatePresenceInString(modes, "kl"))
+				errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
 			for (size_t i = 0; i < modes.length(); i++)
 			{
@@ -804,7 +811,11 @@ void	Server::mode(const t_commandParams &commandParams)
 				info + " " + targetChannel->getUserModes(targetUser), ""));
 		else
 		{
-			int	modeStatus;
+			int	modeStatus = MODE_UNCHANGED;
+
+			if (std::distance(it, commandParams.arguments.end())
+				< validatePresenceInString(modes, "kl"))
+				errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
 			for (size_t i = 0; i < modes.length(); i++)
 			{
@@ -1329,17 +1340,16 @@ Server::getCommandResponse(const Client *source, const std::string &command,
 	return (response);
 }
 
-void	Server::parseMode(const t_commandParams commandParams, Channel::User *&targetUser,
-	Channel *&targetChannel, std::string &modes)
+Server::ArgumentsIterator	Server::parseMode(const t_commandParams commandParams,
+	Channel::User *&targetUser, Channel *&targetChannel, std::string &modes)
 {
-	Client							*source = commandParams.source;
-	const std::vector<std::string>	&args = commandParams.arguments;
+	Client				*source = commandParams.source;
+	const Arguments		&args = commandParams.arguments;
+	ArgumentsIterator	it = args.begin();
 
 	if (areBitsSet(commandParams.mask, ARGUMENTS))
 	{
-		std::vector<std::string>::const_iterator	it = args.begin();
-
-		for (size_t i = 0; i < 2 && it != args.end(); i++, it++)
+		for (size_t i = 0; modes.empty() && it != args.end(); i++, it++)
 		{
 			const std::string	&arg = *it;
 
@@ -1383,8 +1393,8 @@ void	Server::parseMode(const t_commandParams commandParams, Channel::User *&targ
 					{
 						if (modes.empty())
 							modes = arg;
-						else
-							errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
+						//else
+						//	errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
 					}
 					break ;
 			}
@@ -1397,6 +1407,8 @@ void	Server::parseMode(const t_commandParams commandParams, Channel::User *&targ
 		if (!targetChannel)
 			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
 	}
+
+	return (it);
 }
 
 /* Setters */
