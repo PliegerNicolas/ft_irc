@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/31 22:23:10 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:35:35 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,14 @@ class	Client
 			VERIFIED = (1 << 0),
 			IDENTIFIED = (1 << 1)
 		}	t_serverPermissions;
+
+		/*
+		typedef enum ClientMode
+		{
+			SSL_TLS = (1 << 1),					// connected in SSL mode. Not used in our case.
+			INVISIBLE = (1 << 0)
+		}	t_clientMode;
+		*/
 
 		typedef std::vector<Client*>			Clients;
 		typedef std::map<std::string, Channel*>	Channels;

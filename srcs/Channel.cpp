@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/07 22:35:06 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:34:02 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -506,8 +506,6 @@ int	Channel::userModeToMask(const char &mode)
 {
 	switch (mode)
 	{
-		case 'x':
-			return (SSL_TLS); // not used
 		case 'h':
 			return (HALF_OPERATOR);
 		case 'o':

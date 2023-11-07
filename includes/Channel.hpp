@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/07 22:33:02 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:33:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@
 #define MODE_INVALID -1
 
 #define MODES_CHANNEL "tinmlkps"
-#define MODES_USER "xhoaq"
+#define MODES_USER "hoaq"
 
 class	Server;
 class	Client;
@@ -54,7 +54,6 @@ class	Channel
 
 		typedef enum UserMode
 		{
-			SSL_TLS = (1 << 1),					// connected in SSL mode. Not used in our case.
 			VOICE = (1 << 2),					// Can speed in moderated channels.
 			HALF_OPERATOR = (1 << 3),			// Become half channel operator.
 			OPERATOR = (1 << 4),				// become channel operator.
