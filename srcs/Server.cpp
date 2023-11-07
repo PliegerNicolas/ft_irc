@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 00:18:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:30:53 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -810,7 +810,7 @@ void	Server::mode(const t_commandParams &commandParams)
 							+ " " + targetUser->client->getNickname(), ""));
 					else if (modeStatus == MODE_INVALID)
 						errCommand(source, ERR_UNKNOWNMODE,
-							"", "Unknown mode char");
+							targetChannel->getName() + " " + sign + modes[i], "Unknown mode char");
 				}
 			}
 			else
@@ -843,7 +843,7 @@ void	Server::mode(const t_commandParams &commandParams)
 							targetChannel->getName() + " " + sign + modes[i] + argument, ""));
 					else if (modeStatus == MODE_INVALID)
 						errCommand(source, ERR_UNKNOWNMODE,
-							"", "Unknown mode char");
+							targetChannel->getName() + " " + sign + modes[i], "Unknown mode char");
 				}
 			}
 		}
@@ -858,88 +858,13 @@ void	Server::mode(const t_commandParams &commandParams)
 		{
 			for (size_t i = 0; i < modes.length(); i++)
 			{
-
+				// Well need new functions.
 			}
 		}
 		else
-		{
-
-		}
-	}
-
-
-
-
-	/*
-	if (targetChannel && !targetUser)
-	{
-		info = targetChannel->getName();
-
-		if (modes.empty())
-			source->receiveMessage(getServerResponse(source, RPL_CHANNELMODEIS,
-				info + " " + targetChannel->getChannelModes(), ""));
-		else
-		{
-			int	modeStatus = MODE_UNCHANGED;
-
-			if (sign == '+' && std::distance(it, itEnd) < validatePresenceInString(modes, "kl"))
-				errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-
-			for (size_t i = 0; i < modes.length(); i++)
-			{
-				if (sign == '+')
-				{
-					if (modes[i] == 'k' || modes[i] == 'l')
-						modeStatus = targetChannel->addChannelMode(modes[i], *it++);
-					else
-						modeStatus = targetChannel->addChannelMode(modes[i], "");
-				}
-				else if (sign == '-')
-					modeStatus = targetChannel->removeChannelMode(modes[i]);
-
-				if (modeStatus == MODE_CHANGED)
-				{
-					std::string	additionalInfo = info + " " + sign + modes[i];
-
-					if (modes[i] == 'k')
-						additionalInfo += " " + targetChannel->getPassword();
-					else if (modes[i] == 'l')
-						additionalInfo += " " + targetChannel->getUserLimit();
-
-					source->receiveMessage(getCommandResponse(source, "MODE",
-						additionalInfo, ""));
-				}
-			}
-		}
-	}
-	else if (targetChannel && targetUser)
-	{
-		info = targetChannel->getName() + " " + targetUser->client->getNickname();
-
-		if (modes.empty())
 			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
-				info + " " + targetChannel->getUserModes(targetUser), ""));
-		else
-		{
-			int	modeStatus = MODE_UNCHANGED;
-
-			if (commandParams.arguments.size() < 3)
-				errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-
-			for (size_t i = 0; i < modes.length(); i++)
-			{
-				if (sign == '+')
-					modeStatus = targetChannel->addUserMode(targetUser, modes[i], "");
-				else if (sign == '-')
-					modeStatus = targetChannel->removeUserMode(targetUser, modes[i]);
-
-				if (modeStatus == MODE_CHANGED)
-					source->receiveMessage(getCommandResponse(source, "MODE",
-						info + " " + sign + modes[i], ""));
-			}
-		}
+				targetClient->getNickname()/* + " " + targetClient->getClientModes()*/, ""));
 	}
-	*/
 }
 
 void	Server::topic(const t_commandParams &commandParams)
@@ -1496,11 +1421,7 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams
 	}
 
 	if (!targetClient && !targetChannel)
-	{
-		targetChannel = source->getActiveChannel();
-		if (!targetChannel)
-			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
-	}
+		targetClient = source;
 
 	return (it);
 }
