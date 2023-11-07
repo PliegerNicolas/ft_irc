@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/07 16:46:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/07 16:58:17 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -507,9 +507,24 @@ void	Server::join(const t_commandParams &commandParams)
 
 	if (targetChannel)
 	{
-		if (targetChannel->isFull())
-			errCommand(source, ERR_CHANNELISFULL, channelName, "Channel is full");
-		else if (targetChannel == source->getActiveChannel())
+		if (areBitsSet(targetChannel->getChannelModesMask(), Channel::INVITE_ONLY)
+			&& !targetChannel->isInvited(source))
+			errCommand(source, ERR_INVITEONLYCHAN, channelName, "You are not invited (+i)");
+		else if (areBitsSet(targetChannel->getChannelModesMask(), Channel::USER_LIMIT)
+			&& targetChannel->isFull())
+			errCommand(source, ERR_CHANNELISFULL, channelName, "Cannot join channel (+l)");
+		else if (areBitsSet(targetChannel->getChannelModesMask(), Channel::KEY_PASS))
+		{
+			if (commandParams.arguments.size() < 2)
+				errCommand(source, ERR_BADCHANNELKEY, channelName, "Cannot join channel (+k)");
+
+			const std::string	&password = commandParams.arguments[1];
+
+			if (password != targetChannel->getPassword())
+				errCommand(source, ERR_BADCHANNELKEY, channelName, "Cannot join channel (+k)");
+		}
+
+		if (targetChannel == source->getActiveChannel())
 			errCommand(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
 
 		if (targetChannel->isClientRegistered(source))
@@ -525,29 +540,6 @@ void	Server::join(const t_commandParams &commandParams)
 		targetChannel->setUserModesMask(targetChannel->getUser(source->getNickname()),
 			Channel::OWNER);
 	}
-
-	// check join on those flags.
-	if (areBitsSet(targetChannel->getChannelModesMask(), Channel::INVITE_ONLY))
-	{
-
-	}
-	else if (areBitsSet(targetChannel->getChannelModesMask(), Channel::USER_LIMIT))
-	{
-
-	}
-	else if (areBitsSet(targetChannel->getChannelModesMask(), Channel::KEY_PASS))
-	{
-
-	}
-
-	// +i management (invite only)
-
-	/*
-	if (areBitsSet(targetChannel->getChannelModesMask(), Channel::INVITE_ONLY)
-		&& targetChannel->isInvited(source))
-		errCommand(source, ERR_INVITEONLYCHAN, channelName,
-			"Cannot join channel (+i) - You must be invited");
-	*/
 
 	std::string	commandResponse = getCommandResponse(source, "JOIN", targetChannel->getName(), "");
 
