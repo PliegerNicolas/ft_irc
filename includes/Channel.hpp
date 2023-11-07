@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/07 15:54:41 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:33:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,9 @@
 #define MODE_CHANGED 1
 #define MODE_UNCHANGED 0
 #define MODE_INVALID -1
+
+#define MODES_CHANNEL "tinmlkps"
+#define MODES_USER "hoaq"
 
 class	Server;
 class	Client;
@@ -51,14 +54,11 @@ class	Channel
 
 		typedef enum UserMode
 		{
-			SERVER_NOTICE = (1 << 0),			// Receive notices.
-			SSL_TLS = (1 << 1),					// connected in SSL mode. Not used in our case.
-			INVISIBLE = (1 << 2),				// Not listed in user lists.
-			VOICE = (1 << 3),					// Can speed in moderated channels.
-			HALF_OPERATOR = (1 << 4),			// Become half channel operator.
-			OPERATOR = (1 << 5),				// become channel operator.
-			ADMIN = (1 << 6),					// become channel admin.
-			OWNER = (1 << 7)					// become channel owner.
+			VOICE = (1 << 2),					// Can speed in moderated channels.
+			HALF_OPERATOR = (1 << 3),			// Become half channel operator.
+			OPERATOR = (1 << 4),				// become channel operator.
+			ADMIN = (1 << 5),					// become channel admin.
+			OWNER = (1 << 6)					// become channel owner.
 		}	t_userMode;
 
 		typedef struct User
@@ -139,6 +139,9 @@ class	Channel
 		static int			defaultOpsPerms(void);
 		static int			defaultAdminPerms(void);
 		static int			defaultOwnerPerms(void);
+
+		static bool			isChannelMode(const char &mode);
+		static bool			isUserMode(const char &mode);
 
 	protected:
 		/* Attributs */

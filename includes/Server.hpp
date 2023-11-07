@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/06 20:42:19 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/07 21:29:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,7 +177,7 @@ class	Server
 							const std::string &parameter, const std::string &trailing);
 
 		ArgumentsIterator	parseMode(const t_commandParams &commandParams,
-								Channel::User *&targetUser, Channel *&targetChannel,
+								Client *&targetClient, Channel *&targetChannel,
 								std::string &modes);
 
 		// Getters

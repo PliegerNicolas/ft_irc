@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/07 17:06:09 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:34:02 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,7 +173,7 @@ bool	Channel::canKick(const Client *client)
 
 	if (!user)
 		return (false);
-	if (areBitsSet(user->modesMask, OPERATOR | HALF_OPERATOR | OWNER))
+	if (areBitsSet(user->modesMask, HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
 		return (true);
 	return (false);
 }
@@ -184,7 +184,7 @@ bool	Channel::canInvite(const Client *client)
 
 	if (!user)
 		return (false);
-	if (areBitsSet(user->modesMask, OPERATOR | HALF_OPERATOR | OWNER))
+	if (areBitsSet(user->modesMask, HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
 		return (true);
 	return (false);
 }
@@ -197,7 +197,7 @@ bool	Channel::canChangeTopic(const Client *client)
 		return (false);
 	if (areBitsNotSet(_modesMask, TOPIC_LOCK))
 		return (true);
-	else if (areBitsSet(user->modesMask, OPERATOR | OWNER))
+	else if (areBitsSet(user->modesMask, OPERATOR | ADMIN | OWNER))
 		return (true);
 	return (false);
 }
@@ -420,28 +420,43 @@ void	Channel::setUserModesMask(User *targetUser, const int &mask)
 
 int	Channel::defaultUserPerms(void)
 {
-	return (INVISIBLE | SERVER_NOTICE);
+	return (0);
 }
 
 int	Channel::defaultHalfOpsPerms(void)
 {
-	return (INVISIBLE | SERVER_NOTICE | HALF_OPERATOR);
+	return (HALF_OPERATOR);
 }
 
 int	Channel::defaultOpsPerms(void)
 {
-	return (INVISIBLE | SERVER_NOTICE | VOICE | OPERATOR);
+	return (VOICE | OPERATOR);
 }
 
 int	Channel::defaultAdminPerms(void)
 {
-	return (INVISIBLE | SERVER_NOTICE | VOICE | ADMIN);
+	return (VOICE | ADMIN);
 }
 
 int	Channel::defaultOwnerPerms(void)
 {
-	return (INVISIBLE | SERVER_NOTICE | VOICE | ADMIN | OWNER);
+	return (VOICE | OWNER);
 }
+
+bool	Channel::isChannelMode(const char &mode)
+{
+	if (strchr(MODES_CHANNEL, mode) != NULL)
+		return (true);
+	return (false);
+}
+
+bool	Channel::isUserMode(const char &mode)
+{
+	if (strchr(MODES_USER, mode) != NULL)
+		return (true);
+	return (false);
+}
+
 
 	/* Protected */
 	/* Private */
@@ -474,12 +489,12 @@ int	Channel::channelModeToMask(const char &mode)
 std::string	Channel::channelMaskToModes(const int &mask)
 {
 	std::string	modes;
-	const char	bitToChar[] = {'t', 'i', 'n', 'm', 'l', 'k', 'p', 's'};
+	const char	*channelModes = MODES_CHANNEL;
 
-	for (size_t shift = 0; shift < sizeof(bitToChar) / sizeof(*bitToChar); shift++)
+	for (size_t shift = 0; shift < strlen(channelModes); shift++)
 	{
 		if((mask >> shift) & 1)
-			modes += bitToChar[shift];
+			modes += channelModes[shift];
 	}
 
 	if (modes.empty())
@@ -491,12 +506,6 @@ int	Channel::userModeToMask(const char &mode)
 {
 	switch (mode)
 	{
-		case 's':
-			return (SERVER_NOTICE);
-		case 'x':
-			return (SSL_TLS); // not used
-		case 'i':
-			return (INVISIBLE);
 		case 'h':
 			return (HALF_OPERATOR);
 		case 'o':
@@ -513,12 +522,12 @@ int	Channel::userModeToMask(const char &mode)
 std::string	Channel::userMaskToModes(const int &mask)
 {
 	std::string	modes;
-	const char	bitToChar[] = {'s', 'x', 'i', 'h', 'o', 'a', 'q'};
+	const char	*userModes = MODES_USER;
 
-	for (size_t shift = 0; shift < sizeof(bitToChar) / sizeof(*bitToChar); shift++)
+	for (size_t shift = 0; shift < strlen(userModes); shift++)
 	{
 		if((mask >> shift) & 1)
-			modes += bitToChar[shift];
+			modes += userModes[shift];
 	}
 
 	if (modes.empty())

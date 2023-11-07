@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/07 16:58:17 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:38:54 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -538,7 +538,7 @@ void	Server::join(const t_commandParams &commandParams)
 		_channels[channelName] = targetChannel;
 		source->joinChannel(targetChannel);
 		targetChannel->setUserModesMask(targetChannel->getUser(source->getNickname()),
-			Channel::OWNER);
+			Channel::defaultOwnerPerms());
 	}
 
 	std::string	commandResponse = getCommandResponse(source, "JOIN", targetChannel->getName(), "");
@@ -764,13 +764,12 @@ void	Server::mode(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
 	Client				*source = commandParams.source;
-	Channel::User		*targetUser = NULL;
+	Client				*targetClient = NULL;
 	Channel				*targetChannel = NULL;
 	std::string			modes;
-	std::string			info;
 	char				sign = '\0';
 
-	ArgumentsIterator	it = parseMode(commandParams, targetUser, targetChannel, modes);
+	ArgumentsIterator	it = parseMode(commandParams, targetClient, targetChannel, modes);
 	ArgumentsIterator	itEnd = commandParams.arguments.end();
 
 	stripDuplicateChars(modes);
@@ -781,70 +780,90 @@ void	Server::mode(const t_commandParams &commandParams)
 		modes = modes.substr(1);
 	}
 
-	if (targetChannel && !targetUser)
+	if (targetChannel && !targetClient)
 	{
-		info = targetChannel->getName();
+		// Set channel perms or target user inside of.
+		if (!modes.empty())
+		{
+			Channel::User	*targetUser = NULL;
+			int				modeStatus = MODE_UNCHANGED;
 
-		if (modes.empty())
+			std::cout << std::distance(it, itEnd) << std::endl;
+			if (std::distance(it, itEnd) > 0 && (targetUser = targetChannel->getUser(*it)))
+				it++;
+
+			if (targetUser)
+			{
+				if (sign == '+' && std::distance(it, itEnd) < validatePresenceInString(modes, ""))
+					errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+
+				for (size_t i = 0; i < modes.length(); i++)
+				{
+					if (sign == '+')
+						modeStatus = targetChannel->addUserMode(targetUser, modes[i], "");
+					else if (sign == '-')
+						modeStatus = targetChannel->removeUserMode(targetUser, modes[i]);
+
+					if (modeStatus == MODE_CHANGED)
+						source->receiveMessage(getCommandResponse(source, "MODE",
+							targetChannel->getName() + " " + sign + modes[i]
+							+ " " + targetUser->client->getNickname(), ""));
+					else if (modeStatus == MODE_INVALID)
+						errCommand(source, ERR_UNKNOWNMODE,
+							targetChannel->getName() + " " + sign + modes[i], "Unknown mode char");
+				}
+			}
+			else
+			{
+				if (sign == '+' && std::distance(it, itEnd) < validatePresenceInString(modes, "kl"))
+					errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+
+				for (size_t i = 0; i < modes.length(); i++)
+				{
+					std::string	argument;
+
+					if (sign == '+')
+					{
+						if (modes[i] == 'k' || modes[i] == 'l')
+						{
+							modeStatus = targetChannel->addChannelMode(modes[i], *it++);
+							if (modes[i] == 'k')
+								argument = " " + targetChannel->getPassword();
+							else if (modes[i] == 'l')
+								argument = " " + targetChannel->getUserLimit();
+						}
+						else
+							modeStatus = targetChannel->addChannelMode(modes[i], "");
+					}
+					else if (sign == '-')
+						modeStatus = targetChannel->removeChannelMode(modes[i]);
+
+					if (modeStatus == MODE_CHANGED)
+						source->receiveMessage(getCommandResponse(source, "MODE",
+							targetChannel->getName() + " " + sign + modes[i] + argument, ""));
+					else if (modeStatus == MODE_INVALID)
+						errCommand(source, ERR_UNKNOWNMODE,
+							targetChannel->getName() + " " + sign + modes[i], "Unknown mode char");
+				}
+			}
+		}
+		else
 			source->receiveMessage(getServerResponse(source, RPL_CHANNELMODEIS,
-				info + " " + targetChannel->getChannelModes(), ""));
-		else
-		{
-			int	modeStatus = MODE_UNCHANGED;
-
-			if (sign == '+' && std::distance(it, itEnd) < validatePresenceInString(modes, "kl"))
-				errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-
-			for (size_t i = 0; i < modes.length(); i++)
-			{
-				if (sign == '+')
-				{
-					if (modes[i] == 'k' || modes[i] == 'l')
-						modeStatus = targetChannel->addChannelMode(modes[i], *it++);
-					else
-						modeStatus = targetChannel->addChannelMode(modes[i], "");
-				}
-				else if (sign == '-')
-					modeStatus = targetChannel->removeChannelMode(modes[i]);
-
-				if (modeStatus == MODE_CHANGED)
-				{
-					std::string	additionalInfo = info + " " + sign + modes[i];
-
-					if (modes[i] == 'k')
-						additionalInfo += " " + targetChannel->getPassword();
-					else if (modes[i] == 'l')
-						additionalInfo += " " + targetChannel->getUserLimit();
-
-					source->receiveMessage(getCommandResponse(source, "MODE",
-						additionalInfo, ""));
-				}
-			}
-		}
+				targetChannel->getName() + " " + targetChannel->getChannelModes(), ""));
 	}
-	else if (targetChannel && targetUser)
+	else if (!targetChannel && targetClient)
 	{
-		info = targetChannel->getName() + " " + targetUser->client->getNickname();
-
-		if (modes.empty())
-			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
-				info + " " + targetChannel->getUserModes(targetUser), ""));
-		else
+		// Set user's global perms
+		if (!modes.empty())
 		{
-			int	modeStatus = MODE_UNCHANGED;
-
 			for (size_t i = 0; i < modes.length(); i++)
 			{
-				if (sign == '+')
-					modeStatus = targetChannel->addUserMode(targetUser, modes[i], "");
-				else if (sign == '-')
-					modeStatus = targetChannel->removeUserMode(targetUser, modes[i]);
-
-				if (modeStatus == MODE_CHANGED)
-					source->receiveMessage(getCommandResponse(source, "MODE",
-						info + " " + sign + modes[i], ""));
+				// Well need new functions.
 			}
 		}
+		else
+			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+				targetClient->getNickname()/* + " " + targetClient->getClientModes()*/, ""));
 	}
 }
 
@@ -1203,7 +1222,7 @@ void	Server::part(const t_commandParams &commandParams)
 
 void	Server::pass(const t_commandParams &commandParams)
 {
-	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+	if (areBitsNotSet(commandParams.mask, SOURCE))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
@@ -1357,7 +1376,7 @@ Server::getCommandResponse(const Client *source, const std::string &command,
 }
 
 Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams,
-	Channel::User *&targetUser, Channel *&targetChannel, std::string &modes)
+	Client *&targetClient, Channel *&targetChannel, std::string &modes)
 {
 	Client				*source = commandParams.source;
 	ArgumentsIterator	it = commandParams.arguments.begin();
@@ -1388,38 +1407,21 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams
 						errCommand(source, ERR_NOSUCHCHANNEL, arg, "No such channel");
 					break ;
 				default:
-					if (getClient(arg))
+					if (!targetChannel)
 					{
-						if (!targetChannel)
-							targetChannel = source->getActiveChannel();
-
-						if (targetChannel)
-						{
-							targetUser = targetChannel->getUser(arg);
-							if (!targetUser)
-								errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
-									"User not found in channel");
-						}
-						else
-							errCommand(source, ERR_NOTONCHANNEL, "",
-								"You are not on target channel");
+						targetClient = getClient(arg);
+						if (!targetClient)
+							errCommand(source, ERR_NOSUCHNICK, arg, "No such user");
 					}
 					else
-					{
-						if (modes.empty())
-							modes = "+" + arg;
-					}
+						modes = "+" + arg;
 					break ;
 			}
 		}
 	}
 
-	if (!targetChannel)
-	{
-		targetChannel = source->getActiveChannel();
-		if (!targetChannel)
-			errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
-	}
+	if (!targetClient && !targetChannel)
+		targetClient = source;
 
 	return (it);
 }
