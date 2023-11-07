@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/07 15:54:32 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/07 16:35:38 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -209,23 +209,20 @@ int	Channel::addChannelMode(const char &mode, const std::string &argument)
 {
 	int	mask = Channel::channelModeToMask(mode);
 
-	if (mask == USER_LIMIT)
-	{
-		(void)argument;
-		// Set user limit
-	}
-	else if (mask == KEY_PASS)
-	{
-		(void)argument;
-		// Set channel password
-	}
-
 	if (!mask)
 		return (MODE_INVALID);
-	else if (areBitsSet(_modesMask, mask))
+	else if (areBitsSet(_modesMask, mask)
+		&& mask != KEY_PASS && mask != USER_LIMIT)
 		return (MODE_UNCHANGED);
 	else
-		return (setBits(_modesMask, mask), MODE_CHANGED);
+	{
+		if (mask == KEY_PASS)
+			setPassword(argument);
+		else if (mask == USER_LIMIT)
+			setUserLimit(argument);
+		setBits(_modesMask, mask);
+		return (MODE_CHANGED);
+	}
 }
 
 int	Channel::removeChannelMode(const char &mode)
@@ -369,7 +366,11 @@ void	Channel::setUserLimit(const std::string &userLimit)
 	std::istringstream	iss(userLimit);
 
 	if (iss >> limit)
+	{
+		if (limit <= 0)
+			limit = -1;
 		_userLimit = limit;
+	}
 	else
 	{
 		// Error message ? Keep the old value.

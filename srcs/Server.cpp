@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/07 15:44:33 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/07 16:18:26 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -800,8 +800,17 @@ void	Server::mode(const t_commandParams &commandParams)
 					modeStatus = targetChannel->removeChannelMode(modes[i]);
 
 				if (modeStatus == MODE_CHANGED)
+				{
+					std::string	additionalInfo = info + " " + sign + modes[i];
+
+					if (modes[i] == 'k')
+						additionalInfo += " " + targetChannel->getPassword();
+					else if (modes[i] == 'l')
+						additionalInfo += " " + targetChannel->getUserLimit();
+
 					source->receiveMessage(getCommandResponse(source, "MODE",
-						info + " " + sign + modes[i], "")); // add  password change ?
+						additionalInfo, ""));
+				}
 			}
 		}
 	}
