@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/07 22:36:36 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:08:22 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -767,7 +767,6 @@ void	Server::mode(const t_commandParams &commandParams)
 	Client				*targetClient = NULL;
 	Channel				*targetChannel = NULL;
 	std::string			modes;
-	std::string			info;
 	char				sign = '\0';
 
 	ArgumentsIterator	it = parseMode(commandParams, targetClient, targetChannel, modes);
@@ -789,13 +788,9 @@ void	Server::mode(const t_commandParams &commandParams)
 			Channel::User	*targetUser = NULL;
 			int				modeStatus = MODE_UNCHANGED;
 
-			if (std::distance(it, itEnd) > 0)
-			{
-				targetUser = targetChannel->getUser(*it);
-				if (!targetUser)
-					errCommand(source, ERR_NOSUCHNICK, *it, "No such user");
+			std::cout << std::distance(it, itEnd) << std::endl;
+			if (std::distance(it, itEnd) > 0 && (targetUser = targetChannel->getUser(*it)))
 				it++;
-			}
 
 			if (targetUser)
 			{
@@ -810,9 +805,11 @@ void	Server::mode(const t_commandParams &commandParams)
 						modeStatus = targetChannel->removeUserMode(targetUser, modes[i]);
 
 					if (modeStatus == MODE_CHANGED)
-						std::cout << "Changed : " << modes[i] << std::endl;
+						source->receiveMessage(getCommandResponse(source, "MODE",
+							targetChannel->getName() + " " + sign + modes[i], ""));
 					else if (modeStatus == MODE_INVALID)
-						std::cout << "Invalid : " << modes[i] << std::endl;
+						errCommand(source, ERR_UNKNOWNMODE,
+							"", "Unknown mode char");
 				}
 			}
 			else
@@ -822,10 +819,15 @@ void	Server::mode(const t_commandParams &commandParams)
 
 				for (size_t i = 0; i < modes.length(); i++)
 				{
+					std::string	argument;
+
 					if (sign == '+')
 					{
 						if (modes[i] == 'k' || modes[i] == 'l')
-							modeStatus = targetChannel->addChannelMode(modes[i], *it++);
+						{
+							modeStatus = targetChannel->addChannelMode(modes[i], *it);
+							argument = " " + *it++;
+						}
 						else
 							modeStatus = targetChannel->addChannelMode(modes[i], "");
 					}
@@ -833,15 +835,17 @@ void	Server::mode(const t_commandParams &commandParams)
 						modeStatus = targetChannel->removeChannelMode(modes[i]);
 
 					if (modeStatus == MODE_CHANGED)
-						std::cout << "Changed : " << modes[i] << std::endl;
+						source->receiveMessage(getCommandResponse(source, "MODE",
+							targetChannel->getName() + " " + sign + modes[i] + argument, ""));
 					else if (modeStatus == MODE_INVALID)
-						std::cout << "Invalid : " << modes[i] << std::endl;
+						errCommand(source, ERR_UNKNOWNMODE,
+							"", "Unknown mode char");
 				}
 			}
 		}
 		else
 			source->receiveMessage(getServerResponse(source, RPL_CHANNELMODEIS,
-				info + " " + targetChannel->getChannelModes(), ""));
+				targetChannel->getName() + " " + targetChannel->getChannelModes(), ""));
 	}
 	else if (!targetChannel && targetClient)
 	{
@@ -1477,41 +1481,17 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams
 					if (!targetChannel)
 					{
 						targetClient = getClient(arg);
-						if (targetClient)
+						if (!targetClient)
 							errCommand(source, ERR_NOSUCHNICK, arg, "No such user");
 					}
 					else
 						modes = "+" + arg;
 					break ;
-					/*
-					if (getClient(arg))
-					{
-						if (!targetChannel)
-							targetChannel = source->getActiveChannel();
-
-						if (targetChannel)
-						{
-							targetUser = targetChannel->getUser(arg);
-							if (!targetUser)
-								errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
-									"User not found in channel");
-						}
-						else
-							errCommand(source, ERR_NOTONCHANNEL, "",
-								"You are not on target channel");
-					}
-					else
-					{
-						if (modes.empty())
-							modes = "+" + arg;
-					}
-					break ;
-					*/
 			}
 		}
 	}
 
-	if (!targetChannel)
+	if (!targetClient && !targetChannel)
 	{
 		targetChannel = source->getActiveChannel();
 		if (!targetChannel)
