@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 00:08:22 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:18:43 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -806,7 +806,8 @@ void	Server::mode(const t_commandParams &commandParams)
 
 					if (modeStatus == MODE_CHANGED)
 						source->receiveMessage(getCommandResponse(source, "MODE",
-							targetChannel->getName() + " " + sign + modes[i], ""));
+							targetChannel->getName() + " " + sign + modes[i]
+							+ " " + targetUser->client->getNickname(), ""));
 					else if (modeStatus == MODE_INVALID)
 						errCommand(source, ERR_UNKNOWNMODE,
 							"", "Unknown mode char");
@@ -825,8 +826,11 @@ void	Server::mode(const t_commandParams &commandParams)
 					{
 						if (modes[i] == 'k' || modes[i] == 'l')
 						{
-							modeStatus = targetChannel->addChannelMode(modes[i], *it);
-							argument = " " + *it++;
+							modeStatus = targetChannel->addChannelMode(modes[i], *it++);
+							if (modes[i] == 'k')
+								argument = " " + targetChannel->getPassword();
+							else if (modes[i] == 'l')
+								argument = " " + targetChannel->getUserLimit();
 						}
 						else
 							modeStatus = targetChannel->addChannelMode(modes[i], "");
