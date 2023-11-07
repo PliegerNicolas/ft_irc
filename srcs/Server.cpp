@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 00:30:53 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 00:38:54 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1222,7 +1222,7 @@ void	Server::part(const t_commandParams &commandParams)
 
 void	Server::pass(const t_commandParams &commandParams)
 {
-	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+	if (areBitsNotSet(commandParams.mask, SOURCE))
 		return ;
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
