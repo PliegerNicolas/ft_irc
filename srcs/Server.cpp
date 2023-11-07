@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/06 20:42:54 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/07 15:44:33 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -500,8 +500,6 @@ void	Server::join(const t_commandParams &commandParams)
 	Client				*source = commandParams.source;
 	const std::string	&channelName = commandParams.arguments[0];
 
-	// Implement +i management somewhere.
-
 	if (channelName[0] != '#')
 		errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 
@@ -524,7 +522,11 @@ void	Server::join(const t_commandParams &commandParams)
 		targetChannel = new Channel(channelName);
 		_channels[channelName] = targetChannel;
 		source->joinChannel(targetChannel);
+		targetChannel->setUserModesMask(targetChannel->getUser(source->getNickname()),
+			Channel::OWNER);
 	}
+
+	// +i management (invite only)
 
 	if (areBitsSet(targetChannel->getChannelModesMask(), Channel::INVITE_ONLY)
 		&& targetChannel->isInvited(source))
@@ -799,7 +801,7 @@ void	Server::mode(const t_commandParams &commandParams)
 
 				if (modeStatus == MODE_CHANGED)
 					source->receiveMessage(getCommandResponse(source, "MODE",
-						info + " " + sign + modes[i], ""));
+						info + " " + sign + modes[i], "")); // add  password change ?
 			}
 		}
 	}
@@ -1389,8 +1391,6 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams
 					{
 						if (modes.empty())
 							modes = "+" + arg;
-						//else
-						//	errCommand(source, ERR_UNKNOWNCOMMAND, arg, "Unknown command");
 					}
 					break ;
 			}

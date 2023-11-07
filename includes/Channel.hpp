@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/05 23:31:59 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/07 15:54:41 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,6 +115,8 @@ class	Channel
 
 		const std::string	&getName(void) const;
 		const std::string	&getTopic(void) const;
+		const std::string	getUserLimit(void) const;
+		const std::string	&getPassword(void) const;
 
 		const std::string	getChannelModes(void) const;
 		int					getChannelModesMask(void) const;
@@ -124,6 +126,8 @@ class	Channel
 		// SETTERS
 
 		void				setTopic(const std::string &topic);
+		void				setUserLimit(const std::string &userLimit);
+		void				setPassword(const std::string &password);
 
 		void				setChannelModesMask(const int &mask);
 		void				setUserModesMask(User *targetUser, const int &mask);
@@ -136,12 +140,6 @@ class	Channel
 		static int			defaultAdminPerms(void);
 		static int			defaultOwnerPerms(void);
 
-		static int			channelModeToMask(const char &mode);
-		static std::string	channelMaskToModes(const int &mask);
-
-		static int			userModeToMask(const char &mode);
-		static std::string	userMaskToModes(const int &mask);
-
 	protected:
 		/* Attributs */
 
@@ -153,12 +151,13 @@ class	Channel
 		/* Attributs */
 		std::string	_name;
 		std::string	_topic;
+		int			_modesMask;
 
 		Users		_users;
 		Clients		_invitedClients;
 
 		int			_userLimit;
-		int			_modesMask;
+		std::string	_password;
 
 		/* Constructors & Destructors */
 		Channel(void);
@@ -169,4 +168,12 @@ class	Channel
 		// GETTERS
 
 		// SETTERS
+
+		/* Static functions */
+
+		static int			channelModeToMask(const char &mode);
+		static std::string	channelMaskToModes(const int &mask);
+
+		static int			userModeToMask(const char &mode);
+		static std::string	userMaskToModes(const int &mask);
 };

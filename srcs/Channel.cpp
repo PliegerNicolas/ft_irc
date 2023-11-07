@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/06 20:15:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/07 15:54:32 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,9 @@
 
 Channel::Channel(const std::string &name):
 	_name(truncate(name, MAX_CHANNELNAME_LEN)),
+	_modesMask(NO_EXTERNAL_MESSAGES | TOPIC_LOCK),
 	_userLimit(-1),
-	_modesMask(NO_EXTERNAL_MESSAGES | TOPIC_LOCK)
+	_password("")
 {
 	if (DEBUG)
 	{
@@ -33,10 +34,11 @@ Channel::Channel(const std::string &name):
 Channel::Channel(const Channel &other):
 	_name(other._name),
 	_topic(other._topic),
+	_modesMask(other._modesMask),
 	_users(other._users),
 	_invitedClients(other._invitedClients),
 	_userLimit(other._userLimit),
-	_modesMask(other._modesMask)
+	_password(other._password)
 {
 	if (DEBUG)
 	{
@@ -59,10 +61,11 @@ Channel	&Channel::operator=(const Channel &other)
 	{
 		_name = other._name;
 		_topic = other._topic;
+		_modesMask = other._modesMask;
 		_users = other._users;
 		_invitedClients = other._invitedClients;
 		_userLimit = other._userLimit;
-		_modesMask = other._modesMask;
+		_password = other._password;
 	}
 
 	return (*this);
@@ -82,8 +85,9 @@ Channel::~Channel(void)
 
 Channel::Channel(void):
 	_name(""),
+	_modesMask(0),
 	_userLimit(-1),
-	_modesMask(0)
+	_password("")
 {
 	if (DEBUG)
 	{
@@ -294,6 +298,19 @@ const std::string	&Channel::getTopic(void) const
 	return (_topic);
 }
 
+const std::string	Channel::getUserLimit(void) const
+{
+	std::ostringstream	oss;
+
+	oss << _userLimit;
+	return (oss.str());
+}
+
+const std::string &Channel::getPassword(void) const
+{
+	return (_password);
+}
+
 Channel::User	*Channel::getUser(const std::string &nickname)
 {
 	UsersIterator	it = _users.begin();
@@ -346,6 +363,24 @@ void	Channel::setTopic(const std::string &topic)
 	_topic = truncate(topic, MAX_TOPIC_LEN);
 }
 
+void	Channel::setUserLimit(const std::string &userLimit)
+{
+	int	limit;
+	std::istringstream	iss(userLimit);
+
+	if (iss >> limit)
+		_userLimit = limit;
+	else
+	{
+		// Error message ? Keep the old value.
+	}
+}
+
+void	Channel::setPassword(const std::string &password)
+{
+	_password = password;
+}
+
 void	Channel::setChannelModesMask(const int &mask)
 {
 	setBits(_modesMask, mask);
@@ -363,6 +398,8 @@ void	Channel::setUserModesMask(User *targetUser, const int &mask)
 	/* Private */
 
 /* Static functions */
+
+	/* Public */
 
 int	Channel::defaultUserPerms(void)
 {
@@ -388,6 +425,9 @@ int	Channel::defaultOwnerPerms(void)
 {
 	return (INVISIBLE | SERVER_NOTICE | VOICE | ADMIN | OWNER);
 }
+
+	/* Protected */
+	/* Private */
 
 int	Channel::channelModeToMask(const char &mode)
 {
