@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/07 16:35:38 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/07 16:45:08 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,10 +217,20 @@ int	Channel::addChannelMode(const char &mode, const std::string &argument)
 	else
 	{
 		if (mask == KEY_PASS)
+		{
 			setPassword(argument);
+			setBits(_modesMask, mask);
+		}
 		else if (mask == USER_LIMIT)
+		{
 			setUserLimit(argument);
-		setBits(_modesMask, mask);
+
+			if (areBitsSet(_modesMask, USER_LIMIT) && _userLimit == -1)
+				removeBits(_modesMask, mask);
+			else
+				setBits(_modesMask, mask);
+		}
+
 		return (MODE_CHANGED);
 	}
 }
