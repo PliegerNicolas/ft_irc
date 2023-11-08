@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 01:30:32 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 01:48:16 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ Client::Client(const ASocket::t_socket &serverSocket):
 	_activeChannel(NULL),
 	_serverPermissions(0),
 	_connectionRetries(1),
+	_modesMask(HIDE_HOSTNAME),
 	_nickname("*"),
 	_username("*"),
 	_hostname("*"),
@@ -40,6 +41,7 @@ Client::Client(const Client &other):
 	_activeChannel(other._activeChannel),
 	_serverPermissions(other._serverPermissions),
 	_connectionRetries(other._connectionRetries),
+	_modesMask(other._modesMask),
 	_nickname(other._nickname),
 	_username(other._username),
 	_hostname(other._hostname),
@@ -70,6 +72,7 @@ Client	&Client::operator=(const Client &other)
 		_activeChannel = other._activeChannel;
 		_serverPermissions = other._serverPermissions;
 		_connectionRetries = other._connectionRetries;
+		_modesMask = other._modesMask;
 		_nickname = other._nickname;
 		_username = other._username;
 		_hostname = other._hostname;
@@ -98,6 +101,7 @@ Client::Client(void):
 	_activeChannel(NULL),
 	_serverPermissions(0),
 	_connectionRetries(1),
+	_modesMask(0),
 	_nickname("*"),
 	_username("*"),
 	_hostname("*"),
@@ -183,6 +187,32 @@ void	Client::quitChannel(Channel *channel)
 	_activeChannel = NULL;
 }
 
+int	Client::addClientMode(const char &mode, const std::string &argument)
+{
+	int	mask = Client::clientModeToMask(mode);
+
+	(void)argument;
+
+	if (!mask)
+		return (MODE_INVALID);
+	else if (areBitsSet(_modesMask, mask))
+		return (MODE_UNCHANGED);
+	else
+		return (setBits(_modesMask, mask), MODE_CHANGED);
+}
+
+int	Client::removeClientMode(const char &mode)
+{
+	int	mask = Client::clientModeToMask(mode);
+
+	if (!mask)
+		return (MODE_INVALID);
+	else if (areBitsNotSet(_modesMask, mask))
+		return (MODE_UNCHANGED);
+	else
+		return (removeBits(_modesMask, mask), MODE_CHANGED);
+}
+
 	/* Protected */
 	/* Private */
 
@@ -244,6 +274,16 @@ Channel::Channels	&Client::getJoinedChannels(void)
 Channel	*Client::getActiveChannel(void)
 {
 	return (_activeChannel);
+}
+
+const std::string	Client::getClientModes(void) const
+{
+	return (Client::clientMaskToModes(_modesMask));
+}
+
+int	Client::getClientModesMask(void) const
+{
+	return (_modesMask);
 }
 
 	/* Protected */

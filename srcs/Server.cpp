@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 00:38:54 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 01:37:35 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -856,14 +856,26 @@ void	Server::mode(const t_commandParams &commandParams)
 		// Set user's global perms
 		if (!modes.empty())
 		{
+			int	modeStatus = MODE_UNCHANGED;
+
 			for (size_t i = 0; i < modes.length(); i++)
 			{
-				// Well need new functions.
+				if (sign == '+')
+					modeStatus = targetClient->addClientMode(modes[i], "");
+				else if (sign == '-')
+					modeStatus = targetClient->removeClientMode(modes[i]);
+
+				if (modeStatus == MODE_CHANGED)
+					source->receiveMessage(getCommandResponse(source, "MODE",
+						targetClient->getNickname() + " " + sign + modes[i], ""));
+				else if (modeStatus == MODE_INVALID)
+					errCommand(source, ERR_UNKNOWNMODE,
+						targetClient->getNickname() + " " + sign + modes[i], "Unknown mode char");
 			}
 		}
 		else
 			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
-				targetClient->getNickname()/* + " " + targetClient->getClientModes()*/, ""));
+				targetClient->getNickname() + " " + targetClient->getClientModes(), ""));
 	}
 }
 

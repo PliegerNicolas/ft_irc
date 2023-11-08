@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 01:29:20 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 01:43:42 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,10 @@
 #include <map>
 
 // MACROS
+
+#define MODE_CHANGED 1
+#define MODE_UNCHANGED 0
+#define MODE_INVALID -1
 
 #define MODES_CLIENT "iwoxz"
 
@@ -78,6 +82,9 @@ class	Client
 		void				joinChannel(Channel *channel);
 		void				quitChannel(Channel *channel);
 
+		int					addClientMode(const char &mode, const std::string &argument);
+		int					removeClientMode(const char &mode);
+
 		// Getter
 		std::string			&getBuffer(void);
 		int					getSocketFd(void) const;
@@ -92,6 +99,9 @@ class	Client
 		Channels			&getJoinedChannels(void);
 		Channel				*getActiveChannel(void);
 
+		const std::string	getClientModes(void) const; // implement
+		int					getClientModesMask(void) const; // implement
+
 		// Setter
 		void				setNickname(const std::string &nickname);
 		void				setUsername(const std::string &username);
@@ -102,7 +112,7 @@ class	Client
 		void				setActiveChannel(Channel *channel);
 
 		/* Static */
-		static bool			isClientMode(const char &mode); // implement
+		static bool			isClientMode(const char &mode);
 
 	protected:
 		/* Attributs */
@@ -120,6 +130,7 @@ class	Client
 		int					_serverPermissions;
 		std::string			_password; // encryption :(
 		short				_connectionRetries;
+		int					_modesMask;
 
 		std::string			_nickname;
 		std::string			_username;
