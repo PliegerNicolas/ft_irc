@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 01:37:35 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 01:55:21 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -788,7 +788,6 @@ void	Server::mode(const t_commandParams &commandParams)
 			Channel::User	*targetUser = NULL;
 			int				modeStatus = MODE_UNCHANGED;
 
-			std::cout << std::distance(it, itEnd) << std::endl;
 			if (std::distance(it, itEnd) > 0 && (targetUser = targetChannel->getUser(*it)))
 				it++;
 
