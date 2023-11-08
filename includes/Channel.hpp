@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/08 00:33:56 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 01:23:39 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,17 +39,17 @@ class	Channel
 
 		typedef enum ChannelMode
 		{
-			TOPIC_LOCK = (1 << 0),				// Topic can only be modified by a moderator.
+			TOPIC_LOCK = (1 << 0),				// Topic can only be modified by a moderator (t)
 			INVITE_ONLY = (1 << 1),				// Can only be accessed if invited by someone
-												// with invite privileges.
-			NO_EXTERNAL_MESSAGES = (1 << 2),	// No messages from outside but announcements.
+												// with invite privileges (i)
+			NO_EXTERNAL_MESSAGES = (1 << 2),	// No messages from outside but announcements (n)
 			MODERATED = (1 << 3),				// Only users with voice or higher modes are allowed
-												//to talk (PRIVMSG or NOTICE)
-			USER_LIMIT = (1 << 4),				// user limit is set.
-			KEY_PASS = (1 << 5),				// Needs a password to join.
-			PRIVATE = (1 << 6),					// Hidden from channels list.
+												//to talk (PRIVMSG or NOTICE) (m)
+			USER_LIMIT = (1 << 4),				// user limit is set (l)
+			KEY_PASS = (1 << 5),				// Needs a password to join (k)
+			PRIVATE = (1 << 6),					// Channel's Member list hidden (p)
 			SECRET = (1 << 7)					// Channel is hidden from channels list
-												// + disable NAMES.
+												// + disable NAMES (s)
 		}	t_channelMode;
 
 		typedef enum UserMode

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/03 01:59:47 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 01:30:32 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -311,3 +311,52 @@ void	Client::setActiveChannel(Channel *channel)
 
 	/* Protected */
 	/* Private */
+
+/* Static */
+
+	/* Public */
+
+bool	Client::isClientMode(const char &mode)
+{
+	if (strchr(MODES_CLIENT, mode))
+		return (true);
+	return (false);
+}
+
+	/* Protected */
+	/* Private */
+
+int	Client::clientModeToMask(const char &mode)
+{
+	switch (mode)
+	{
+		case 'i':
+			return (INVISIBLE);
+		case 'w':
+			return (WALLOPS);
+		case 'o':
+			return (OPERATOR);
+		case 'x':
+			return (SSL_TLS);
+		case 'z':
+			return (HIDE_HOSTNAME);
+		default:
+			return (0);
+	}
+}
+
+std::string	Client::clientMaskToModes(const int &mask)
+{
+	std::string	modes;
+	const char	*clientModes = MODES_CLIENT;
+
+	for (size_t shift = 0; shift < strlen(clientModes); shift++)
+	{
+		if((mask >> shift) & 1)
+			modes += clientModes[shift];
+	}
+
+	if (modes.empty())
+		return ("");
+	return ("+" + modes);
+}
