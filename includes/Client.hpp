@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 00:35:35 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 01:29:20 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 
 // MACROS
 
+#define MODES_CLIENT "iwoxz"
+
 class	Server;
 class	Channel;
 
@@ -36,13 +38,14 @@ class	Client
 			IDENTIFIED = (1 << 1)
 		}	t_serverPermissions;
 
-		/*
 		typedef enum ClientMode
 		{
-			SSL_TLS = (1 << 1),					// connected in SSL mode. Not used in our case.
-			INVISIBLE = (1 << 0)
+			INVISIBLE = (1 << 0),				// Invisible in channel user lists or queries (i)
+			WALLOPS = (1 << 1),					// Allow server-wide notifications reception (w)
+			OPERATOR = (1 << 2),				// General operator privileges (o)
+			SSL_TLS = (1 << 3),					// connected in SSL mode (x)
+			HIDE_HOSTNAME = (1 << 4)			// Secure connection. Hides user's hostname (z)
 		}	t_clientMode;
-		*/
 
 		typedef std::vector<Client*>			Clients;
 		typedef std::map<std::string, Channel*>	Channels;
@@ -98,6 +101,9 @@ class	Client
 		void				setServerPermissions(const int &mask);
 		void				setActiveChannel(Channel *channel);
 
+		/* Static */
+		static bool			isClientMode(const char &mode); // implement
+
 	protected:
 		/* Attributs */
 
@@ -127,4 +133,8 @@ class	Client
 		Client(void);
 
 		/* Member functions */
+
+		/* Static */
+		static int			clientModeToMask(const char &mode);
+		static std::string	clientMaskToModes(const int &mask);
 };
