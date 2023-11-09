@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/09 22:42:55 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/09 23:52:19 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ void	Server::deleteClients(void)
 {
 	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		(*it)->closeSocketFd();
+		//(*it)->closeSocketFd();
 		delete *it;
 	}
 	_clients.clear();
@@ -299,15 +299,12 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
-	Client::ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
-
-	// Should disconnect from channel(s) also. This transmits privileges if no one has them.
+	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
 
 	delete *clientIt;
 	_clients.erase(clientIt);
 
-	_pollFds.erase(_pollFds.begin() + i);
-	i--;
+	_pollFds.erase(_pollFds.begin() + i--);
 }
 
 /* ************************************************************************** */
@@ -385,15 +382,11 @@ Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *poll
 /* *                           Command Functions                            * */
 /* ************************************************************************** */
 
-/**
- *	CAP and it's subcommands communicate capabilities of server.
- *	No specific capabilities are available on our Server -yet-.
-**/
 void	Server::cap(const t_commandParams &commandParams)
 {
 	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (commandParams.arguments.size() > 1)
+	else if (commandParams.arguments.size() > 2)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	const Client	*source = commandParams.source;
@@ -480,14 +473,9 @@ void	Server::quit(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 0)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// clear necessary data if needed ? No response expected.
-
 	commandParams.pollFd->revents |= POLLHUP;
 }
 
-/**
- *	JOIN handles connection tentatives to a Channel and Channel creation.
-**/
 void	Server::join(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -549,9 +537,8 @@ void	Server::join(const t_commandParams &commandParams)
 	names(commandParams);
 }
 
-/**
- *	WHOIS shows information about a user.
-**/
+// Stopped here
+
 void	Server::whois(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -563,37 +550,45 @@ void	Server::whois(const t_commandParams &commandParams)
 
 	const Client		*source = commandParams.source;
 	const std::string	&targetName = commandParams.arguments[0];
-	std::string			info;
 
-	if (targetName[0] != '#')
+	Client				*targetClient = getClient(targetName);
+
+	if (targetName[0] != '#' || !targetClient)
 	{
-		Client	*targetClient = getClient(targetName);
-
-		std::cout << targetClient->getHostname() << std::endl;
-		std::cout << targetClient->getUsername() << std::endl;
-
-		if (targetClient)
 		{
-			info = targetName;
-			info += " " + targetClient->getHostname();
-			info += " " + targetClient->getServername();
+			std::string	info = targetClient->getNickname();
+
+			if (areBitsSet(targetClient->getClientModesMask(), Client::OPERATOR))
+				info += " ~" + targetClient->getUsername();
+			else
+				info += " " + targetClient->getUsername();
+
+			if (!targetClient->getHostname().empty())
+				info += " " + targetClient->getHostname();
+			else
+				info += " *";
+
 			info += " *";
 
 			source->receiveMessage(getServerResponse(source, RPL_WHOISUSER, info,
 				targetClient->getRealname()));
+		}
+		{
+			std::string	info = "is using modes " + targetClient->getClientModes();
 
-			info = targetName;
-			info += " " + _serverSockets.getHostname();
+			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+				targetClient->getNickname(), info));
+		}
 
-			source->receiveMessage(getServerResponse(source, RPL_WHOISSERVER, info,
-				SERVER_VERSION));
+		if (targetClient->getActiveChannel())
+		{
+			Channel		*targetChannel = targetClient->getActiveChannel();
 
-			info = targetName;
+			// Add @ if operator of channel or status points like that.
+			std::string	info = targetChannel->getName();
 
-			Channel	*activeChannel = targetClient->getActiveChannel();
-			if (activeChannel)
-				source->receiveMessage(getServerResponse(source, RPL_WHOISCHANNELS, info,
-					activeChannel->getName()));
+			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+				targetClient->getNickname(), info));
 		}
 	}
 	else

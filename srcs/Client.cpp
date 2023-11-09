@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/09 22:28:34 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/09 23:10:05 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,16 @@ Client::~Client(void)
 		std::cout << "Client: default destructor called.";
 		std::cout << WHITE;
 	}
+
+	_activeChannel = NULL;
+
+	for (ChannelsIterator it = _joinedChannels.begin(); it != _joinedChannels.end(); it++)
+	{
+		it->second->removeInvitation(this);
+		it->second->removeUser(this);
+		// Handle permission transmission if last operator on channel.
+	}
+	_joinedChannels.clear();
 }
 	/* Protected */
 	/* Private */
