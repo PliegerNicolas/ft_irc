@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/08 00:34:02 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/08 01:57:07 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -435,12 +435,12 @@ int	Channel::defaultOpsPerms(void)
 
 int	Channel::defaultAdminPerms(void)
 {
-	return (VOICE | ADMIN);
+	return (VOICE | OPERATOR | ADMIN);
 }
 
 int	Channel::defaultOwnerPerms(void)
 {
-	return (VOICE | OWNER);
+	return (VOICE | OPERATOR | OWNER);
 }
 
 bool	Channel::isChannelMode(const char &mode)

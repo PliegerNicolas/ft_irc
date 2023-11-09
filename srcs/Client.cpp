@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 01:48:16 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/09 22:28:34 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -399,4 +399,11 @@ std::string	Client::clientMaskToModes(const int &mask)
 	if (modes.empty())
 		return ("");
 	return ("+" + modes);
+}
+
+bool	Client::isValidNickname(const std::string &nickname)
+{
+	if (nickname.empty() || nickname.length() > MAX_NICKNAME_LEN || nickname[0] == '#')
+		return (false);
+	return (true);
 }

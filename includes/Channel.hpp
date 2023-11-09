@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/08 01:23:39 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/09 22:32:28 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,9 @@
 
 #define MODES_CHANNEL "tinmlkps"
 #define MODES_USER "hoaq"
+
+#define MAX_TOPIC_LEN 306
+#define MAX_CHANNELNAME_LEN 50
 
 class	Server;
 class	Client;

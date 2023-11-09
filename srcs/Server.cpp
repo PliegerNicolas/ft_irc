@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 01:55:21 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/09 22:42:55 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -393,6 +393,8 @@ void	Server::cap(const t_commandParams &commandParams)
 {
 	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 1)
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	const Client	*source = commandParams.source;
 	std::string		subcommand = commandParams.arguments[0];
@@ -417,9 +419,6 @@ void	Server::cap(const t_commandParams &commandParams)
 			"Unknown subcommand", subcommand));
 }
 
-/**
- *	NICK sets or changes the user's nickname. It's reference and unique identifier.
-**/
 void	Server::nick(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED))
@@ -432,7 +431,7 @@ void	Server::nick(const t_commandParams &commandParams)
 	Client				*source = commandParams.source;
 	const std::string	&nickname = commandParams.arguments[0];
 
-	if (nickname.length() > MAX_NICKNAME_LEN || nickname[0] == '#')
+	if (!Client::isValidNickname(nickname))
 		errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 	{
@@ -471,6 +470,7 @@ void	Server::user(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"Welcome to our Internet Relay Chat Network !"));
+	motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
 }
 
 void	Server::quit(const t_commandParams &commandParams)
@@ -711,7 +711,7 @@ void	Server::kick(const t_commandParams &commandParams)
 	{
 		const std::string	&nickname = commandParams.arguments[0];
 
-		if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LEN)
+		if (!Client::isValidNickname(nickname))
 			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = source->getActiveChannel();
@@ -730,7 +730,7 @@ void	Server::kick(const t_commandParams &commandParams)
 
 		if (channelName[0] != '#')
 			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
-		else if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LEN)
+		else if (!Client::isValidNickname(nickname))
 			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = getChannel(channelName);
@@ -959,7 +959,7 @@ void	Server::invite(const t_commandParams &commandParams)
 			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
 	}
 
-	if (targetNickname[0] == '#' || targetNickname.length() > MAX_NICKNAME_LEN)
+	if (Client::isValidNickname(targetNickname))
 		errCommand(source, ERR_ERRONEUSNICKNAME, targetNickname, "Erroneous Nickname");
 	else if (targetChannel->getUser(targetNickname))
 		errCommand(source, ERR_USERONCHANNEL, targetNickname, "User already on channel");
@@ -1014,7 +1014,7 @@ void	Server::uninvite(const t_commandParams &commandParams)
 			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
 	}
 
-	if (targetNickname[0] == '#' || targetNickname.length() > MAX_NICKNAME_LEN)
+	if (!Client::isValidNickname(targetNickname))
 		errCommand(source, ERR_ERRONEUSNICKNAME, targetNickname, "Erroneous Nickname");
 	else if (targetChannel->getUser(targetNickname))
 		errCommand(source, ERR_USERONCHANNEL, targetNickname, "User already on channel");
@@ -1432,7 +1432,13 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams
 	}
 
 	if (!targetClient && !targetChannel)
-		targetClient = source;
+	{
+		Channel	*activeChannel = source->getActiveChannel();
+		if (activeChannel)
+			targetChannel = activeChannel;
+		else
+			targetClient = source;
+	}
 
 	return (it);
 }
@@ -1450,7 +1456,7 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams
 	/* Private */
 
 Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd *pollFd,
-	std::vector<std::string> &arguments, std::string &message)
+	const Arguments &arguments, const std::string &message)
 {
 	t_commandParams	commandParameters;
 

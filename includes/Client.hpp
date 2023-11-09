@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 01:43:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/09 22:32:00 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,9 @@
 #define MODE_INVALID -1
 
 #define MODES_CLIENT "iwoxz"
+
+#define MAX_USERNAME_LEN 18
+#define MAX_NICKNAME_LEN 9
 
 class	Server;
 class	Channel;
@@ -113,6 +116,7 @@ class	Client
 
 		/* Static */
 		static bool			isClientMode(const char &mode);
+		static bool			isValidNickname(const std::string &nickname);
 
 	protected:
 		/* Attributs */
