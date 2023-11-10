@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/09 23:10:05 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/10 14:45:00 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -296,6 +296,16 @@ int	Client::getClientModesMask(void) const
 	return (_modesMask);
 }
 
+const std::string	Client::getPrefix(void) const
+{
+	std::string	prefix;
+
+	if (areBitsSet(_modesMask, OPERATOR))
+		prefix += "~";
+
+	return (prefix);
+}
+
 	/* Protected */
 	/* Private */
 
@@ -349,14 +359,21 @@ void	Client::setRealname(const std::string &realname)
 	_realname = realname;
 }
 
+void	Client::setActiveChannel(Channel *channel)
+{
+	_activeChannel = channel;
+}
+
+
+
 void	Client::setServerPermissions(const int &mask)
 {
 	setBits(_serverPermissions, mask);
 }
 
-void	Client::setActiveChannel(Channel *channel)
+void	Client::setClientModesMask(const int &mask)
 {
-	_activeChannel = channel;
+	setBits(_modesMask, mask);
 }
 
 	/* Protected */

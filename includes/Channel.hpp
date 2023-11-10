@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/09 22:32:28 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/10 15:08:37 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,8 +123,10 @@ class	Channel
 
 		const std::string	getChannelModes(void) const;
 		int					getChannelModesMask(void) const;
-		const std::string	getUserModes(const User *targetUser);
-		int					getUserModesMask(const User *targetUser);
+		const std::string	getUserModes(const User *targetUser) const;
+		int					getUserModesMask(const User *targetUser) const;
+
+		const std::string	getUserPrefix(User *targetUser) const;
 
 		// SETTERS
 

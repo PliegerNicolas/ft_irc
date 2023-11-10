@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/10 14:30:14 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/10 15:00:18 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -290,7 +290,7 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 
 
 		if (_clients.size() <= 0)
-			client->setServerPermissions(Client::OPERATOR);
+			client->setClientModesMask(Client::OPERATOR);
 
 		_clients.push_back(client);
 		_pollFds.push_back(clientPollFd);
@@ -541,8 +541,6 @@ void	Server::join(const t_commandParams &commandParams)
 	names(commandParams);
 }
 
-// Stopped here
-
 void	Server::whois(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -557,15 +555,12 @@ void	Server::whois(const t_commandParams &commandParams)
 
 	Client				*targetClient = getClient(targetName);
 
-	if (targetName[0] != '#' || !targetClient)
+	if (targetName[0] != '#' && targetClient)
 	{
 		{
 			std::string	info = targetClient->getNickname();
 
-			if (areBitsSet(targetClient->getClientModesMask(), Client::OPERATOR))
-				info += " ~" + targetClient->getUsername();
-			else
-				info += " " + targetClient->getUsername();
+			info += " " + targetClient->getPrefix() + targetClient->getUsername();
 
 			if (!targetClient->getHostname().empty())
 				info += " " + targetClient->getHostname();
@@ -584,12 +579,10 @@ void	Server::whois(const t_commandParams &commandParams)
 				targetClient->getNickname(), info));
 		}
 
-		if (targetClient->getActiveChannel())
+		if (areBitsSet(targetClient->getClientModesMask(), Client::INVISIBLE)
+			&& targetClient->getActiveChannel())
 		{
-			Channel		*targetChannel = targetClient->getActiveChannel();
-
-			// Add @ if operator of channel or status points like that.
-			std::string	info = targetChannel->getName();
+			std::string	info = targetClient->getActiveChannel()->getName();
 
 			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
 				targetClient->getNickname(), info));
@@ -602,10 +595,8 @@ void	Server::whois(const t_commandParams &commandParams)
 		"End of /WHOIS list"));
 }
 
-/**
- *	PRIVMSG handles communication between users and users/channels.
- *	It is used by default and targets the user's active channel when no command is given.
-**/
+// Stopped here
+
 void	Server::privmsg(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
