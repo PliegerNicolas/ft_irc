@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/10 15:00:18 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/10 15:49:41 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -595,8 +595,6 @@ void	Server::whois(const t_commandParams &commandParams)
 		"End of /WHOIS list"));
 }
 
-// Stopped here
-
 void	Server::privmsg(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -606,10 +604,10 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	const Client		*source = commandParams.source;
-	std::string			targetName = commandParams.arguments[0];
-	Channel				*targetChannel = NULL;
-	Client				*targetClient = NULL;
+	const Client	*source = commandParams.source;
+	std::string		targetName = commandParams.arguments[0];
+	Channel			*targetChannel = NULL;
+	Client			*targetClient = NULL;
 
 	{
 		const size_t	pos = targetName.find(":");
@@ -633,6 +631,18 @@ void	Server::privmsg(const t_commandParams &commandParams)
 		targetClient = getClient(targetName);
 		if (!targetClient)
 			errCommand(source, ERR_NOSUCHNICK, targetName, "No such user");
+	}
+
+	if (targetChannel
+		&& areBitsSet(targetChannel->getChannelModesMask(), Channel::MODERATED)
+		&& areBitsNotSet(source->getClientModesMask(), Client::OPERATOR))
+	{
+		Channel::User	*user = targetChannel->getUser(source->getNickname());
+
+		if (!user || areBitsNotSet(targetChannel->getUserModesMask(user),
+			Channel::VOICE | Channel::OPERATOR | Channel::ADMIN | Channel::OWNER))
+			errCommand(source, ERR_CANNOTSENDTOCHAN, targetChannel->getName(),
+				"You need voice (+v) (" + targetChannel->getName() + ")");
 	}
 
 	const std::string	delimiter = DELIMITER;
@@ -668,6 +678,8 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	}
 }
 
+// TODO: Implement
+
 void	Server::notice(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -681,9 +693,6 @@ void	Server::notice(const t_commandParams &commandParams)
 	std::cout << "NOTICE command executed." << std::endl;
 }
 
-/**
- *	KICK removes forcefully a user from a Channel, affecting also it's privileges.
-**/
 void	Server::kick(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -914,6 +923,8 @@ void	Server::topic(const t_commandParams &commandParams)
 		source->receiveMessage(getServerResponse(source, RPL_TOPIC,
 			targetChannel->getName(), topic));
 }
+
+// Stopped here
 
 void	Server::invite(const t_commandParams &commandParams)
 {

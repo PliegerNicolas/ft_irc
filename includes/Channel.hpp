@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/10 15:08:37 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/10 15:42:19 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,11 +57,11 @@ class	Channel
 
 		typedef enum UserMode
 		{
-			VOICE = (1 << 2),					// Can speed in moderated channels.
-			HALF_OPERATOR = (1 << 3),			// Become half channel operator.
-			OPERATOR = (1 << 4),				// become channel operator.
-			ADMIN = (1 << 5),					// become channel admin.
-			OWNER = (1 << 6)					// become channel owner.
+			VOICE = (1 << 0),					// Can speed in moderated channels.
+			HALF_OPERATOR = (1 << 1),			// Become half channel operator.
+			OPERATOR = (1 << 2),				// become channel operator.
+			ADMIN = (1 << 3),					// become channel admin.
+			OWNER = (1 << 4)					// become channel owner.
 		}	t_userMode;
 
 		typedef struct User

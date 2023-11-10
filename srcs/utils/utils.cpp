@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/29 11:14:21 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/06 16:08:08 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/10 15:24:49 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,14 +111,15 @@ long int	validatePresenceInString(const std::string &str, const std::string &cha
 
 bool	areBitsSet(const int &mask, const int &bits)
 {
-	if ((mask & bits) == bits)
-		return (true);
-	return (false);
+	return ((mask & bits) == bits);
 }
 
 bool	areBitsNotSet(const int &mask, const int &bits)
 {
-	if ((mask & bits) != bits)
-		return (true);
-	return (false);
+	return ((mask & bits) != bits);
+}
+
+bool	isAtLeastOneBitSet(const int &mask, const int &bits)
+{
+	return ((mask & bits) != 0);
 }

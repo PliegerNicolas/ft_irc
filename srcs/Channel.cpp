@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/10 15:09:02 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/10 15:49:20 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,7 +197,8 @@ bool	Channel::canChangeTopic(const Client *client)
 		return (false);
 	if (areBitsNotSet(_modesMask, TOPIC_LOCK))
 		return (true);
-	else if (areBitsSet(user->modesMask, OPERATOR | ADMIN | OWNER))
+	else if (areBitsSet(user->modesMask, OPERATOR | ADMIN | OWNER)
+		|| areBitsSet(client->getClientModesMask(), OPERATOR))
 		return (true);
 	return (false);
 }
