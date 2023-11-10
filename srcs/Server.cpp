@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/09 23:52:19 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/10 14:30:14 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -287,6 +287,10 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 	{
 		Client			*client = new Client(serverSocket);
 		struct	pollfd	clientPollFd = client->generatePollFd();
+
+
+		if (_clients.size() <= 0)
+			client->setServerPermissions(Client::OPERATOR);
 
 		_clients.push_back(client);
 		_pollFds.push_back(clientPollFd);
