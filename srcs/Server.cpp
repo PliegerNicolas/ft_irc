@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/11 11:05:00 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 11:07:57 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1038,6 +1038,9 @@ void	Server::uninvite(const t_commandParams &commandParams)
 	targetClient->receiveMessage(getCommandResponse(source, "UNINVITE",
 		targetNickname, targetChannel->getName()));
 }
+
+//TODO: add filter mask ? /WHO <name> ["o"] for operator ?
+// Stopped here
 
 void	Server::who(const t_commandParams &commandParams)
 {
