@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/10 15:49:41 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 02:06:24 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -467,7 +467,7 @@ void	Server::user(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"Welcome to our Internet Relay Chat Network !"));
-	motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
+	//motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
 }
 
 void	Server::quit(const t_commandParams &commandParams)
@@ -633,6 +633,11 @@ void	Server::privmsg(const t_commandParams &commandParams)
 			errCommand(source, ERR_NOSUCHNICK, targetName, "No such user");
 	}
 
+	if (targetChannel && !targetChannel->canTalk(source))
+		errCommand(source, ERR_CANNOTSENDTOCHAN, targetChannel->getName(),
+			"You need voice (+v) (" + targetChannel->getName() + ")");
+
+	/*
 	if (targetChannel
 		&& areBitsSet(targetChannel->getChannelModesMask(), Channel::MODERATED)
 		&& areBitsNotSet(source->getClientModesMask(), Client::OPERATOR))
@@ -641,9 +646,8 @@ void	Server::privmsg(const t_commandParams &commandParams)
 
 		if (!user || areBitsNotSet(targetChannel->getUserModesMask(user),
 			Channel::VOICE | Channel::OPERATOR | Channel::ADMIN | Channel::OWNER))
-			errCommand(source, ERR_CANNOTSENDTOCHAN, targetChannel->getName(),
-				"You need voice (+v) (" + targetChannel->getName() + ")");
 	}
+	*/
 
 	const std::string	delimiter = DELIMITER;
 	std::string			buffer = commandParams.message;
@@ -692,6 +696,8 @@ void	Server::notice(const t_commandParams &commandParams)
 	// Sends a server notice to a client, channel or everywhere.
 	std::cout << "NOTICE command executed." << std::endl;
 }
+
+// STOPPED HERE. Wrong person kicked (source instead of target receives msg)
 
 void	Server::kick(const t_commandParams &commandParams)
 {
@@ -745,14 +751,16 @@ void	Server::kick(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
+	std::string		commandResponse;
+	Client			*targetClient = targetUser->client;
+
 	targetUser->client->quitChannel(targetChannel);
 
-	std::string		commandResponse;
 	commandResponse = getCommandResponse(source, "KICK", targetChannel->getName()
-						+ " " + targetUser->client->getNickname(), commandParams.message);
+						+ " " + targetClient->getNickname(), commandParams.message);
 
 	source->receiveMessage(commandResponse);
-	targetUser->client->receiveMessage(commandResponse);
+	targetClient->receiveMessage(commandResponse);
 }
 
 void	Server::mode(const t_commandParams &commandParams)
@@ -784,6 +792,10 @@ void	Server::mode(const t_commandParams &commandParams)
 		// Set channel perms or target user inside of.
 		if (!modes.empty())
 		{
+			if (!targetChannel->canUpdateModes(source))
+				errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED,
+					targetChannel->getName(), "Not enough privileges");
+
 			Channel::User	*targetUser = NULL;
 			int				modeStatus = MODE_UNCHANGED;
 
@@ -854,6 +866,8 @@ void	Server::mode(const t_commandParams &commandParams)
 		// Set user's global perms
 		if (!modes.empty())
 		{
+			// Check perms
+
 			int	modeStatus = MODE_UNCHANGED;
 
 			for (size_t i = 0; i < modes.length(); i++)

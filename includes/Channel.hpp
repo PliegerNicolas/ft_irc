@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/10 15:42:19 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 01:39:36 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,8 @@ class	Channel
 		bool				canKick(const Client *client);
 		bool				canInvite(const Client *client);
 		bool				canChangeTopic(const Client *client);
+		bool				canTalk(const Client *client);
+		bool				canUpdateModes(const Client *client);
 
 		int					addChannelMode(const char &mode, const std::string &argument);
 		int					removeChannelMode(const char &mode);

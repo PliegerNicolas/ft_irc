@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/10 15:49:20 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 01:58:28 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,40 +169,74 @@ bool	Channel::isClientRegistered(const Client* client) const
 
 bool	Channel::canKick(const Client *client)
 {
+	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR))
+		return (true);
+
 	const User	*user = Channel::getUser(client->getNickname());
 
-	if (!user)
-		return (false);
-	if (areBitsSet(user->modesMask, HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
 		return (true);
 	return (false);
 }
 
 bool	Channel::canInvite(const Client *client)
 {
+	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR))
+		return (true);
+
 	const User	*user = Channel::getUser(client->getNickname());
 
-	if (!user)
-		return (false);
-	if (areBitsSet(user->modesMask, HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
 		return (true);
 	return (false);
 }
 
 bool	Channel::canChangeTopic(const Client *client)
 {
+	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR))
+		return (true);
+
 	const User	*user = Channel::getUser(client->getNickname());
 
-	if (!user)
-		return (false);
-	if (areBitsNotSet(_modesMask, TOPIC_LOCK))
+	if (user)
+	{
+		if (areBitsNotSet(_modesMask, TOPIC_LOCK))
+			return (true);
+		else if (isAtLeastOneBitSet(getUserModesMask(user),
+			OPERATOR | ADMIN | OWNER))
+			return (true);
+	}
+	return (false);
+}
+
+bool	Channel::canTalk(const Client *client)
+{
+	if (areBitsNotSet(_modesMask, MODERATED)
+		|| areBitsSet(client->getClientModesMask(), Client::OPERATOR))
 		return (true);
-	else if (areBitsSet(user->modesMask, OPERATOR | ADMIN | OWNER)
-		|| areBitsSet(client->getClientModesMask(), OPERATOR))
+
+	const User	*user = Channel::getUser(client->getNickname());
+
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		VOICE | OPERATOR | ADMIN | OWNER))
 		return (true);
 	return (false);
 }
 
+bool	Channel::canUpdateModes(const Client *client)
+{
+	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR))
+		return (true);
+
+	const User	*user = Channel::getUser(client->getNickname());
+
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		OPERATOR | ADMIN | OWNER))
+		return (true);
+	return (false);
+}
 
 
 
@@ -373,10 +407,12 @@ const std::string	Channel::getUserPrefix(User *targetUser) const
 		return (prefix);
 
 	if (areBitsSet(targetUser->client->getClientModesMask(), Client::OPERATOR)
-		|| areBitsSet(getUserModesMask(targetUser), Channel::OPERATOR))
+		|| isAtLeastOneBitSet(getUserModesMask(targetUser), OPERATOR | ADMIN | OWNER))
 		prefix += "@";
 	else if (areBitsSet(getUserModesMask(targetUser), Channel::VOICE))
 		prefix += "+";
+	else if (areBitsSet(getUserModesMask(targetUser), HALF_OPERATOR))
+		prefix += "%";
 
 	return (prefix);
 }
@@ -523,6 +559,8 @@ int	Channel::userModeToMask(const char &mode)
 {
 	switch (mode)
 	{
+		case 'v':
+			return (VOICE);
 		case 'h':
 			return (HALF_OPERATOR);
 		case 'o':
