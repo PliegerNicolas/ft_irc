@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/11 11:07:57 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 11:56:26 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -442,6 +442,7 @@ void	Server::nick(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"You are now known as " + nickname));
+	motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
 }
 
 void	Server::user(const t_commandParams &commandParams)
@@ -467,7 +468,6 @@ void	Server::user(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"Welcome to our Internet Relay Chat Network !"));
-	//motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
 }
 
 void	Server::quit(const t_commandParams &commandParams)
@@ -1233,9 +1233,33 @@ void	Server::part(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
+	Client	*source = commandParams.source;
+	Channel	*targetChannel = source->getActiveChannel();
+
+	if (!targetChannel)
+		errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+
+	// Check if last operator / owner /admin ...
+	// Upgrade stats of other users relative to this.
+
+	// If channel empty after leave, destroy it.
+
+	source->setActiveChannel(NULL);
+
 	// Leaves a channel. A user can be member of multiple channels at the same time
-	// for persistence.
-	std::cout << "PART command executed." << std::endl;
+	// for persistence ?
+
+	std::string	response;
+
+	if (areBitsSet(commandParams.mask, MESSAGE))
+		response = getCommandResponse(source, "PART",
+			targetChannel->getName(), commandParams.message);
+	else
+		response = getCommandResponse(source, "PART",
+			targetChannel->getName(), "");
+
+	source->broadcastMessageToChannel(targetChannel, response);
+	source->receiveMessage(response);
 }
 
 void	Server::pass(const t_commandParams &commandParams)

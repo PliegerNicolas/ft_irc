@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/11 10:28:57 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 11:39:00 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,9 @@ Channel::~Channel(void)
 		std::cout << "Channel: default destructor called.";
 		std::cout << WHITE;
 	}
+
+	_users.clear();
+	_invitedClients.clear();
 }
 	/* Protected */
 	/* Private */
