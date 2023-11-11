@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/11 19:55:06 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/11 19:59:42 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ void		sendJoke(int sd, std::string channel) {
 	pause = line.find("... ");
 	send_msg(sd, "PRIVMSG #" + channel + " :" + line.substr(0, pause + 3));
 	recv_msg(sd, 0);
-	sleep(5);
+	sleep(3);
 	send_msg(sd, "PRIVMSG #" + channel + " :" + line.substr(pause, line.length()));
 	recv_msg(sd, 0);
 }
