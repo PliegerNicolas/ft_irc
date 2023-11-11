@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/11 15:20:09 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/11 15:41:22 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,10 @@
 #include <cstdlib>
 #include <signal.h>
 #include <poll.h>
+
+#define BOT_FILE "./config/bot.config"
+#define NB_JOKES 86
+#define WAIT 1800
 
 bool	botShutdown = false;
 
@@ -43,7 +47,7 @@ std::string	recv_msg(int sd, bool wait)
 
 	struct timeval tv;
 	if (wait == true)
-		tv.tv_sec = 1800;
+		tv.tv_sec = WAIT;
 	else
 		tv.tv_sec = 2;
 	tv.tv_usec = 0;
@@ -60,16 +64,12 @@ std::string	recv_msg(int sd, bool wait)
 
 void		sendJoke(int sd, std::string channel) {
 	std::string		line;
-	int				line_nb;
-	int				pause;
-	std::ifstream	botFile("./config/bot.config");
+	int				line_nb = 0;
+	int				pause = 0;
+	std::ifstream	botFile(BOT_FILE);
 
-	if (!botFile.is_open()) {
-		std::cerr << "Unable to open the bot's input file" << std::endl;
-		return;
-	}
 	srand(time(NULL));
-	line_nb = std::rand() % 85 + 1;
+	line_nb = std::rand() % NB_JOKES + 1;
 	for (int i = 0; i <= line_nb; i++) {
 		getline(botFile, line);
 	}
@@ -88,6 +88,11 @@ int			main(int ac, char **av)
 		return 1;
 	}
 	signal(SIGINT, signalHandler);
+	std::ifstream	botFile(BOT_FILE);
+	if (botFile.fail()) {
+		std::cerr << "Error: Unable to open " << BOT_FILE << std::endl;
+		return 1;
+	}
 	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_socket == -1) {
 		std::cerr << "Error creating socket." << std::endl;
@@ -98,16 +103,15 @@ int			main(int ac, char **av)
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(std::atoi(av[1]));
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	// connect(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr));
 	if (connect(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
 		std::cerr << "Error connecting to the server: " << errno << std::endl;
 		close(server_socket);
 		return 1;
 	}
-	std::string	nickname = (std::string)av[3];
-	std::string	channel = (std::string)av[4];
+	std::string	nickname = static_cast<std::string>(av[3]);
+	std::string	channel = static_cast<std::string>(av[4]);
 
-	send_msg(server_socket, "PASS " + (std::string)av[2]);
+	send_msg(server_socket, "PASS " + static_cast<std::string>(av[2]));
 	send_msg(server_socket, "NICK " + nickname);
 	while (!recv_msg(server_socket, 1).find("You are now known as")) {
 		nickname += "_";
