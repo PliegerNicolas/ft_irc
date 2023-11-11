@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/11 16:20:49 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/11 16:44:29 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,23 @@ std::string	recv_msg(int sd, bool wait)
 	return (std::string(buffer));
 }
 
+std::string	login(int server_socket, std::string password, std::string nickname, std::string channel)
+{
+	send_msg(server_socket, "PASS " + password);
+	send_msg(server_socket, "NICK " + nickname);
+	while (recv_msg(server_socket, 1).find("You are now known as") == std::string::npos) {
+		nickname += "_";
+		send_msg(server_socket, "NICK " + nickname);
+		sleep(1);
+	}
+	send_msg(server_socket, "USER Bot * * :Mr. Bot");
+	recv_msg(server_socket, 0);
+	send_msg(server_socket, "JOIN #" + channel);
+	send_msg(server_socket, "PRIVMSG #" + channel + " :Hello! my name is " + nickname + ". Send me a message if you want to hear a programming joke :)");
+	recv_msg(server_socket, 0);
+	return (nickname);
+}
+
 void		sendJoke(int sd, std::string channel) {
 	std::string		line;
 	int				line_nb = 0;
@@ -77,23 +94,6 @@ void		sendJoke(int sd, std::string channel) {
 	sleep(5);
 	send_msg(sd, "PRIVMSG #" + channel + " :" + line.substr(pause, line.length()));
 	recv_msg(sd, 0);
-}
-
-std::string	login(int server_socket, std::string password, std::string nickname, std::string channel)
-{
-	send_msg(server_socket, "PASS " + password);
-	send_msg(server_socket, "NICK " + nickname);
-	while (recv_msg(server_socket, 1).find("You are now known as") == std::string::npos) {
-		nickname += "_";
-		send_msg(server_socket, "NICK " + nickname);
-		sleep(1);
-	}
-	send_msg(server_socket, "USER Bot * * :Mr. Bot");
-	recv_msg(server_socket, 0);
-	send_msg(server_socket, "JOIN #" + channel);
-	send_msg(server_socket, "PRIVMSG #" + channel + " :Hello! my name is " + nickname + ". Send me a message if you want to hear a programming joke :)");
-	recv_msg(server_socket, 0);
-	return (nickname);
 }
 
 int			main(int ac, char **av)
