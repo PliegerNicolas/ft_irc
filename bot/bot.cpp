@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/11 16:44:29 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/11 19:55:06 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ int			main(int ac, char **av)
 	nickname = login(server_socket, password, nickname, channel);
 	while (!botShutdown) {
 		std::string	msg = recv_msg(server_socket, 1);
-		if (msg.find("PRIVMSG " + nickname + " ") != std::string::npos || msg.find("@" + nickname + " ") != std::string::npos) {
+		if (msg.find("PRIVMSG " + nickname) != std::string::npos || msg.find("@" + nickname) != std::string::npos) {
 			std::cout << "Recieved: " << msg << std::endl;
 			sendJoke(server_socket, channel);
 		}
