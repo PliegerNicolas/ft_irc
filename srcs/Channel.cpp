@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/11 01:58:28 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 10:28:57 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -195,19 +195,15 @@ bool	Channel::canInvite(const Client *client)
 
 bool	Channel::canChangeTopic(const Client *client)
 {
-	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR))
+	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR)
+		|| areBitsNotSet(_modesMask, TOPIC_LOCK))
 		return (true);
 
 	const User	*user = Channel::getUser(client->getNickname());
 
-	if (user)
-	{
-		if (areBitsNotSet(_modesMask, TOPIC_LOCK))
-			return (true);
-		else if (isAtLeastOneBitSet(getUserModesMask(user),
-			OPERATOR | ADMIN | OWNER))
-			return (true);
-	}
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		OPERATOR | ADMIN | OWNER))
+		return (true);
 	return (false);
 }
 
