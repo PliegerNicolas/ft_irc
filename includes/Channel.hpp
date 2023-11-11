@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/08 01:23:39 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 01:39:36 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,9 @@
 
 #define MODES_CHANNEL "tinmlkps"
 #define MODES_USER "hoaq"
+
+#define MAX_TOPIC_LEN 306
+#define MAX_CHANNELNAME_LEN 50
 
 class	Server;
 class	Client;
@@ -54,11 +57,11 @@ class	Channel
 
 		typedef enum UserMode
 		{
-			VOICE = (1 << 2),					// Can speed in moderated channels.
-			HALF_OPERATOR = (1 << 3),			// Become half channel operator.
-			OPERATOR = (1 << 4),				// become channel operator.
-			ADMIN = (1 << 5),					// become channel admin.
-			OWNER = (1 << 6)					// become channel owner.
+			VOICE = (1 << 0),					// Can speed in moderated channels.
+			HALF_OPERATOR = (1 << 1),			// Become half channel operator.
+			OPERATOR = (1 << 2),				// become channel operator.
+			ADMIN = (1 << 3),					// become channel admin.
+			OWNER = (1 << 4)					// become channel owner.
 		}	t_userMode;
 
 		typedef struct User
@@ -101,6 +104,8 @@ class	Channel
 		bool				canKick(const Client *client);
 		bool				canInvite(const Client *client);
 		bool				canChangeTopic(const Client *client);
+		bool				canTalk(const Client *client);
+		bool				canUpdateModes(const Client *client);
 
 		int					addChannelMode(const char &mode, const std::string &argument);
 		int					removeChannelMode(const char &mode);
@@ -120,8 +125,10 @@ class	Channel
 
 		const std::string	getChannelModes(void) const;
 		int					getChannelModesMask(void) const;
-		const std::string	getUserModes(const User *targetUser);
-		int					getUserModesMask(const User *targetUser);
+		const std::string	getUserModes(const User *targetUser) const;
+		int					getUserModesMask(const User *targetUser) const;
+
+		const std::string	getUserPrefix(User *targetUser) const;
 
 		// SETTERS
 

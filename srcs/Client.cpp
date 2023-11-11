@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 01:48:16 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 10:42:47 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,16 @@ Client::~Client(void)
 		std::cout << "Client: default destructor called.";
 		std::cout << WHITE;
 	}
+
+	_activeChannel = NULL;
+
+	for (ChannelsIterator it = _joinedChannels.begin(); it != _joinedChannels.end(); it++)
+	{
+		it->second->removeInvitation(this);
+		it->second->removeUser(this);
+		// Handle permission transmission if last operator on channel.
+	}
+	_joinedChannels.clear();
 }
 	/* Protected */
 	/* Private */
@@ -286,6 +296,16 @@ int	Client::getClientModesMask(void) const
 	return (_modesMask);
 }
 
+const std::string	Client::getPrefix(void) const
+{
+	std::string	prefix;
+
+	if (areBitsSet(_modesMask, OPERATOR))
+		prefix += "~";
+
+	return (prefix);
+}
+
 	/* Protected */
 	/* Private */
 
@@ -339,14 +359,21 @@ void	Client::setRealname(const std::string &realname)
 	_realname = realname;
 }
 
+void	Client::setActiveChannel(Channel *channel)
+{
+	_activeChannel = channel;
+}
+
+
+
 void	Client::setServerPermissions(const int &mask)
 {
 	setBits(_serverPermissions, mask);
 }
 
-void	Client::setActiveChannel(Channel *channel)
+void	Client::setClientModesMask(const int &mask)
 {
-	_activeChannel = channel;
+	setBits(_modesMask, mask);
 }
 
 	/* Protected */
@@ -399,4 +426,11 @@ std::string	Client::clientMaskToModes(const int &mask)
 	if (modes.empty())
 		return ("");
 	return ("+" + modes);
+}
+
+bool	Client::isValidNickname(const std::string &nickname)
+{
+	if (nickname.empty() || nickname.length() > MAX_NICKNAME_LEN || nickname[0] == '#')
+		return (false);
+	return (true);
 }

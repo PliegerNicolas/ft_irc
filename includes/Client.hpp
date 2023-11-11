@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:56:13 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 01:43:42 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/10 14:45:09 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,9 @@
 #define MODE_INVALID -1
 
 #define MODES_CLIENT "iwoxz"
+
+#define MAX_USERNAME_LEN 18
+#define MAX_NICKNAME_LEN 9
 
 class	Server;
 class	Channel;
@@ -99,8 +102,10 @@ class	Client
 		Channels			&getJoinedChannels(void);
 		Channel				*getActiveChannel(void);
 
-		const std::string	getClientModes(void) const; // implement
-		int					getClientModesMask(void) const; // implement
+		const std::string	getClientModes(void) const;
+		int					getClientModesMask(void) const;
+
+		const std::string	getPrefix(void) const;
 
 		// Setter
 		void				setNickname(const std::string &nickname);
@@ -108,11 +113,14 @@ class	Client
 		void				setHostname(const std::string &hostname);
 		void				setServername(const std::string &servername);
 		void				setRealname(const std::string &realname);
-		void				setServerPermissions(const int &mask);
 		void				setActiveChannel(Channel *channel);
+
+		void				setServerPermissions(const int &mask);
+		void				setClientModesMask(const int &mask);
 
 		/* Static */
 		static bool			isClientMode(const char &mode);
+		static bool			isValidNickname(const std::string &nickname);
 
 	protected:
 		/* Attributs */

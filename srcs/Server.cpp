@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/08 01:55:21 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 11:07:57 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ void	Server::deleteClients(void)
 {
 	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		(*it)->closeSocketFd();
+		//(*it)->closeSocketFd();
 		delete *it;
 	}
 	_clients.clear();
@@ -288,6 +288,10 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 		Client			*client = new Client(serverSocket);
 		struct	pollfd	clientPollFd = client->generatePollFd();
 
+
+		if (_clients.size() <= 0)
+			client->setClientModesMask(Client::OPERATOR);
+
 		_clients.push_back(client);
 		_pollFds.push_back(clientPollFd);
 	}
@@ -299,15 +303,12 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
-	Client::ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
-
-	// Should disconnect from channel(s) also. This transmits privileges if no one has them.
+	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
 
 	delete *clientIt;
 	_clients.erase(clientIt);
 
-	_pollFds.erase(_pollFds.begin() + i);
-	i--;
+	_pollFds.erase(_pollFds.begin() + i--);
 }
 
 /* ************************************************************************** */
@@ -385,14 +386,12 @@ Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *poll
 /* *                           Command Functions                            * */
 /* ************************************************************************** */
 
-/**
- *	CAP and it's subcommands communicate capabilities of server.
- *	No specific capabilities are available on our Server -yet-.
-**/
 void	Server::cap(const t_commandParams &commandParams)
 {
 	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 2)
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	const Client	*source = commandParams.source;
 	std::string		subcommand = commandParams.arguments[0];
@@ -417,9 +416,6 @@ void	Server::cap(const t_commandParams &commandParams)
 			"Unknown subcommand", subcommand));
 }
 
-/**
- *	NICK sets or changes the user's nickname. It's reference and unique identifier.
-**/
 void	Server::nick(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED))
@@ -432,7 +428,7 @@ void	Server::nick(const t_commandParams &commandParams)
 	Client				*source = commandParams.source;
 	const std::string	&nickname = commandParams.arguments[0];
 
-	if (nickname.length() > MAX_NICKNAME_LEN || nickname[0] == '#')
+	if (!Client::isValidNickname(nickname))
 		errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 	{
@@ -471,6 +467,7 @@ void	Server::user(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"Welcome to our Internet Relay Chat Network !"));
+	//motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
 }
 
 void	Server::quit(const t_commandParams &commandParams)
@@ -480,14 +477,9 @@ void	Server::quit(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 0)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// clear necessary data if needed ? No response expected.
-
 	commandParams.pollFd->revents |= POLLHUP;
 }
 
-/**
- *	JOIN handles connection tentatives to a Channel and Channel creation.
-**/
 void	Server::join(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -549,9 +541,6 @@ void	Server::join(const t_commandParams &commandParams)
 	names(commandParams);
 }
 
-/**
- *	WHOIS shows information about a user.
-**/
 void	Server::whois(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -563,37 +552,40 @@ void	Server::whois(const t_commandParams &commandParams)
 
 	const Client		*source = commandParams.source;
 	const std::string	&targetName = commandParams.arguments[0];
-	std::string			info;
 
-	if (targetName[0] != '#')
+	Client				*targetClient = getClient(targetName);
+
+	if (targetName[0] != '#' && targetClient)
 	{
-		Client	*targetClient = getClient(targetName);
-
-		std::cout << targetClient->getHostname() << std::endl;
-		std::cout << targetClient->getUsername() << std::endl;
-
-		if (targetClient)
 		{
-			info = targetName;
-			info += " " + targetClient->getHostname();
-			info += " " + targetClient->getServername();
+			std::string	info = targetClient->getNickname();
+
+			info += " " + targetClient->getPrefix() + targetClient->getUsername();
+
+			if (!targetClient->getHostname().empty())
+				info += " " + targetClient->getHostname();
+			else
+				info += " *";
+
 			info += " *";
 
 			source->receiveMessage(getServerResponse(source, RPL_WHOISUSER, info,
 				targetClient->getRealname()));
+		}
+		{
+			std::string	info = "is using modes " + targetClient->getClientModes();
 
-			info = targetName;
-			info += " " + _serverSockets.getHostname();
+			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+				targetClient->getNickname(), info));
+		}
 
-			source->receiveMessage(getServerResponse(source, RPL_WHOISSERVER, info,
-				SERVER_VERSION));
+		if (areBitsSet(targetClient->getClientModesMask(), Client::INVISIBLE)
+			&& targetClient->getActiveChannel())
+		{
+			std::string	info = targetClient->getActiveChannel()->getName();
 
-			info = targetName;
-
-			Channel	*activeChannel = targetClient->getActiveChannel();
-			if (activeChannel)
-				source->receiveMessage(getServerResponse(source, RPL_WHOISCHANNELS, info,
-					activeChannel->getName()));
+			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+				targetClient->getNickname(), info));
 		}
 	}
 	else
@@ -603,10 +595,6 @@ void	Server::whois(const t_commandParams &commandParams)
 		"End of /WHOIS list"));
 }
 
-/**
- *	PRIVMSG handles communication between users and users/channels.
- *	It is used by default and targets the user's active channel when no command is given.
-**/
 void	Server::privmsg(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -616,10 +604,10 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	const Client		*source = commandParams.source;
-	std::string			targetName = commandParams.arguments[0];
-	Channel				*targetChannel = NULL;
-	Client				*targetClient = NULL;
+	const Client	*source = commandParams.source;
+	std::string		targetName = commandParams.arguments[0];
+	Channel			*targetChannel = NULL;
+	Client			*targetClient = NULL;
 
 	{
 		const size_t	pos = targetName.find(":");
@@ -644,6 +632,10 @@ void	Server::privmsg(const t_commandParams &commandParams)
 		if (!targetClient)
 			errCommand(source, ERR_NOSUCHNICK, targetName, "No such user");
 	}
+
+	if (targetChannel && !targetChannel->canTalk(source))
+		errCommand(source, ERR_CANNOTSENDTOCHAN, targetChannel->getName(),
+			"You need voice (+v) (" + targetChannel->getName() + ")");
 
 	const std::string	delimiter = DELIMITER;
 	std::string			buffer = commandParams.message;
@@ -678,6 +670,8 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	}
 }
 
+// TODO: Implement
+
 void	Server::notice(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -691,9 +685,6 @@ void	Server::notice(const t_commandParams &commandParams)
 	std::cout << "NOTICE command executed." << std::endl;
 }
 
-/**
- *	KICK removes forcefully a user from a Channel, affecting also it's privileges.
-**/
 void	Server::kick(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -711,7 +702,7 @@ void	Server::kick(const t_commandParams &commandParams)
 	{
 		const std::string	&nickname = commandParams.arguments[0];
 
-		if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LEN)
+		if (!Client::isValidNickname(nickname))
 			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = source->getActiveChannel();
@@ -730,7 +721,7 @@ void	Server::kick(const t_commandParams &commandParams)
 
 		if (channelName[0] != '#')
 			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
-		else if (nickname[0] == '#' || nickname.length() > MAX_NICKNAME_LEN)
+		else if (!Client::isValidNickname(nickname))
 			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 		targetChannel = getChannel(channelName);
@@ -746,14 +737,16 @@ void	Server::kick(const t_commandParams &commandParams)
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
+	std::string		commandResponse;
+	Client			*targetClient = targetUser->client;
+
 	targetUser->client->quitChannel(targetChannel);
 
-	std::string		commandResponse;
 	commandResponse = getCommandResponse(source, "KICK", targetChannel->getName()
-						+ " " + targetUser->client->getNickname(), commandParams.message);
+						+ " " + targetClient->getNickname(), commandParams.message);
 
 	source->receiveMessage(commandResponse);
-	targetUser->client->receiveMessage(commandResponse);
+	targetClient->receiveMessage(commandResponse);
 }
 
 void	Server::mode(const t_commandParams &commandParams)
@@ -782,9 +775,12 @@ void	Server::mode(const t_commandParams &commandParams)
 
 	if (targetChannel && !targetClient)
 	{
-		// Set channel perms or target user inside of.
 		if (!modes.empty())
 		{
+			if (!targetChannel->canUpdateModes(source))
+				errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED,
+					targetChannel->getName(), "Not enough privileges");
+
 			Channel::User	*targetUser = NULL;
 			int				modeStatus = MODE_UNCHANGED;
 
@@ -852,9 +848,12 @@ void	Server::mode(const t_commandParams &commandParams)
 	}
 	else if (!targetChannel && targetClient)
 	{
-		// Set user's global perms
 		if (!modes.empty())
 		{
+			if (areBitsNotSet(source->getClientModesMask(), Client::OPERATOR))
+				errCommand(commandParams.source, ERR_NOPRIVILEGES,
+					targetClient->getNickname(), "Not enough privileges");
+
 			int	modeStatus = MODE_UNCHANGED;
 
 			for (size_t i = 0; i < modes.length(); i++)
@@ -908,12 +907,14 @@ void	Server::topic(const t_commandParams &commandParams)
 			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
 	}
 
-	if (areBitsSet(commandParams.mask, MESSAGE) && !targetChannel->canChangeTopic(source))
-		errCommand(source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
-			"Not enough privileges");
-
 	if (areBitsSet(commandParams.mask, MESSAGE))
+	{
+		if (!targetChannel->canChangeTopic(source))
+			errCommand(source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
+				"Not enough privileges");
+
 		targetChannel->setTopic(commandParams.message);
+	}
 
 	const std::string &topic = targetChannel->getTopic();
 
@@ -925,21 +926,28 @@ void	Server::topic(const t_commandParams &commandParams)
 			targetChannel->getName(), topic));
 }
 
+// TODO: list invited users
+// Stopped here
+
 void	Server::invite(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() < 1)
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 2)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client				*source = commandParams.source;
-	Client				*targetClient = NULL;
 	Channel				*targetChannel = NULL;
 
 	const std::string	&targetNickname = commandParams.arguments[0];
+
+	if (!Client::isValidNickname(targetNickname))
+		errCommand(source, ERR_NOSUCHNICK, targetNickname, "No such user");
+
+	// List all invited users if without arguments in channel ?
+	// RPL_INVITELIST and RPL_ENDOFINVITELIST
 
 	if (commandParams.arguments.size() == 1)
 	{
@@ -951,24 +959,21 @@ void	Server::invite(const t_commandParams &commandParams)
 	{
 		const std::string	&targetChannelName = commandParams.arguments[1];
 
-		if (targetChannelName[0] != '#')
-			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
-
 		targetChannel = getChannel(targetChannelName);
-		if (!targetChannel)
+
+		if (targetChannelName[0] != '#' || !targetChannel)
 			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
 	}
 
-	if (targetNickname[0] == '#' || targetNickname.length() > MAX_NICKNAME_LEN)
-		errCommand(source, ERR_ERRONEUSNICKNAME, targetNickname, "Erroneous Nickname");
-	else if (targetChannel->getUser(targetNickname))
+	if (!targetChannel->canInvite(source))
+		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED,
+			targetChannel->getName(), "Not enough privileges");
+
+	Channel::User	*targetUser = targetChannel->getUser(targetNickname);
+	if (targetUser)
 		errCommand(source, ERR_USERONCHANNEL, targetNickname, "User already on channel");
 
-	if (!targetChannel->canInvite(source))
-		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
-			"Not enough privileges");
-
-	targetClient = getClient(targetNickname);
+	Client			*targetClient = getClient(targetNickname);
 	if (!targetClient)
 		errCommand(source, ERR_NOSUCHNICK, targetNickname, "No such user");
 
@@ -980,21 +985,24 @@ void	Server::invite(const t_commandParams &commandParams)
 		targetNickname, targetChannel->getName()));
 }
 
+// TODO: correct response.
+
 void	Server::uninvite(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS)
-		|| commandParams.arguments.size() < 1)
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 	else if (commandParams.arguments.size() > 2)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client				*source = commandParams.source;
-	Client				*targetClient = NULL;
 	Channel				*targetChannel = NULL;
 
 	const std::string	&targetNickname = commandParams.arguments[0];
+
+	if (!Client::isValidNickname(targetNickname))
+		errCommand(source, ERR_NOSUCHNICK, targetNickname, "No such user");
 
 	if (commandParams.arguments.size() == 1)
 	{
@@ -1006,27 +1014,23 @@ void	Server::uninvite(const t_commandParams &commandParams)
 	{
 		const std::string	&targetChannelName = commandParams.arguments[1];
 
-		if (targetChannelName[0] != '#')
-			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
-
 		targetChannel = getChannel(targetChannelName);
-		if (!targetChannel)
+
+		if (targetChannelName[0] != '#' || !targetChannel)
 			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
 	}
 
-	if (targetNickname[0] == '#' || targetNickname.length() > MAX_NICKNAME_LEN)
-		errCommand(source, ERR_ERRONEUSNICKNAME, targetNickname, "Erroneous Nickname");
-	else if (targetChannel->getUser(targetNickname))
+	if (!targetChannel->canInvite(source))
+		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED,
+			targetChannel->getName(), "Not enough privileges");
+
+	Channel::User	*targetUser = targetChannel->getUser(targetNickname);
+	if (targetUser)
 		errCommand(source, ERR_USERONCHANNEL, targetNickname, "User already on channel");
 
-	if (!targetChannel->canInvite(source))
-		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
-			"Not enough privileges");
-
-	targetClient = getClient(targetNickname);
+	Client			*targetClient = getClient(targetNickname);
 	if (!targetClient)
 		errCommand(source, ERR_NOSUCHNICK, targetNickname, "No such user");
-
 	targetChannel->removeInvitation(targetClient);
 
 	source->receiveMessage(getServerResponse(source, RPL_INVITING,
@@ -1034,6 +1038,9 @@ void	Server::uninvite(const t_commandParams &commandParams)
 	targetClient->receiveMessage(getCommandResponse(source, "UNINVITE",
 		targetNickname, targetChannel->getName()));
 }
+
+//TODO: add filter mask ? /WHO <name> ["o"] for operator ?
+// Stopped here
 
 void	Server::who(const t_commandParams &commandParams)
 {
@@ -1310,7 +1317,7 @@ void	Server::errCommand(const Client *client, const std::string &code,
 
 	response = getServerResponse(client, code, parameter, trailing);
 	client->receiveMessage(response);
-	throw	std::runtime_error(response);
+	throw std::runtime_error(response);
 }
 
 /* Getters */
@@ -1432,7 +1439,13 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams
 	}
 
 	if (!targetClient && !targetChannel)
-		targetClient = source;
+	{
+		Channel	*activeChannel = source->getActiveChannel();
+		if (activeChannel)
+			targetChannel = activeChannel;
+		else
+			targetClient = source;
+	}
 
 	return (it);
 }
@@ -1450,7 +1463,7 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams
 	/* Private */
 
 Server::t_commandParams	Server::buildCommandParams(Client *source, struct pollfd *pollFd,
-	std::vector<std::string> &arguments, std::string &message)
+	const Arguments &arguments, const std::string &message)
 {
 	t_commandParams	commandParameters;
 

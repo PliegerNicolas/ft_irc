@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/08 00:34:02 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 10:28:57 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,39 +169,70 @@ bool	Channel::isClientRegistered(const Client* client) const
 
 bool	Channel::canKick(const Client *client)
 {
+	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR))
+		return (true);
+
 	const User	*user = Channel::getUser(client->getNickname());
 
-	if (!user)
-		return (false);
-	if (areBitsSet(user->modesMask, HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
 		return (true);
 	return (false);
 }
 
 bool	Channel::canInvite(const Client *client)
 {
+	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR))
+		return (true);
+
 	const User	*user = Channel::getUser(client->getNickname());
 
-	if (!user)
-		return (false);
-	if (areBitsSet(user->modesMask, HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
 		return (true);
 	return (false);
 }
 
 bool	Channel::canChangeTopic(const Client *client)
 {
+	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR)
+		|| areBitsNotSet(_modesMask, TOPIC_LOCK))
+		return (true);
+
 	const User	*user = Channel::getUser(client->getNickname());
 
-	if (!user)
-		return (false);
-	if (areBitsNotSet(_modesMask, TOPIC_LOCK))
-		return (true);
-	else if (areBitsSet(user->modesMask, OPERATOR | ADMIN | OWNER))
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		OPERATOR | ADMIN | OWNER))
 		return (true);
 	return (false);
 }
 
+bool	Channel::canTalk(const Client *client)
+{
+	if (areBitsNotSet(_modesMask, MODERATED)
+		|| areBitsSet(client->getClientModesMask(), Client::OPERATOR))
+		return (true);
+
+	const User	*user = Channel::getUser(client->getNickname());
+
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		VOICE | OPERATOR | ADMIN | OWNER))
+		return (true);
+	return (false);
+}
+
+bool	Channel::canUpdateModes(const Client *client)
+{
+	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR))
+		return (true);
+
+	const User	*user = Channel::getUser(client->getNickname());
+
+	if (user && isAtLeastOneBitSet(getUserModesMask(user),
+		OPERATOR | ADMIN | OWNER))
+		return (true);
+	return (false);
+}
 
 
 
@@ -350,18 +381,36 @@ int	Channel::getChannelModesMask(void) const
 	return (_modesMask);
 }
 
-const std::string	Channel::getUserModes(const User *targetUser)
+const std::string	Channel::getUserModes(const User *targetUser) const
 {
 	if (!targetUser)
 		return ("");
 	return (Channel::userMaskToModes(targetUser->modesMask));
 }
 
-int	Channel::getUserModesMask(const User *targetUser)
+int	Channel::getUserModesMask(const User *targetUser) const
 {
 	if (!targetUser)
 		return (0);
 	return (targetUser->modesMask);
+}
+
+const std::string	Channel::getUserPrefix(User *targetUser) const
+{
+	std::string	prefix;
+
+	if (!targetUser)
+		return (prefix);
+
+	if (areBitsSet(targetUser->client->getClientModesMask(), Client::OPERATOR)
+		|| isAtLeastOneBitSet(getUserModesMask(targetUser), OPERATOR | ADMIN | OWNER))
+		prefix += "@";
+	else if (areBitsSet(getUserModesMask(targetUser), Channel::VOICE))
+		prefix += "+";
+	else if (areBitsSet(getUserModesMask(targetUser), HALF_OPERATOR))
+		prefix += "%";
+
+	return (prefix);
 }
 
 	/* Protected */
@@ -435,12 +484,12 @@ int	Channel::defaultOpsPerms(void)
 
 int	Channel::defaultAdminPerms(void)
 {
-	return (VOICE | ADMIN);
+	return (VOICE | OPERATOR | ADMIN);
 }
 
 int	Channel::defaultOwnerPerms(void)
 {
-	return (VOICE | OWNER);
+	return (VOICE | OPERATOR | OWNER);
 }
 
 bool	Channel::isChannelMode(const char &mode)
@@ -506,6 +555,8 @@ int	Channel::userModeToMask(const char &mode)
 {
 	switch (mode)
 	{
+		case 'v':
+			return (VOICE);
 		case 'h':
 			return (HALF_OPERATOR);
 		case 'o':
