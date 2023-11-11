@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/11 10:32:49 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/11 13:01:57 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,14 +22,14 @@
 #include <signal.h>
 #include <poll.h>
 
-bool	bot_end = false;
+bool	botShutdown = false;
 
-void	signalHandler(int sig) {
+void		signalHandler(int sig) {
 	(void)sig;
-	bot_end = true;
+	botShutdown = true;
 }
 
-void	send_msg(int sd, std::string msg) {
+void		send_msg(int sd, std::string msg) {
 	msg += "\r\n";
 	int bytes_sent = send(sd, msg.c_str(), msg.size(), 0);
 	if (bytes_sent < 0)
@@ -37,13 +37,13 @@ void	send_msg(int sd, std::string msg) {
 	std::cout << "Sent: " << msg << std::endl;
 }
 
-std::string	recv_msg(int sd, bool registered)
+std::string	recv_msg(int sd, bool wait)
 {
 	char buffer[4096 + 1];
 
 	struct timeval tv;
-	if (registered == true)
-		tv.tv_sec = 600;
+	if (wait == true)
+		tv.tv_sec = 1800;
 	else
 		tv.tv_sec = 2;
 	tv.tv_usec = 0;
@@ -51,14 +51,14 @@ std::string	recv_msg(int sd, bool registered)
 	usleep(1000);
 	ssize_t bytes_received = recv(sd, buffer, sizeof(buffer) - 1, 0);
 	if (bytes_received <= 0) {
-		bot_end = true;
+		botShutdown = true;
 		return "";
 	}
 	buffer[bytes_received] = '\0';
 	return (std::string(buffer));
 }
 
-void	sendJoke(int sd, std::string channel) {
+void		sendJoke(int sd, std::string channel) {
 	std::string		line;
 	int				line_nb;
 	int				pause;
@@ -79,7 +79,7 @@ void	sendJoke(int sd, std::string channel) {
 	send_msg(sd, "PRIVMSG #" + channel + " :" + line.substr(pause, line.length()));
 }
 
-int	main(int ac, char **av)
+int			main(int ac, char **av)
 {
 	if (ac != 5) {
 		std::cerr << "Invalid input. Please try ./bot <server_port> <password> <nickname> <channel>" << std::endl;
@@ -117,8 +117,9 @@ int	main(int ac, char **av)
 	recv_msg(server_socket, 0);
 
 	signal(SIGINT, signalHandler);
-	while (!bot_end) {
-		if (recv_msg(server_socket, 1).find("PRIVMSG " + nickname))
+	while (!botShutdown) {
+		std::string	msg = recv_msg(server_socket, 1);
+		if (msg.find("PRIVMSG " + nickname) || msg.find("@" + nickname))
 			sendJoke(server_socket, channel);
 	}
 }
