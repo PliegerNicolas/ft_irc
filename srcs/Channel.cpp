@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/11 12:12:04 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 12:33:59 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -319,31 +319,47 @@ int	Channel::removeUserMode(User *targetUser, const char &mode)
 		return (removeBits(targetUser->modesMask, mask), MODE_CHANGED);
 }
 
-void	Channel::transferPermissions(const Client *targetClient)
+/*
+size_t	Channel::countWhoSharesMyPermissions(const User *targetUser)
 {
-	if (!targetClient)
-		return ;
+	if (!targetUser)
+		return (0);
 
-	UsersIterator	it = _users.begin();
-	for (; it != _users.end() && targetClient != it->client; it++);
+	int	currentUserRoleModesMask = 0;
 
-	if (it == _users.end())
-		return ;
+	if (areBitsSet(targetUser->modesMask, Channel::OWNER))
+		currentUserRoleModesMask = Channel::OWNER;
+	else if (areBitsSet(targetUser->modesMask, Channel::ADMIN))
+		currentUserRoleModesMask = Channel::ADMIN;
+	else if (areBitsSet(targetUser->modesMask, Channel::OPERATOR))
+		currentUserRoleModesMask = Channel::OPERATOR;
+	else
+		return (0);
 
-	int	maskToTransfer = 0;
+	size_t	count = 0;
 
-	if (areBitsSet(it->modesMask, defaultOwnerPerms()))
-		maskToTransfer = defaultOwnerPerms();
-	else if (areBitsSet(it->modesMask, defaultAdminPerms()))
-		maskToTransfer = defaultAdminPerms();
-	else if (areBitsSet(it->modesMask, defaultOpsPerms()))
-		maskToTransfer = defaultOpsPerms();
+	for (UsersIterator it = _users.begin(); it != _users.end(); it++)
+	{
+		if (areBitsSet(it->modesMask, currentUserRoleModesMask))
+			count++;
+	}
 
-	if (!maskToTransfer)
-		return ;
-
-	(void)maskToTransfer;
+	return (count);
 }
+
+void	Channel::transferPermissions(const Client *sourceClient)
+{
+	if (!sourceClient)
+		return ;
+
+	User	*sourceUser = getUser(sourceClient->getNickname());
+
+	if (countWhoSharesMyPermissions(sourceUser) == 0)
+		return ;
+
+	std::cout << "Someone shares permissions" << std::endl;
+}
+*/
 
 	/* Protected */
 	/* Private */
