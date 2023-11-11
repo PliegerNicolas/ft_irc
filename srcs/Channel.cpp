@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/11 11:39:00 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 12:12:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -318,6 +318,33 @@ int	Channel::removeUserMode(User *targetUser, const char &mode)
 	else
 		return (removeBits(targetUser->modesMask, mask), MODE_CHANGED);
 }
+
+void	Channel::transferPermissions(const Client *targetClient)
+{
+	if (!targetClient)
+		return ;
+
+	UsersIterator	it = _users.begin();
+	for (; it != _users.end() && targetClient != it->client; it++);
+
+	if (it == _users.end())
+		return ;
+
+	int	maskToTransfer = 0;
+
+	if (areBitsSet(it->modesMask, defaultOwnerPerms()))
+		maskToTransfer = defaultOwnerPerms();
+	else if (areBitsSet(it->modesMask, defaultAdminPerms()))
+		maskToTransfer = defaultAdminPerms();
+	else if (areBitsSet(it->modesMask, defaultOpsPerms()))
+		maskToTransfer = defaultOpsPerms();
+
+	if (!maskToTransfer)
+		return ;
+
+	(void)maskToTransfer;
+}
+
 	/* Protected */
 	/* Private */
 

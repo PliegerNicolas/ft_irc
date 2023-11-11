@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/11 11:49:51 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 12:03:21 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,6 +112,8 @@ class	Channel
 		int					addUserMode(User *targetUser, const char &mode,
 								const std::string &argument);
 		int					removeUserMode(User *targetUser, const char &modes);
+
+		void				transferPermissions(const Client *targetClient); // temp ?
 
 		// GETTERS
 
