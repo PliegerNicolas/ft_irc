@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/11 02:06:24 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/11 02:14:00 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -697,8 +697,6 @@ void	Server::notice(const t_commandParams &commandParams)
 	std::cout << "NOTICE command executed." << std::endl;
 }
 
-// STOPPED HERE. Wrong person kicked (source instead of target receives msg)
-
 void	Server::kick(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -789,7 +787,6 @@ void	Server::mode(const t_commandParams &commandParams)
 
 	if (targetChannel && !targetClient)
 	{
-		// Set channel perms or target user inside of.
 		if (!modes.empty())
 		{
 			if (!targetChannel->canUpdateModes(source))
@@ -863,10 +860,11 @@ void	Server::mode(const t_commandParams &commandParams)
 	}
 	else if (!targetChannel && targetClient)
 	{
-		// Set user's global perms
 		if (!modes.empty())
 		{
-			// Check perms
+			if (areBitsNotSet(source->getClientModesMask(), Client::OPERATOR))
+				errCommand(commandParams.source, ERR_NOPRIVILEGES,
+					targetClient->getNickname(), "Not enough privileges");
 
 			int	modeStatus = MODE_UNCHANGED;
 
@@ -890,6 +888,8 @@ void	Server::mode(const t_commandParams &commandParams)
 				targetClient->getNickname() + " " + targetClient->getClientModes(), ""));
 	}
 }
+
+// Stopped here.
 
 void	Server::topic(const t_commandParams &commandParams)
 {
