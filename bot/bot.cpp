@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/11 16:02:30 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/11 16:20:49 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,11 +79,11 @@ void		sendJoke(int sd, std::string channel) {
 	recv_msg(sd, 0);
 }
 
-void		login(int server_socket, std::string password, std::string nickname, std::string channel)
+std::string	login(int server_socket, std::string password, std::string nickname, std::string channel)
 {
 	send_msg(server_socket, "PASS " + password);
 	send_msg(server_socket, "NICK " + nickname);
-	while (!recv_msg(server_socket, 1).find("You are now known as")) {
+	while (recv_msg(server_socket, 1).find("You are now known as") == std::string::npos) {
 		nickname += "_";
 		send_msg(server_socket, "NICK " + nickname);
 		sleep(1);
@@ -93,12 +93,13 @@ void		login(int server_socket, std::string password, std::string nickname, std::
 	send_msg(server_socket, "JOIN #" + channel);
 	send_msg(server_socket, "PRIVMSG #" + channel + " :Hello! my name is " + nickname + ". Send me a message if you want to hear a programming joke :)");
 	recv_msg(server_socket, 0);
+	return (nickname);
 }
 
 int			main(int ac, char **av)
 {
-	if (ac != 5) {
-		std::cerr << "Invalid input. Please try ./bot <server_port> <password> <nickname> <channel>" << std::endl;
+	if (ac < 4) {
+		std::cerr << "Invalid input. Please try ./bot <server_port> <password> <channel> [nickname] " << std::endl;
 		return 1;
 	}
 	signal(SIGINT, signalHandler);
@@ -124,13 +125,13 @@ int			main(int ac, char **av)
 	}
 
 	std::string	password = static_cast<std::string>(av[2]);
-	std::string	nickname = static_cast<std::string>(av[3]);
-	std::string	channel = static_cast<std::string>(av[4]);
+	std::string	channel = static_cast<std::string>(av[3]);
+	std::string	nickname = (ac == 5) ? static_cast<std::string>(av[4]) : "bot";
 
-	login(server_socket, password, nickname, channel);
+	nickname = login(server_socket, password, nickname, channel);
 	while (!botShutdown) {
 		std::string	msg = recv_msg(server_socket, 1);
-		if (msg.find("PRIVMSG " + nickname) != std::string::npos || msg.find("@" + nickname) != std::string::npos) {
+		if (msg.find("PRIVMSG " + nickname + " ") != std::string::npos || msg.find("@" + nickname + " ") != std::string::npos) {
 			std::cout << "Recieved: " << msg << std::endl;
 			sendJoke(server_socket, channel);
 		}
