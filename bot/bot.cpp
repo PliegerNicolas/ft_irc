@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/11 13:01:57 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/11 15:20:09 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,14 +69,16 @@ void		sendJoke(int sd, std::string channel) {
 		return;
 	}
 	srand(time(NULL));
-	line_nb = std::rand() % 48 + 1;
+	line_nb = std::rand() % 85 + 1;
 	for (int i = 0; i <= line_nb; i++) {
 		getline(botFile, line);
 	}
 	pause = line.find("... ");
 	send_msg(sd, "PRIVMSG #" + channel + " :" + line.substr(0, pause + 3));
-	sleep(7);
+	recv_msg(sd, 0);
+	sleep(5);
 	send_msg(sd, "PRIVMSG #" + channel + " :" + line.substr(pause, line.length()));
+	recv_msg(sd, 0);
 }
 
 int			main(int ac, char **av)
@@ -85,21 +87,23 @@ int			main(int ac, char **av)
 		std::cerr << "Invalid input. Please try ./bot <server_port> <password> <nickname> <channel>" << std::endl;
 		return 1;
 	}
+	signal(SIGINT, signalHandler);
 	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_socket == -1) {
 		std::cerr << "Error creating socket." << std::endl;
+		close(server_socket);
 		return 1;
 	}
 	struct sockaddr_in server_addr;
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(6668);
+	server_addr.sin_port = htons(std::atoi(av[1]));
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	connect(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr));
-	// if (connect(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr) == -1)) {
-	// 	std::cerr << "Error connecting to the server: " << errno << std::endl;
-	// 	close(server_socket);
-	// 	return 1;
-	// }
+	// connect(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr));
+	if (connect(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+		std::cerr << "Error connecting to the server: " << errno << std::endl;
+		close(server_socket);
+		return 1;
+	}
 	std::string	nickname = (std::string)av[3];
 	std::string	channel = (std::string)av[4];
 
@@ -116,10 +120,10 @@ int			main(int ac, char **av)
 	send_msg(server_socket, "PRIVMSG #" + channel + " :Hello! my name is " + nickname + ". Send me a message if you want to hear a programming joke :)");
 	recv_msg(server_socket, 0);
 
-	signal(SIGINT, signalHandler);
 	while (!botShutdown) {
 		std::string	msg = recv_msg(server_socket, 1);
-		if (msg.find("PRIVMSG " + nickname) || msg.find("@" + nickname))
+		if (msg.find("PRIVMSG " + nickname) != std::string::npos || msg.find("@" + nickname) != std::string::npos)
 			sendJoke(server_socket, channel);
 	}
+	close(server_socket);
 }
