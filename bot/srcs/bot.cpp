@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 15:19:38 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/12 17:30:08 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ std::string	login(int sd, std::string pw, std::string nick, std::string channel)
 {
 	send_msg(sd, "PASS " + pw + delim + "NICK " + nick);
 	while (recv_msg(sd, 1).find("You are now known as") == std::string::npos) {
+		std::cout << nick << " is already in use. Retrying with " + nick + "_..." << std::endl;
 		nick += "_";
 		send_msg(sd, "NICK " + nick);
 		sleep(1);
@@ -58,12 +59,13 @@ std::string	login(int sd, std::string pw, std::string nick, std::string channel)
 }
 
 bool		targeted(std::string msg, std::string nick) {
-	return (msg.find("PRIVMSG " + nick + "\n") != std::string::npos
+	return ((msg.find("PRIVMSG " + nick + "\n") != std::string::npos
 		|| msg.find("PRIVMSG " + nick + " ") != std::string::npos
 		|| msg.find("PRIVMSG " + nick + delim) != std::string::npos
 		|| msg.find("@" + nick + "\n") != std::string::npos
 		|| msg.find("@" + nick + " ") != std::string::npos
-		|| msg.find("@" + nick + delim) != std::string::npos);
+		|| msg.find("@" + nick + delim) != std::string::npos)
+		&& msg.find("NOTICE") == std::string::npos);
 }
 
 std::vector<std::string>	getJokes() {
