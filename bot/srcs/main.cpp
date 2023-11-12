@@ -6,11 +6,11 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/12 13:41:33 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 13:44:41 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/12 15:28:04 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "bot.hpp"
+#include "../includes/bot.hpp"
 
 bool	botShutdown = false;
 
@@ -24,7 +24,7 @@ int			main(int ac, char **av)
 	std::vector<std::string>	jokes;
 
 	if (ac < 4) {
-		std::cerr << "Invalid input. Please try ./bot <server_port> <password> <channel> [nickname] " << std::endl;
+		std::cerr << "Invalid input. Please try ./ircbot <server_port> <password> <channel> [nickname] " << std::endl;
 		return 1;
 	}
 	signal(SIGINT, signalHandler);
@@ -55,6 +55,8 @@ int			main(int ac, char **av)
 	nickname = login(server_socket, password, nickname, channel);
 	while (!botShutdown) {
 		std::string	msg = recv_msg(server_socket, 1);
+		if (msg.empty())
+			return 1;
 		if (targeted(msg, nickname)) {
 			std::cout << "Recieved: " << msg << std::endl;
 			sendJoke(server_socket, channel, jokes);
