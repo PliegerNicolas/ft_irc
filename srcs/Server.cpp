@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/12 13:45:11 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 23:11:43 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -320,6 +320,11 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 		{
 			Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
 			setBits(newOwner->modesMask, Channel::OWNER);
+		}
+		else
+		{
+			_channels.erase(targetChannel->getName());
+			delete targetChannel;
 		}
 	}
 
@@ -1246,43 +1251,59 @@ void	Server::part(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+	else if (areBitsNotSet(commandParams.mask, SOURCE))
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (commandParams.arguments.size() > 1)
+	else if (areBitsSet(commandParams.mask, ARGUMENTS)
+		&& commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
 	Client	*source = commandParams.source;
-	Channel	*targetChannel = source->getActiveChannel();
+	Channel	*targetChannel = NULL;
+	bool	isSourceChannelOwner = false;
+
+	if (areBitsSet(commandParams.mask, ARGUMENTS))
+	{
+		const std::string	&channelName = commandParams.arguments[0];
+
+		if (channelName[0] != '#')
+			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+
+		targetChannel = getChannel(channelName);
+	}
+	else
+		targetChannel = source->getActiveChannel();
 
 	if (!targetChannel)
-		errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
-	else if (!targetChannel->getUser(source->getNickname()))
 		errCommand(source, ERR_NOTONCHANNEL, "", "You are not on that channel");
+
+	{
+		Channel::User	*sourceUser = targetChannel->getUser(source->getNickname());
+
+		if (!sourceUser)
+		errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
+			"You are not on that channel");
+
+		isSourceChannelOwner = areBitsSet(sourceUser->modesMask, Channel::OWNER);
+	}
 
 	source->quitChannel(targetChannel);
 
-	if (targetChannel->getUsers().size() > 0)
+	if (isSourceChannelOwner && targetChannel->getUsers().size() > 0)
 	{
 		Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
 		setBits(newOwner->modesMask, Channel::OWNER);
 	}
-
-	std::string	response;
-
-	if (areBitsSet(commandParams.mask, MESSAGE))
-		response = getCommandResponse(source, "PART",
-			targetChannel->getName(), commandParams.message);
-	else
-		response = getCommandResponse(source, "PART",
-			targetChannel->getName(), "");
-
-	if (targetChannel->getUsers().size() > 0)
-		source->broadcastMessageToChannel(targetChannel, response);
 	else
 	{
-		_channels.erase(targetChannel->getName());
 		delete targetChannel;
+		targetChannel = NULL;
 	}
+
+	std::string	response = getCommandResponse(source, "PART",
+		targetChannel->getName(), commandParams.message);
+
+	if (targetChannel)
+		source->broadcastMessageToChannel(targetChannel, response);
 	source->receiveMessage(response);
 }
 
