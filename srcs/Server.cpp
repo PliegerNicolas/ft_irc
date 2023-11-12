@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/12 23:11:43 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 23:18:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -312,6 +312,9 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 	for (ChannelsIterator it = joinedChannels.begin(); it != joinedChannels.end(); it++)
 	{
 		Channel	*targetChannel = it->second;
+
+		client->broadcastMessageToChannel(targetChannel, getCommandResponse(client, "QUIT",
+			targetChannel->getName(), "Leaving the IRC server"));
 
 		targetChannel->removeUser(client);
 		targetChannel->removeInvitation(client);
