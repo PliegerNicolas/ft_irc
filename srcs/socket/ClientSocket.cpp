@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 10:32:31 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/11/12 13:57:41 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSocket.hpp"
@@ -106,9 +106,14 @@ void	ClientSocket::setSocketOptions(void)
 	{
 		if (setsockopt(_socket.fd, socketOptions[i].level, socketOptions[i].option,
 			&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
+		{
 			throw std::runtime_error("Error: couldn't set socket option (client).");
+		}
+
 		if (fcntl(_socket.fd, F_SETFL, O_NONBLOCK))
+		{
 			throw std::runtime_error("Error: couldn't set socket option (client).");
+		}
 	}
 }
 

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/11 11:07:57 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 13:45:11 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,9 +304,27 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
 	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
+	Client			*client = *clientIt;
+	Channels		&joinedChannels = client->getJoinedChannels();
 
-	delete *clientIt;
+	client->setActiveChannel(NULL);
+
+	for (ChannelsIterator it = joinedChannels.begin(); it != joinedChannels.end(); it++)
+	{
+		Channel	*targetChannel = it->second;
+
+		targetChannel->removeUser(client);
+		targetChannel->removeInvitation(client);
+
+		if (targetChannel->getUsers().size() > 0)
+		{
+			Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
+			setBits(newOwner->modesMask, Channel::OWNER);
+		}
+	}
+
 	_clients.erase(clientIt);
+	delete client;
 
 	_pollFds.erase(_pollFds.begin() + i--);
 }
@@ -442,6 +460,7 @@ void	Server::nick(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"You are now known as " + nickname));
+	motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
 }
 
 void	Server::user(const t_commandParams &commandParams)
@@ -467,7 +486,6 @@ void	Server::user(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"Welcome to our Internet Relay Chat Network !"));
-	//motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
 }
 
 void	Server::quit(const t_commandParams &commandParams)
@@ -1233,9 +1251,39 @@ void	Server::part(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	// Leaves a channel. A user can be member of multiple channels at the same time
-	// for persistence.
-	std::cout << "PART command executed." << std::endl;
+	Client	*source = commandParams.source;
+	Channel	*targetChannel = source->getActiveChannel();
+
+	if (!targetChannel)
+		errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+	else if (!targetChannel->getUser(source->getNickname()))
+		errCommand(source, ERR_NOTONCHANNEL, "", "You are not on that channel");
+
+	source->quitChannel(targetChannel);
+
+	if (targetChannel->getUsers().size() > 0)
+	{
+		Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
+		setBits(newOwner->modesMask, Channel::OWNER);
+	}
+
+	std::string	response;
+
+	if (areBitsSet(commandParams.mask, MESSAGE))
+		response = getCommandResponse(source, "PART",
+			targetChannel->getName(), commandParams.message);
+	else
+		response = getCommandResponse(source, "PART",
+			targetChannel->getName(), "");
+
+	if (targetChannel->getUsers().size() > 0)
+		source->broadcastMessageToChannel(targetChannel, response);
+	else
+	{
+		_channels.erase(targetChannel->getName());
+		delete targetChannel;
+	}
+	source->receiveMessage(response);
 }
 
 void	Server::pass(const t_commandParams &commandParams)

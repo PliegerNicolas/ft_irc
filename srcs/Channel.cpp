@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/11 10:28:57 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 02:35:59 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,9 @@ Channel::~Channel(void)
 		std::cout << "Channel: default destructor called.";
 		std::cout << WHITE;
 	}
+
+	_users.clear();
+	_invitedClients.clear();
 }
 	/* Protected */
 	/* Private */
@@ -315,6 +318,27 @@ int	Channel::removeUserMode(User *targetUser, const char &mode)
 	else
 		return (removeBits(targetUser->modesMask, mask), MODE_CHANGED);
 }
+
+Channel::User	*Channel::findFirstHighestPrivilege(void)
+{
+	UsersIterator	it = _users.begin();
+	User			*user = NULL;
+
+	if (it != _users.end())
+	{
+		user = &(*it);
+		it++;
+	}
+
+	for (; it != _users.end(); it++)
+	{
+		if (it->modesMask > user->modesMask)
+			user = &(*it);
+	}
+
+	return (user);
+}
+
 	/* Protected */
 	/* Private */
 
@@ -484,12 +508,12 @@ int	Channel::defaultOpsPerms(void)
 
 int	Channel::defaultAdminPerms(void)
 {
-	return (VOICE | OPERATOR | ADMIN);
+	return (VOICE | ADMIN);
 }
 
 int	Channel::defaultOwnerPerms(void)
 {
-	return (VOICE | OPERATOR | OWNER);
+	return (VOICE | OWNER);
 }
 
 bool	Channel::isChannelMode(const char &mode)

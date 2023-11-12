@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/11 01:39:36 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 02:35:51 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,6 +112,8 @@ class	Channel
 		int					addUserMode(User *targetUser, const char &mode,
 								const std::string &argument);
 		int					removeUserMode(User *targetUser, const char &modes);
+
+		User				*findFirstHighestPrivilege(void);
 
 		// GETTERS
 
