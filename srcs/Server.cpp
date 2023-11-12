@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/11 11:56:26 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 03:14:44 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,9 +304,21 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
 	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
+	Client			*client = *clientIt;
+	Channels		&joinedChannels = client->getJoinedChannels();
 
-	delete *clientIt;
+	client->setActiveChannel(NULL);
+
+	for (ChannelsIterator it = joinedChannels.begin(); it != joinedChannels.end(); it++)
+	{
+		Channel	*targetChannel = it->second;
+
+		targetChannel->removeUser(client);
+		targetChannel->removeInvitation(client);
+	}
+
 	_clients.erase(clientIt);
+	delete client;
 
 	_pollFds.erase(_pollFds.begin() + i--);
 }
@@ -1238,16 +1250,16 @@ void	Server::part(const t_commandParams &commandParams)
 
 	if (!targetChannel)
 		errCommand(source, ERR_NOTONCHANNEL, "", "You are not on a channel");
+	else if (!targetChannel->getUser(source->getNickname()))
+		errCommand(source, ERR_NOTONCHANNEL, "", "You are not on that channel");
 
-	// Check if last operator / owner /admin ...
-	// Upgrade stats of other users relative to this.
+	source->quitChannel(targetChannel);
 
-	// If channel empty after leave, destroy it.
-
-	source->setActiveChannel(NULL);
-
-	// Leaves a channel. A user can be member of multiple channels at the same time
-	// for persistence ?
+	if (targetChannel->getUsers().size() > 0)
+	{
+		Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
+		setBits(newOwner->modesMask, Channel::OWNER);
+	}
 
 	std::string	response;
 
@@ -1258,7 +1270,13 @@ void	Server::part(const t_commandParams &commandParams)
 		response = getCommandResponse(source, "PART",
 			targetChannel->getName(), "");
 
-	source->broadcastMessageToChannel(targetChannel, response);
+	if (targetChannel->getUsers().size() > 0)
+		source->broadcastMessageToChannel(targetChannel, response);
+	else
+	{
+		_channels.erase(targetChannel->getName());
+		delete targetChannel;
+	}
 	source->receiveMessage(response);
 }
 
