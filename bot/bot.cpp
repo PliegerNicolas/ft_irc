@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/11 19:59:42 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/12 12:49:34 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <poll.h>
 
+#define DELIMITER "\r\n"
 #define BOT_FILE "./config/bot.config"
 #define NB_JOKES 86
 #define WAIT 1800
@@ -34,7 +35,7 @@ void		signalHandler(int sig) {
 }
 
 void		send_msg(int sd, std::string msg) {
-	msg += "\r\n";
+	msg += DELIMITER;
 	int bytes_sent = send(sd, msg.c_str(), msg.size(), 0);
 	if (bytes_sent < 0)
 		std::cerr << "Unable to send : " << msg << std::endl;
@@ -62,8 +63,7 @@ std::string	recv_msg(int sd, bool wait)
 
 std::string	login(int server_socket, std::string password, std::string nickname, std::string channel)
 {
-	send_msg(server_socket, "PASS " + password);
-	send_msg(server_socket, "NICK " + nickname);
+	send_msg(server_socket, "PASS " + password + DELIMITER + "NICK " + nickname);
 	while (recv_msg(server_socket, 1).find("You are now known as") == std::string::npos) {
 		nickname += "_";
 		send_msg(server_socket, "NICK " + nickname);
@@ -71,8 +71,8 @@ std::string	login(int server_socket, std::string password, std::string nickname,
 	}
 	send_msg(server_socket, "USER Bot * * :Mr. Bot");
 	recv_msg(server_socket, 0);
-	send_msg(server_socket, "JOIN #" + channel);
-	send_msg(server_socket, "PRIVMSG #" + channel + " :Hello! my name is " + nickname + ". Send me a message if you want to hear a programming joke :)");
+	send_msg(server_socket, "JOIN " + channel);
+	send_msg(server_socket, "PRIVMSG " + channel + " :Hello! my name is " + nickname + ". Send me a message if you want to hear a programming joke :)");
 	recv_msg(server_socket, 0);
 	return (nickname);
 }
@@ -89,10 +89,10 @@ void		sendJoke(int sd, std::string channel) {
 		getline(botFile, line);
 	}
 	pause = line.find("... ");
-	send_msg(sd, "PRIVMSG #" + channel + " :" + line.substr(0, pause + 3));
+	send_msg(sd, "PRIVMSG " + channel + " :" + line.substr(0, pause + 3));
 	recv_msg(sd, 0);
 	sleep(3);
-	send_msg(sd, "PRIVMSG #" + channel + " :" + line.substr(pause, line.length()));
+	send_msg(sd, "PRIVMSG " + channel + " :" + line.substr(pause, line.length()));
 	recv_msg(sd, 0);
 }
 
@@ -125,7 +125,7 @@ int			main(int ac, char **av)
 	}
 
 	std::string	password = static_cast<std::string>(av[2]);
-	std::string	channel = static_cast<std::string>(av[3]);
+	std::string	channel = (av[3][0] == '#') ? static_cast<std::string>(av[3]) : "#" + static_cast<std::string>(av[3]);
 	std::string	nickname = (ac == 5) ? static_cast<std::string>(av[4]) : "bot";
 
 	nickname = login(server_socket, password, nickname, channel);
