@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/12 13:41:33 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 15:28:04 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/12 15:32:16 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,8 +55,10 @@ int			main(int ac, char **av)
 	nickname = login(server_socket, password, nickname, channel);
 	while (!botShutdown) {
 		std::string	msg = recv_msg(server_socket, 1);
-		if (msg.empty())
+		if (msg.empty()) {
+			std::cout << "Disconnected (Remote host closed socket)" << std::endl;
 			return 1;
+		}
 		if (targeted(msg, nickname)) {
 			std::cout << "Recieved: " << msg << std::endl;
 			sendJoke(server_socket, channel, jokes);
