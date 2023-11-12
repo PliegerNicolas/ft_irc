@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:19:49 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/12 13:42:37 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 13:57:08 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ServerSockets.hpp"
@@ -125,7 +125,6 @@ void	ServerSockets::launchServerSockets(const t_serverconfig &serverConfig)
 		newSocket.fd = socket(newSocket.info->ai_family, newSocket.info->ai_socktype,
 			newSocket.info->ai_protocol);
 		handleErrors(newSocket.fd);
-		setSocketOptions();
 
 		_sockets.push_back(newSocket);
 
@@ -135,6 +134,8 @@ void	ServerSockets::launchServerSockets(const t_serverconfig &serverConfig)
 		// Verify if we can listen with it and do if it's possible.
 		handleErrors(listen(newSocket.fd, SOMAXCONN));
 	}
+
+	setSocketOptions();
 }
 
 void	ServerSockets::setSocketOptions(void)
@@ -148,20 +149,23 @@ void	ServerSockets::setSocketOptions(void)
 	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_KEEPALIVE, 1);
 	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_QUICKACK, 1);
 	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
-	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_IPV6, IPV6_V6ONLY, 0);
 
-	for (i = 0; i < SERVOPTSIZE; i++)
+	for (size_t i = 0; i < SERVOPTSIZE; i++)
 	{
 		for (SocketsConstIt it = _sockets.begin(); it != _sockets.end(); it++)
 		{
 			if (setsockopt(it->fd, socketOptions[i].level, socketOptions[i].option,
 				&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
+			{
 				throw std::runtime_error("Error: couldn't set socket option (socket).");
+			}
+
 			if (fcntl(it->fd, F_SETFL, O_NONBLOCK))
+			{
 				throw std::runtime_error("Error: couldn't set socket option (socket).");
+			}
 		}
 	}
-
 }
 
 void	ServerSockets::handleErrors(const int &statusCode)

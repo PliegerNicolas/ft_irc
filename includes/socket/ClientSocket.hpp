@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:16:24 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/12 13:43:50 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 13:45:55 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -18,7 +18,7 @@
 
 // MACROS
 
-#define CLIENTOPTSIZE 7
+#define CLIENTOPTSIZE 6
 
 class	ClientSocket: public ASocket
 {

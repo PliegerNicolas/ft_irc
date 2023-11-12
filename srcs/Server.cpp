@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/12 03:14:44 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 13:45:11 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -315,6 +315,12 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 
 		targetChannel->removeUser(client);
 		targetChannel->removeInvitation(client);
+
+		if (targetChannel->getUsers().size() > 0)
+		{
+			Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
+			setBits(newOwner->modesMask, Channel::OWNER);
+		}
 	}
 
 	_clients.erase(clientIt);

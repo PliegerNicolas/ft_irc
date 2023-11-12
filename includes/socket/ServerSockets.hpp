@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:14:59 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/12 13:42:51 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 13:57:13 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -17,7 +17,7 @@
 
 // MACROS
 
-#define SERVOPTSIZE 7
+#define SERVOPTSIZE 6
 
 class	ServerSockets: public ASocket
 {
