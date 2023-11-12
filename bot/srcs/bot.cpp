@@ -6,11 +6,11 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 13:46:32 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/12 15:19:38 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "bot.hpp"
+#include "../includes/bot.hpp"
 
 const int			botTimeOut = 1800;
 const std::string	delim = "\r\n";
@@ -43,23 +43,27 @@ std::string	recv_msg(int sd, bool waiting)
 	return (std::string(buffer));
 }
 
-std::string				login(int server_socket, std::string pw, std::string nick, std::string channel)
+std::string	login(int sd, std::string pw, std::string nick, std::string channel)
 {
-	send_msg(server_socket, "PASS " + pw + delim + "NICK " + nick);
-	while (recv_msg(server_socket, 1).find("You are now known as") == std::string::npos) {
+	send_msg(sd, "PASS " + pw + delim + "NICK " + nick);
+	while (recv_msg(sd, 1).find("You are now known as") == std::string::npos) {
 		nick += "_";
-		send_msg(server_socket, "NICK " + nick);
+		send_msg(sd, "NICK " + nick);
 		sleep(1);
 	}
-	send_msg(server_socket, "USER Bot * * :Mr. Bot" + delim + "JOIN " + channel + delim + "PRIVMSG " + channel + " :Hello! my name is " + nick + ". Send me a message if you want to hear a programming joke :)");
+	send_msg(sd, "USER Bot * * :Mr. Bot" + delim + "JOIN " + channel + delim +
+		"PRIVMSG " + channel + " :Hello! my name is " + nick +
+		". Send me a message if you want to hear a programming joke :)");
 	return (nick);
 }
 
-bool						targeted(std::string msg, std::string nick) {
+bool		targeted(std::string msg, std::string nick) {
 	return (msg.find("PRIVMSG " + nick + "\n") != std::string::npos
-		|| msg.find("@" + nick + "\n") != std::string::npos
 		|| msg.find("PRIVMSG " + nick + " ") != std::string::npos
-		|| msg.find("@" + nick + " ") != std::string::npos);
+		|| msg.find("PRIVMSG " + nick + delim) != std::string::npos
+		|| msg.find("@" + nick + "\n") != std::string::npos
+		|| msg.find("@" + nick + " ") != std::string::npos
+		|| msg.find("@" + nick + delim) != std::string::npos);
 }
 
 std::vector<std::string>	getJokes() {
@@ -77,7 +81,7 @@ std::vector<std::string>	getJokes() {
 	return (jokes);
 }
 
-void						sendJoke(int sd, std::string channel, std::vector<std::string> jokes)
+void		sendJoke(int sd, std::string channel, std::vector<std::string> jokes)
 {
 	int				line_nb = 0;
 	int				pause = 0;
