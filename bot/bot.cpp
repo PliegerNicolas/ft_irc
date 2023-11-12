@@ -6,33 +6,15 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 13:38:58 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/12 13:46:32 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <string>
-#include <iostream>
-#include <unistd.h>
-#include <fstream>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <cstdlib>
-#include <signal.h>
-#include <poll.h>
-#include <vector>
+#include "bot.hpp"
 
 const int			botTimeOut = 1800;
 const std::string	delim = "\r\n";
 const char			*botInput = "./config/bot.config";
-
-bool	botShutdown = false;
-
-void		signalHandler(int sig) {
-	(void)sig;
-	botShutdown = true;
-}
 
 void		send_msg(int sd, std::string msg) {
 	msg += delim;
@@ -61,37 +43,23 @@ std::string	recv_msg(int sd, bool waiting)
 	return (std::string(buffer));
 }
 
-std::string	login(int server_socket, std::string password, std::string nickname, std::string channel)
+std::string				login(int server_socket, std::string pw, std::string nick, std::string channel)
 {
-	send_msg(server_socket, "PASS " + password + delim + "NICK " + nickname);
+	send_msg(server_socket, "PASS " + pw + delim + "NICK " + nick);
 	while (recv_msg(server_socket, 1).find("You are now known as") == std::string::npos) {
-		nickname += "_";
-		send_msg(server_socket, "NICK " + nickname);
+		nick += "_";
+		send_msg(server_socket, "NICK " + nick);
 		sleep(1);
 	}
-	send_msg(server_socket, "USER Bot * * :Mr. Bot" + delim + "JOIN " + channel + delim + "PRIVMSG " + channel + " :Hello! my name is " + nickname + ". Send me a message if you want to hear a programming joke :)");
-	return (nickname);
+	send_msg(server_socket, "USER Bot * * :Mr. Bot" + delim + "JOIN " + channel + delim + "PRIVMSG " + channel + " :Hello! my name is " + nick + ". Send me a message if you want to hear a programming joke :)");
+	return (nick);
 }
 
-bool	targeted(std::string msg, std::string nickname) {
-	return (msg.find("PRIVMSG " + nickname + "\n") != std::string::npos
-		|| msg.find("@" + nickname + "\n") != std::string::npos
-		|| msg.find("PRIVMSG " + nickname + " ") != std::string::npos
-		|| msg.find("@" + nickname + " ") != std::string::npos);
-}
-
-void		sendJoke(int sd, std::string channel, std::vector<std::string> jokes) {
-	int				line_nb = 0;
-	int				pause = 0;
-	std::string		joke;
-
-	srand(time(NULL));
-	line_nb = std::rand() % jokes.size() + 1;
-	joke = jokes[line_nb];
-	pause = joke.find("... ");
-	send_msg(sd, "PRIVMSG " + channel + " :" + joke.substr(0, pause + 3));
-	sleep(3);
-	send_msg(sd, "PRIVMSG " + channel + " :" + joke.substr(pause, joke.length()));
+bool						targeted(std::string msg, std::string nick) {
+	return (msg.find("PRIVMSG " + nick + "\n") != std::string::npos
+		|| msg.find("@" + nick + "\n") != std::string::npos
+		|| msg.find("PRIVMSG " + nick + " ") != std::string::npos
+		|| msg.find("@" + nick + " ") != std::string::npos);
 }
 
 std::vector<std::string>	getJokes() {
@@ -109,46 +77,17 @@ std::vector<std::string>	getJokes() {
 	return (jokes);
 }
 
-int			main(int ac, char **av)
+void						sendJoke(int sd, std::string channel, std::vector<std::string> jokes)
 {
-	std::vector<std::string>	jokes;
+	int				line_nb = 0;
+	int				pause = 0;
+	std::string		joke;
 
-	if (ac < 4) {
-		std::cerr << "Invalid input. Please try ./bot <server_port> <password> <channel> [nickname] " << std::endl;
-		return 1;
-	}
-	signal(SIGINT, signalHandler);
-
-	jokes = getJokes();
-	if (jokes.empty())
-		return 1;
-	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_socket == -1) {
-		std::cerr << "Error creating socket." << std::endl;
-		close(server_socket);
-		return 1;
-	}
-	struct sockaddr_in server_addr;
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(std::atoi(av[1]));
-	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	if (connect(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-		std::cerr << "Error connecting to the server: " << errno << std::endl;
-		close(server_socket);
-		return 1;
-	}
-
-	std::string	password = static_cast<std::string>(av[2]);
-	std::string	channel = (av[3][0] == '#') ? static_cast<std::string>(av[3]) : "#" + static_cast<std::string>(av[3]);
-	std::string	nickname = (ac == 5) ? static_cast<std::string>(av[4]) : "bot";
-
-	nickname = login(server_socket, password, nickname, channel);
-	while (!botShutdown) {
-		std::string	msg = recv_msg(server_socket, 1);
-		if (targeted(msg, nickname)) {
-			std::cout << "Recieved: " << msg << std::endl;
-			sendJoke(server_socket, channel, jokes);
-		}
-	}
-	close(server_socket);
+	srand(time(NULL));
+	line_nb = std::rand() % jokes.size() + 1;
+	joke = jokes[line_nb];
+	pause = joke.find("... ");
+	send_msg(sd, "PRIVMSG " + channel + " :" + joke.substr(0, pause + 3));
+	sleep(3);
+	send_msg(sd, "PRIVMSG " + channel + " :" + joke.substr(pause, joke.length()));
 }
