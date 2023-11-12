@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 13:04:51 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/12 13:17:26 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,13 @@ std::string	login(int server_socket, std::string password, std::string nickname,
 	return (nickname);
 }
 
+bool	targeted(std::string msg, std::string nickname) {
+	return (msg.find("PRIVMSG " + nickname + "\n") != std::string::npos
+		|| msg.find("@" + nickname + "\n") != std::string::npos
+		|| msg.find("PRIVMSG " + nickname + " ") != std::string::npos
+		|| msg.find("@" + nickname + " ") != std::string::npos);
+}
+
 void		sendJoke(int sd, std::string channel) {
 	std::string		line;
 	int				line_nb = 0;
@@ -130,7 +137,7 @@ int			main(int ac, char **av)
 	nickname = login(server_socket, password, nickname, channel);
 	while (!botShutdown) {
 		std::string	msg = recv_msg(server_socket, 1);
-		if (msg.find("PRIVMSG " + nickname) != std::string::npos || msg.find("@" + nickname) != std::string::npos) {
+		if (targeted(msg, nickname)) {
 			std::cout << "Recieved: " << msg << std::endl;
 			sendJoke(server_socket, channel);
 		}
