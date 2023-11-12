@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/11 12:34:10 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 02:35:51 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,10 +113,7 @@ class	Channel
 								const std::string &argument);
 		int					removeUserMode(User *targetUser, const char &modes);
 
-		/*
-		size_t				countWhoSharesMyPermissions(const User *targetUser); // temp ?
-		void				transferPermissions(const Client *sourceClient); // temp ?
-		*/
+		User				*findFirstHighestPrivilege(void);
 
 		// GETTERS
 

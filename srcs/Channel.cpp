@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/11 12:33:59 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/12 02:35:59 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -319,47 +319,25 @@ int	Channel::removeUserMode(User *targetUser, const char &mode)
 		return (removeBits(targetUser->modesMask, mask), MODE_CHANGED);
 }
 
-/*
-size_t	Channel::countWhoSharesMyPermissions(const User *targetUser)
+Channel::User	*Channel::findFirstHighestPrivilege(void)
 {
-	if (!targetUser)
-		return (0);
+	UsersIterator	it = _users.begin();
+	User			*user = NULL;
 
-	int	currentUserRoleModesMask = 0;
-
-	if (areBitsSet(targetUser->modesMask, Channel::OWNER))
-		currentUserRoleModesMask = Channel::OWNER;
-	else if (areBitsSet(targetUser->modesMask, Channel::ADMIN))
-		currentUserRoleModesMask = Channel::ADMIN;
-	else if (areBitsSet(targetUser->modesMask, Channel::OPERATOR))
-		currentUserRoleModesMask = Channel::OPERATOR;
-	else
-		return (0);
-
-	size_t	count = 0;
-
-	for (UsersIterator it = _users.begin(); it != _users.end(); it++)
+	if (it != _users.end())
 	{
-		if (areBitsSet(it->modesMask, currentUserRoleModesMask))
-			count++;
+		user = &(*it);
+		it++;
 	}
 
-	return (count);
+	for (; it != _users.end(); it++)
+	{
+		if (it->modesMask > user->modesMask)
+			user = &(*it);
+	}
+
+	return (user);
 }
-
-void	Channel::transferPermissions(const Client *sourceClient)
-{
-	if (!sourceClient)
-		return ;
-
-	User	*sourceUser = getUser(sourceClient->getNickname());
-
-	if (countWhoSharesMyPermissions(sourceUser) == 0)
-		return ;
-
-	std::cout << "Someone shares permissions" << std::endl;
-}
-*/
 
 	/* Protected */
 	/* Private */
@@ -530,12 +508,12 @@ int	Channel::defaultOpsPerms(void)
 
 int	Channel::defaultAdminPerms(void)
 {
-	return (VOICE | OPERATOR | ADMIN);
+	return (VOICE | ADMIN);
 }
 
 int	Channel::defaultOwnerPerms(void)
 {
-	return (VOICE | OPERATOR | OWNER);
+	return (VOICE | OWNER);
 }
 
 bool	Channel::isChannelMode(const char &mode)
