@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 13:17:26 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/12 13:38:58 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,7 @@
 #include <cstdlib>
 #include <signal.h>
 #include <poll.h>
-
-#define NB_JOKES 86 // TMP --> Will either count it or save input into a vector
+#include <vector>
 
 const int			botTimeOut = 1800;
 const std::string	delim = "\r\n";
@@ -81,39 +80,48 @@ bool	targeted(std::string msg, std::string nickname) {
 		|| msg.find("@" + nickname + " ") != std::string::npos);
 }
 
-void		sendJoke(int sd, std::string channel) {
-	std::string		line;
+void		sendJoke(int sd, std::string channel, std::vector<std::string> jokes) {
 	int				line_nb = 0;
 	int				pause = 0;
-	std::ifstream	botFile(botInput);
+	std::string		joke;
+
+	srand(time(NULL));
+	line_nb = std::rand() % jokes.size() + 1;
+	joke = jokes[line_nb];
+	pause = joke.find("... ");
+	send_msg(sd, "PRIVMSG " + channel + " :" + joke.substr(0, pause + 3));
+	sleep(3);
+	send_msg(sd, "PRIVMSG " + channel + " :" + joke.substr(pause, joke.length()));
+}
+
+std::vector<std::string>	getJokes() {
+	std::ifstream				botFile(botInput);
+	std::string					line;
+	std::vector<std::string>	jokes;
 
 	if (botFile.fail()) {
 		std::cerr << "Error: Unable to open " << botInput << std::endl;
-		return;
+		return (jokes);
 	}
-	srand(time(NULL));
-	line_nb = std::rand() % NB_JOKES + 1;
-	for (int i = 0; i <= line_nb; i++) {
-		getline(botFile, line);
+	while (getline(botFile, line)) {
+		jokes.push_back(line);
 	}
-	pause = line.find("... ");
-	send_msg(sd, "PRIVMSG " + channel + " :" + line.substr(0, pause + 3));
-	sleep(3);
-	send_msg(sd, "PRIVMSG " + channel + " :" + line.substr(pause, line.length()));
+	return (jokes);
 }
 
 int			main(int ac, char **av)
 {
+	std::vector<std::string>	jokes;
+
 	if (ac < 4) {
 		std::cerr << "Invalid input. Please try ./bot <server_port> <password> <channel> [nickname] " << std::endl;
 		return 1;
 	}
 	signal(SIGINT, signalHandler);
-	std::ifstream	botFile(botInput);
-	if (botFile.fail()) {
-		std::cerr << "Error: Unable to open " << botInput << std::endl;
+
+	jokes = getJokes();
+	if (jokes.empty())
 		return 1;
-	}
 	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_socket == -1) {
 		std::cerr << "Error creating socket." << std::endl;
@@ -139,7 +147,7 @@ int			main(int ac, char **av)
 		std::string	msg = recv_msg(server_socket, 1);
 		if (targeted(msg, nickname)) {
 			std::cout << "Recieved: " << msg << std::endl;
-			sendJoke(server_socket, channel);
+			sendJoke(server_socket, channel, jokes);
 		}
 	}
 	close(server_socket);
