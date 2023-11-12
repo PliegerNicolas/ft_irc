@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/23 10:32:31 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/11/12 13:43:40 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSocket.hpp"
@@ -101,6 +101,7 @@ void	ClientSocket::setSocketOptions(void)
 	socketOptions[i++] = ASocket::buildSocketOption(SOL_SOCKET, SO_KEEPALIVE, 1);
 	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_QUICKACK, 1);
 	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
+	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_IPV6, IPV6_V6ONLY, 0);
 
 	for (i = 0; i < SERVOPTSIZE; i++)
 	{
