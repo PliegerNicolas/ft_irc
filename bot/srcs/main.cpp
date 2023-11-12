@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/12 13:41:33 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 15:32:16 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/12 15:35:39 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,7 @@ int			main(int ac, char **av)
 		std::string	msg = recv_msg(server_socket, 1);
 		if (msg.empty()) {
 			std::cout << "Disconnected (Remote host closed socket)" << std::endl;
+			close(server_socket);
 			return 1;
 		}
 		if (targeted(msg, nickname)) {
