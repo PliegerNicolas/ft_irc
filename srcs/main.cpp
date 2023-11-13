@@ -6,7 +6,7 @@
 /*   By: mfaucheu <mfaucheu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 03:14:40 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/26 01:06:37 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/14 00:17:34 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ int	main(int argc, char **argv)
 		return (1);
 
 	signal(SIGINT, sigintHandler);
+	signal(SIGPIPE, sigpipeHandler);
 
 	try
 	{
