@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 12:28:47 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/13 14:12:15 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -434,7 +434,7 @@ void	Server::nick(const t_commandParams &commandParams)
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+		errCommand(commandParams.source, ERR_ERRONEUSNICKNAME, "", "Spaces are not allowed in nicknames");
 
 	Client				*source = commandParams.source;
 	const std::string	&nickname = commandParams.arguments[0];
@@ -472,13 +472,12 @@ void	Server::user(const t_commandParams &commandParams)
 	const std::string	&servername = commandParams.arguments[2];
 	const std::string	&realname = commandParams.message;
 
+	if (source->getUsername() != "*")
+		errCommand(source, ERR_ALREADYREGISTERED, "", "Your username is already set.");
 	source->setUsername(username);
 	source->setHostname(hostname);
 	source->setServername(servername);
 	source->setRealname(realname);
-
-	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
-		"Welcome to our Internet Relay Chat Network !"));
 }
 
 void	Server::quit(const t_commandParams &commandParams)
@@ -528,7 +527,7 @@ void	Server::join(const t_commandParams &commandParams)
 		}
 
 		if (targetChannel == source->getActiveChannel())
-			errCommand(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
+			return;
 
 		if (targetChannel->isClientRegistered(source))
 			source->setActiveChannel(targetChannel);
@@ -548,7 +547,9 @@ void	Server::join(const t_commandParams &commandParams)
 
 	source->receiveMessage(commandResponse);
 	source->broadcastMessageToChannel(targetChannel, commandResponse);
-	who(commandParams);
+	if (!targetChannel->getTopic().empty())
+		source->receiveMessage(getServerResponse(source, RPL_TOPIC,
+			targetChannel->getName(), targetChannel->getTopic()));
 	names(commandParams);
 }
 
