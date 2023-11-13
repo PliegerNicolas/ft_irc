@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 13:42:46 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/13 14:08:19 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -527,7 +527,7 @@ void	Server::join(const t_commandParams &commandParams)
 		}
 
 		if (targetChannel == source->getActiveChannel())
-			errCommand(source, ERR_USERONCHANNEL, channelName, "Is already on channel");
+			return;
 
 		if (targetChannel->isClientRegistered(source))
 			source->setActiveChannel(targetChannel);
