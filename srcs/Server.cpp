@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/12 19:02:43 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/13 12:11:51 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ void	Server::deleteClients(void)
 {
 	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		//(*it)->closeSocketFd();
+		// (*it)->closeSocketFd();
 		delete *it;
 	}
 	_clients.clear();
@@ -406,32 +406,18 @@ Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *poll
 
 void	Server::cap(const t_commandParams &commandParams)
 {
-	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (commandParams.arguments.size() > 2)
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS) || commandParams.arguments.size() > 2)
+		errCommand(commandParams.source, ERR_INVALIDCAPCMD, "", "Invalid CAP command");
 
 	const Client	*source = commandParams.source;
 	std::string		subcommand = commandParams.arguments[0];
 
-	if (subcommand == "LS")
-		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
-			"CAP LS", "Capability negotiation is not supported"));
-	else if (subcommand == "REQ")
-		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
-			"CAP REQ", "Capability negotiation is not supported"));
-	else if (subcommand == "ACK")
-		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
-			"CAP ACK", "Capability negotiation is not supported"));
-	else if (subcommand == "NAK")
-		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
-			"CAP NAK", "Capability negotiation is not supported"));
-	else if (subcommand == "END")
-		source->receiveMessage(getServerResponse(source, RPL_ENDOFNAMES,
-			"CAP END", "End of CAP command"));
-	else
-		source->receiveMessage(getServerResponse(source, ERR_UNKNOWNCOMMAND,
-			"Unknown subcommand", subcommand));
+	if (subcommand == "LS" || subcommand == "REQ" || subcommand == "ACK" || subcommand == "NAK")
+		source->receiveMessage(getServerResponse(source, ERR_INVALIDCAPCMD,
+			"CAP " + subcommand, "Capability negotiation is not supported"));
+	else if (subcommand != "END")
+		source->receiveMessage(getServerResponse(source, ERR_INVALIDCAPCMD,
+			subcommand, "Invalid CAP Command"));
 }
 
 void	Server::nick(const t_commandParams &commandParams)
