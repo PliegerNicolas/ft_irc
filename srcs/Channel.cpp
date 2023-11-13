@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/12 02:35:59 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/13 23:38:31 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,6 +155,15 @@ bool	Channel::isInvited(Client *client)
 	for (; it != _invitedClients.end() && *it != client; it++);
 
 	if (it != _invitedClients.end())
+		return (true);
+	return (false);
+}
+
+bool	Channel::isOwner(const Client *client)
+{
+	const User	*user = getUser(client->getNickname());
+
+	if (user && areBitsSet(user->modesMask, OWNER))
 		return (true);
 	return (false);
 }

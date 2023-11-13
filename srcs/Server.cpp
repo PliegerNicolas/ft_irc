@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 14:12:15 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/13 23:49:19 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,11 +306,14 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 	Client			*client = *clientIt;
 	Channels		&joinedChannels = client->getJoinedChannels();
 
-	client->setActiveChannel(NULL);
-
 	for (ChannelsIterator it = joinedChannels.begin(); it != joinedChannels.end(); it++)
 	{
 		Channel	*targetChannel = it->second;
+
+		if (!targetChannel || !targetChannel->isClientRegistered(client))
+			continue ;
+
+		const bool	isOwner = targetChannel->isOwner(client);
 
 		client->broadcastMessageToChannel(targetChannel, getCommandResponse(client, "QUIT",
 			targetChannel->getName(), "Leaving the IRC server"));
@@ -318,15 +321,20 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 		targetChannel->removeUser(client);
 		targetChannel->removeInvitation(client);
 
-		if (targetChannel->getUsers().size() > 0)
-		{
-			Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
-			setBits(newOwner->modesMask, Channel::OWNER);
-		}
-		else
+		if (targetChannel->getUsers().size() == 0)
 		{
 			_channels.erase(targetChannel->getName());
 			delete targetChannel;
+			targetChannel = NULL;
+		}
+		else if (isOwner)
+		{
+			Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
+			if (newOwner)
+			{
+				setBits(newOwner->modesMask, Channel::OWNER);
+				// UP mode message.
+			}
 		}
 	}
 
@@ -1347,21 +1355,23 @@ void	Server::part(const t_commandParams &commandParams)
 		isSourceChannelOwner = areBitsSet(sourceUser->modesMask, Channel::OWNER);
 	}
 
+	const std::string	response = getCommandResponse(source, "PART",
+		targetChannel->getName(), commandParams.message);
+
 	source->quitChannel(targetChannel);
 
 	if (isSourceChannelOwner && targetChannel->getUsers().size() > 0)
 	{
 		Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
 		setBits(newOwner->modesMask, Channel::OWNER);
+		// message for UP
 	}
 	else
 	{
+		_channels.erase(targetChannel->getName());
 		delete targetChannel;
 		targetChannel = NULL;
 	}
-
-	std::string	response = getCommandResponse(source, "PART",
-		targetChannel->getName(), commandParams.message);
 
 	if (targetChannel)
 		source->broadcastMessageToChannel(targetChannel, response);

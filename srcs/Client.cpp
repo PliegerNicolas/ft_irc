@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 12:22:10 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/13 23:35:37 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,15 +94,7 @@ Client::~Client(void)
 	}
 
 	_activeChannel = NULL;
-
-	for (ChannelsIterator it = _joinedChannels.begin(); it != _joinedChannels.end(); it++)
-	{
-		it->second->removeInvitation(this);
-		it->second->removeUser(this);
-		// Handle permission transmission if last operator on channel.
-	}
 	_joinedChannels.clear();
-	close(getSocketFd());
 }
 	/* Protected */
 	/* Private */

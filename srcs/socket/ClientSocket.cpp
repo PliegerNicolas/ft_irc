@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/12 13:57:41 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/13 23:29:23 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSocket.hpp"
@@ -79,6 +79,8 @@ ClientSocket::~ClientSocket(void)
 		std::cout << "ClientSocket: default destructor called.";
 		std::cout << WHITE;
 	}
+
+	close(_socket.fd);
 }
 
 	/* Protected */

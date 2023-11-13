@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/12 02:35:51 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/13 23:38:39 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,8 @@ class	Channel
 		bool				isFull(void) const;
 		bool				isEmpty(void) const;
 		bool				isInvited(Client *client);
-		bool				isClientRegistered(const Client* client) const;
+		bool				isClientRegistered(const Client *client) const;
+		bool				isOwner(const Client *client);
 
 		bool				canKick(const Client *client);
 		bool				canInvite(const Client *client);
