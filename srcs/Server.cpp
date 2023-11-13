@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 12:11:51 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/13 12:28:47 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,6 @@ void	Server::deleteClients(void)
 {
 	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		// (*it)->closeSocketFd();
 		delete *it;
 	}
 	_clients.clear();
@@ -417,7 +416,7 @@ void	Server::cap(const t_commandParams &commandParams)
 			"CAP " + subcommand, "Capability negotiation is not supported"));
 	else if (subcommand != "END")
 		source->receiveMessage(getServerResponse(source, ERR_INVALIDCAPCMD,
-			subcommand, "Invalid CAP Command"));
+			subcommand, "Unknown subcommand"));
 }
 
 void	Server::nick(const t_commandParams &commandParams)
