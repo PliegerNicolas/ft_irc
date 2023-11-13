@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/12 23:18:04 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/13 12:28:47 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,6 @@ void	Server::deleteClients(void)
 {
 	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		//(*it)->closeSocketFd();
 		delete *it;
 	}
 	_clients.clear();
@@ -414,32 +413,18 @@ Server::t_commandParams	Server::parseCommand(Client *client, struct pollfd *poll
 
 void	Server::cap(const t_commandParams &commandParams)
 {
-	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
-	else if (commandParams.arguments.size() > 2)
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+	if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS) || commandParams.arguments.size() > 2)
+		errCommand(commandParams.source, ERR_INVALIDCAPCMD, "", "Invalid CAP command");
 
 	const Client	*source = commandParams.source;
 	std::string		subcommand = commandParams.arguments[0];
 
-	if (subcommand == "LS")
-		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
-			"CAP LS", "Capability negotiation is not supported"));
-	else if (subcommand == "REQ")
-		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
-			"CAP REQ", "Capability negotiation is not supported"));
-	else if (subcommand == "ACK")
-		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
-			"CAP ACK", "Capability negotiation is not supported"));
-	else if (subcommand == "NAK")
-		source->receiveMessage(getServerResponse(source, ERR_CANTLOADMODULE,
-			"CAP NAK", "Capability negotiation is not supported"));
-	else if (subcommand == "END")
-		source->receiveMessage(getServerResponse(source, RPL_ENDOFNAMES,
-			"CAP END", "End of CAP command"));
-	else
-		source->receiveMessage(getServerResponse(source, ERR_UNKNOWNCOMMAND,
-			"Unknown subcommand", subcommand));
+	if (subcommand == "LS" || subcommand == "REQ" || subcommand == "ACK" || subcommand == "NAK")
+		source->receiveMessage(getServerResponse(source, ERR_INVALIDCAPCMD,
+			"CAP " + subcommand, "Capability negotiation is not supported"));
+	else if (subcommand != "END")
+		source->receiveMessage(getServerResponse(source, ERR_INVALIDCAPCMD,
+			subcommand, "Unknown subcommand"));
 }
 
 void	Server::nick(const t_commandParams &commandParams)
@@ -625,11 +610,12 @@ void	Server::privmsg(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE))
-		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		errCommand(commandParams.source, ERR_NORECIPIENT, "", "No recipient given (PRIVMSG)");
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
-
+	else if (areBitsNotSet(commandParams.mask, MESSAGE) || commandParams.message.empty())
+		errCommand(commandParams.source, ERR_NOTEXTTOSEND, "", "No text to send");
 	const Client	*source = commandParams.source;
 	std::string		targetName = commandParams.arguments[0];
 	Channel			*targetChannel = NULL;
@@ -650,7 +636,7 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	{
 		targetChannel = getChannel(targetName);
 		if (!targetChannel)
-			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
+			errCommand(source, ERR_NOSUCHNICK, targetName, "No such channel");
 	}
 	else
 	{
@@ -697,18 +683,89 @@ void	Server::privmsg(const t_commandParams &commandParams)
 }
 
 // TODO: Implement
+// Sends a server notice to a client, channel or everywhere.
+
+// 404     ERR_CANNOTSENDTOCHAN
+                // // "<channel name> :Cannot send to channel
+        // - Sent to a user who is either (a) not on a channel
+        //   which is mode +n or (b) not a chanop (or mode +v) on
+        //   a channel which has mode +m set and is trying to send
+        //   a PRIVMSG message to that channel.
 
 void	Server::notice(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
 		return ;
-	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS | MESSAGE))
-		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		errCommand(commandParams.source, ERR_NORECIPIENT, "", "No recipient given (NOTICE)");
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+	else if (areBitsNotSet(commandParams.mask, MESSAGE) || commandParams.message.empty())
+		errCommand(commandParams.source, ERR_NOTEXTTOSEND, "", "No text to send");
+	const Client	*source = commandParams.source;
+	std::string		targetName = commandParams.arguments[0];
+	Channel			*targetChannel = NULL;
+	Client			*targetClient = NULL;
 
-	// Sends a server notice to a client, channel or everywhere.
-	std::cout << "NOTICE command executed." << std::endl;
+	{
+		const size_t	pos = targetName.find(":");
+
+		if (pos != std::string::npos)
+		{
+			if (targetName.substr(pos + 1) != _serverSockets.getHostname())
+				errCommand(source, ERR_NOPERMFORHOST, targetName, "Invalid hostname");
+			targetName = targetName.substr(0, pos);
+		}
+	}
+
+	if (targetName[0] == '#')
+	{
+		targetChannel = getChannel(targetName);
+		if (!targetChannel)
+			errCommand(source, ERR_NOSUCHNICK, targetName, "No such channel");
+	}
+	else
+	{
+		targetClient = getClient(targetName);
+		if (!targetClient)
+			errCommand(source, ERR_NOSUCHNICK, targetName, "No such user");
+	}
+
+	if (targetChannel && !targetChannel->canTalk(source))
+		errCommand(source, ERR_CANNOTSENDTOCHAN, targetChannel->getName(),
+			"You need voice (+v) (" + targetChannel->getName() + ")");
+
+	const std::string	delimiter = DELIMITER;
+	std::string			buffer = commandParams.message;
+	std::string			message;
+	size_t				pos;
+
+	removeLeadingWhitespaces(buffer, delimiter);
+
+	while (!buffer.empty())
+	{
+		if (buffer.length() >= MSG_BUFFER_SIZE)
+		{
+			pos = MSG_BUFFER_SIZE;
+			pos = findLastChar(buffer, pos);
+			message = buffer.substr(0, pos);
+			buffer.erase(0, pos);
+		}
+		else
+		{
+			message = buffer;
+			buffer.clear();
+		}
+
+		if (targetChannel)
+			source->broadcastMessageToChannel(targetChannel,
+				getCommandResponse(source, "NOTICE", targetChannel->getName(), message));
+		else if (targetClient)
+			targetClient->receiveMessage(getCommandResponse(source, "NOTICE",
+				targetClient->getNickname(), message));
+
+		removeLeadingWhitespaces(buffer, delimiter);
+	}
 }
 
 void	Server::kick(const t_commandParams &commandParams)

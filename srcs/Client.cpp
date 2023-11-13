@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/11 10:42:47 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/13 12:22:10 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,7 @@ Client::~Client(void)
 		// Handle permission transmission if last operator on channel.
 	}
 	_joinedChannels.clear();
+	close(getSocketFd());
 }
 	/* Protected */
 	/* Private */
