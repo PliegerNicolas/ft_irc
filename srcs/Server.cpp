@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 13:25:12 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/13 13:42:46 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -544,10 +544,13 @@ void	Server::join(const t_commandParams &commandParams)
 	}
 
 	std::string	commandResponse = getCommandResponse(source, "JOIN", targetChannel->getName(), "");
+	const std::string &topic = targetChannel->getTopic();
 
 	source->receiveMessage(commandResponse);
 	source->broadcastMessageToChannel(targetChannel, commandResponse);
-	who(commandParams);
+	if (!topic.empty())
+		source->receiveMessage(getServerResponse(source, RPL_TOPIC,
+			targetChannel->getName(), topic));
 	names(commandParams);
 }
 
