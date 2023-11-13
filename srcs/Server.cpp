@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 13:11:05 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/13 13:25:12 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -472,13 +472,12 @@ void	Server::user(const t_commandParams &commandParams)
 	const std::string	&servername = commandParams.arguments[2];
 	const std::string	&realname = commandParams.message;
 
+	if (source->getUsername() != "*")
+		errCommand(source, ERR_ALREADYREGISTERED, "", "Your username is already set.");
 	source->setUsername(username);
 	source->setHostname(hostname);
 	source->setServername(servername);
 	source->setRealname(realname);
-
-	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
-		"Welcome to our Internet Relay Chat Network !"));
 }
 
 void	Server::quit(const t_commandParams &commandParams)
