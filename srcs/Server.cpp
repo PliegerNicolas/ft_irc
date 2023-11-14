@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 23:49:19 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/14 01:47:39 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -302,24 +302,24 @@ void	Server::handleClientConnections(const ServerSockets::t_socket &serverSocket
 
 void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
-	ClientsIterator	clientIt = _clients.begin() + (i - serverSockets.size());
-	Client			*client = *clientIt;
-	Channels		&joinedChannels = client->getJoinedChannels();
+	ClientsIterator			clientIt = _clients.begin() + (i - serverSockets.size());
+	Client					*source = *clientIt;
+	Channels				&joinedChannels = source->getJoinedChannels();
 
 	for (ChannelsIterator it = joinedChannels.begin(); it != joinedChannels.end(); it++)
 	{
 		Channel	*targetChannel = it->second;
 
-		if (!targetChannel || !targetChannel->isClientRegistered(client))
+		if (!targetChannel || !targetChannel->isClientRegistered(source))
 			continue ;
 
-		const bool	isOwner = targetChannel->isOwner(client);
+		const bool	isOwner = targetChannel->isOwner(source);
 
-		client->broadcastMessageToChannel(targetChannel, getCommandResponse(client, "QUIT",
-			targetChannel->getName(), "Leaving the IRC server"));
+		source->broadcastMessageToChannel(targetChannel, getCommandResponse(source, "QUIT",
+			targetChannel->getName(), "leaving the irc server"));
 
-		targetChannel->removeUser(client);
-		targetChannel->removeInvitation(client);
+		targetChannel->removeUser(source);
+		targetChannel->removeInvitation(source);
 
 		if (targetChannel->getUsers().size() == 0)
 		{
@@ -332,14 +332,17 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 			Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
 			if (newOwner)
 			{
+				const std::string	privilegeResponse = ":" + source->getNickname() + " MODE "
+					+ targetChannel->getName() + " +q " + newOwner->client->getNickname() + DELIMITER;
+
+				source->broadcastMessageToChannel(targetChannel, privilegeResponse);
 				setBits(newOwner->modesMask, Channel::OWNER);
-				// UP mode message.
 			}
 		}
 	}
 
 	_clients.erase(clientIt);
-	delete client;
+	delete source;
 
 	_pollFds.erase(_pollFds.begin() + i--);
 }
@@ -442,7 +445,8 @@ void	Server::nick(const t_commandParams &commandParams)
 	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
 		errCommand(commandParams.source, ERR_NONICKNAMEGIVEN, "", "No nickname given");
 	else if (commandParams.arguments.size() > 1)
-		errCommand(commandParams.source, ERR_ERRONEUSNICKNAME, "", "Spaces are not allowed in nicknames");
+		errCommand(commandParams.source, ERR_ERRONEUSNICKNAME,
+			"", "Spaces are not allowed in nicknames");
 
 	Client				*source = commandParams.source;
 	const std::string	&nickname = commandParams.arguments[0];
@@ -451,8 +455,7 @@ void	Server::nick(const t_commandParams &commandParams)
 		errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
 
 	{
-		const Client	*concurrentNicknameHolder = getClient(nickname);
-		if (concurrentNicknameHolder)
+		if (getClient(nickname))
 			errCommand(source, ERR_NICKNAMEINUSE, nickname, "Nickname is already in use");
 	}
 
@@ -461,7 +464,7 @@ void	Server::nick(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"You are now known as " + nickname));
-	motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
+	//motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
 }
 
 void	Server::user(const t_commandParams &commandParams)
@@ -517,21 +520,24 @@ void	Server::join(const t_commandParams &commandParams)
 
 	if (targetChannel)
 	{
-		if (areBitsSet(targetChannel->getChannelModesMask(), Channel::INVITE_ONLY)
-			&& !targetChannel->isInvited(source))
-			errCommand(source, ERR_INVITEONLYCHAN, channelName, "You are not invited (+i)");
-		else if (areBitsSet(targetChannel->getChannelModesMask(), Channel::USER_LIMIT)
-			&& targetChannel->isFull())
-			errCommand(source, ERR_CHANNELISFULL, channelName, "Cannot join channel (+l)");
-		else if (areBitsSet(targetChannel->getChannelModesMask(), Channel::KEY_PASS))
+		if (areBitsNotSet(source->getClientModesMask(), Client::OPERATOR))
 		{
-			if (commandParams.arguments.size() < 2)
-				errCommand(source, ERR_BADCHANNELKEY, channelName, "Cannot join channel (+k)");
+			if (areBitsSet(targetChannel->getChannelModesMask(), Channel::INVITE_ONLY)
+				&& !targetChannel->isInvited(source))
+				errCommand(source, ERR_INVITEONLYCHAN, channelName, "You are not invited (+i)");
+			else if (areBitsSet(targetChannel->getChannelModesMask(), Channel::USER_LIMIT)
+				&& targetChannel->isFull())
+				errCommand(source, ERR_CHANNELISFULL, channelName, "Cannot join channel (+l)");
+			else if (areBitsSet(targetChannel->getChannelModesMask(), Channel::KEY_PASS))
+			{
+				if (commandParams.arguments.size() < 2)
+					errCommand(source, ERR_BADCHANNELKEY, channelName, "Cannot join channel (+k)");
 
-			const std::string	&password = commandParams.arguments[1];
+				const std::string	&password = commandParams.arguments[1];
 
-			if (password != targetChannel->getPassword())
-				errCommand(source, ERR_BADCHANNELKEY, channelName, "Cannot join channel (+k)");
+				if (password != targetChannel->getPassword())
+					errCommand(source, ERR_BADCHANNELKEY, channelName, "Cannot join channel (+k)");
+			}
 		}
 
 		if (targetChannel == source->getActiveChannel())
@@ -1328,7 +1334,6 @@ void	Server::part(const t_commandParams &commandParams)
 
 	Client	*source = commandParams.source;
 	Channel	*targetChannel = NULL;
-	bool	isSourceChannelOwner = false;
 
 	if (areBitsSet(commandParams.mask, ARGUMENTS))
 	{
@@ -1342,35 +1347,32 @@ void	Server::part(const t_commandParams &commandParams)
 	else
 		targetChannel = source->getActiveChannel();
 
-	if (!targetChannel)
+	if (!targetChannel || !targetChannel->isClientRegistered(source))
 		errCommand(source, ERR_NOTONCHANNEL, "", "You are not on that channel");
 
-	{
-		Channel::User	*sourceUser = targetChannel->getUser(source->getNickname());
-
-		if (!sourceUser)
-		errCommand(source, ERR_NOTONCHANNEL, targetChannel->getName(),
-			"You are not on that channel");
-
-		isSourceChannelOwner = areBitsSet(sourceUser->modesMask, Channel::OWNER);
-	}
-
+	const bool	isOwner = targetChannel->isOwner(source);
 	const std::string	response = getCommandResponse(source, "PART",
 		targetChannel->getName(), commandParams.message);
 
 	source->quitChannel(targetChannel);
 
-	if (isSourceChannelOwner && targetChannel->getUsers().size() > 0)
-	{
-		Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
-		setBits(newOwner->modesMask, Channel::OWNER);
-		// message for UP
-	}
-	else
+	if (targetChannel->getUsers().size() == 0)
 	{
 		_channels.erase(targetChannel->getName());
 		delete targetChannel;
 		targetChannel = NULL;
+	}
+	else if (isOwner)
+	{
+		Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
+		if (newOwner)
+		{
+			const std::string	privilegeResponse = ":" + source->getNickname() + " MODE "
+				+ targetChannel->getName() + " +q " + newOwner->client->getNickname() + DELIMITER;
+
+			source->broadcastMessageToChannel(targetChannel, privilegeResponse);
+			setBits(newOwner->modesMask, Channel::OWNER);
+		}
 	}
 
 	if (targetChannel)
