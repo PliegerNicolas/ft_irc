@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/14 17:13:52 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/14 17:54:56 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -332,11 +332,16 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 			Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
 			if (newOwner)
 			{
-				const std::string	privilegeResponse = ":" + source->getNickname() + " MODE "
-					+ targetChannel->getName() + " +q " + newOwner->client->getNickname() + DELIMITER;
+				std::string	privilegeResponse = ":" + source->getNickname() + " MODE "
+					+ targetChannel->getName() + " +q";
+
+				if (areBitsNotSet(newOwner->modesMask, Channel::OPERATOR))
+					privilegeResponse += "o";
+
+				privilegeResponse += " " + newOwner->client->getNickname() + DELIMITER;
 
 				source->broadcastMessageToChannel(targetChannel, privilegeResponse);
-				setBits(newOwner->modesMask, Channel::OWNER);
+				setBits(newOwner->modesMask, Channel::OWNER | Channel::OPERATOR);
 			}
 		}
 	}
@@ -1377,11 +1382,16 @@ void	Server::part(const t_commandParams &commandParams)
 		Channel::User	*newOwner = targetChannel->findFirstHighestPrivilege();
 		if (newOwner)
 		{
-			const std::string	privilegeResponse = ":" + source->getNickname() + " MODE "
-				+ targetChannel->getName() + " +q " + newOwner->client->getNickname() + DELIMITER;
+			std::string	privilegeResponse = ":" + source->getNickname() + " MODE "
+				+ targetChannel->getName() + " +q";
+
+			if (areBitsNotSet(newOwner->modesMask, Channel::OPERATOR))
+				privilegeResponse += "o";
+
+			privilegeResponse += " " + newOwner->client->getNickname() + DELIMITER;
 
 			source->broadcastMessageToChannel(targetChannel, privilegeResponse);
-			setBits(newOwner->modesMask, Channel::OWNER);
+			setBits(newOwner->modesMask, Channel::OWNER | Channel::OPERATOR);
 		}
 	}
 
