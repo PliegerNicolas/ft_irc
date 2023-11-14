@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/14 01:57:53 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/14 18:22:07 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,7 @@ class	Channel
 		bool				isClientRegistered(const Client *client) const;
 		bool				isOwner(const Client *client);
 
-		bool				canKick(const Client *client);
+		bool				canKick(const Client *source, const Client *target);
 		bool				canInvite(const Client *client);
 		bool				canChangeTopic(const Client *client);
 		bool				canTalk(const Client *client);

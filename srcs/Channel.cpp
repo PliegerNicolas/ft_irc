@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/14 17:10:25 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/14 18:31:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,16 +179,31 @@ bool	Channel::isClientRegistered(const Client* client) const
 	return (false);
 }
 
-bool	Channel::canKick(const Client *client)
+bool	Channel::canKick(const Client *source, const Client *target)
 {
-	if (areBitsSet(client->getClientModesMask(), Client::OPERATOR))
-		return (true);
+	const User	*sourceUser = Channel::getUser(source->getNickname());
+	const User	*targetUser = Channel::getUser(target->getNickname());
 
-	const User	*user = Channel::getUser(client->getNickname());
+	if (sourceUser && targetUser)
+	{
+		const int	&sourceModesMask = getUserModesMask(sourceUser);
+		const int	&targetModesMask = getUserModesMask(targetUser);
 
-	if (user && isAtLeastOneBitSet(getUserModesMask(user),
-		HALF_OPERATOR | OPERATOR | ADMIN | OWNER))
-		return (true);
+		if (areBitsSet(source->getClientModesMask(), Client::OPERATOR))
+			return (true);
+		else if (areBitsSet(sourceModesMask, OWNER)
+			&& !isAtLeastOneBitSet(targetModesMask, OWNER))
+			return (true);
+		else if (areBitsSet(sourceModesMask, ADMIN)
+			&& !isAtLeastOneBitSet(targetModesMask, OWNER | ADMIN))
+			return (true);
+		else if (areBitsSet(sourceModesMask, OPERATOR)
+			&& !isAtLeastOneBitSet(targetModesMask, OWNER | ADMIN | OPERATOR))
+			return (true);
+		else if (areBitsSet(sourceModesMask, HALF_OPERATOR)
+			&& !isAtLeastOneBitSet(targetModesMask, OWNER | ADMIN | OPERATOR | HALF_OPERATOR))
+			return (true);
+	}
 	return (false);
 }
 

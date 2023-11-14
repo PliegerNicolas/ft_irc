@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/14 17:54:56 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/14 18:10:02 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -836,7 +836,7 @@ void	Server::kick(const t_commandParams &commandParams)
 			errCommand(source, ERR_USERNOTINCHANNEL, channelName, "User not in that channel");
 	}
 
-	if (!targetChannel->canKick(source))
+	if (!targetChannel->canKick(source, targetUser->client))
 		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
