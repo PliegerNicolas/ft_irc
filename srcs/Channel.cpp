@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/14 02:00:21 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/14 17:10:25 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -477,7 +477,8 @@ void	Channel::setUserLimit(const std::string &userLimit)
 
 void	Channel::setPassword(const std::string &password)
 {
-	_password = password;
+	if (!password.empty())
+		_password = password;
 }
 
 void	Channel::setChannelModesMask(const int &mask)

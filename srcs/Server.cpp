@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/14 13:02:01 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/14 17:13:52 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -801,7 +801,7 @@ void	Server::kick(const t_commandParams &commandParams)
 		const std::string	&nickname = commandParams.arguments[0];
 
 		if (!Client::isValidNickname(nickname))
-			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
+			return;
 
 		targetChannel = source->getActiveChannel();
 		if (!targetChannel)
