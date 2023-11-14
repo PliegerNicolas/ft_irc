@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/14 18:10:02 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 00:31:40 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -837,19 +837,18 @@ void	Server::kick(const t_commandParams &commandParams)
 	}
 
 	if (!targetChannel->canKick(source, targetUser->client))
-		errCommand(commandParams.source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
+		errCommand(source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
 	std::string		commandResponse;
 	Client			*targetClient = targetUser->client;
+	std::string	kickMsg = ":" + source->getNickname() + "!" + source->getUsername() + "@" + source->getHostname() + " KICK " + targetChannel->getName() + " " + targetClient->getNickname() + source->getNickname() + "\r\n";
 
 	targetUser->client->quitChannel(targetChannel);
 
-	commandResponse = getCommandResponse(source, "KICK", targetChannel->getName()
-						+ " " + targetClient->getNickname(), commandParams.message);
-
-	source->receiveMessage(commandResponse);
-	targetClient->receiveMessage(commandResponse);
+	source->receiveMessage(kickMsg);
+	targetClient->receiveMessage(kickMsg);
+	source->broadcastMessageToChannel(targetChannel, kickMsg);
 }
 
 void	Server::mode(const t_commandParams &commandParams)
