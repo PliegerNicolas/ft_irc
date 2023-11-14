@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/26 00:06:27 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 11:30:30 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/14 12:09:56 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@
 #define RPL_MOTD "372"
 #define RPL_MOTDSTART "375"
 #define RPL_ENDOFMOTD "376"
+#define RPL_WHOISMODES "379"
 #define ERR_NOSUCHNICK "401"
 #define ERR_NOSUCHSERVER "402"
 #define ERR_NOSUCHCHANNEL "403"
