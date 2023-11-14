@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/14 01:47:39 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/14 02:08:12 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -898,9 +898,14 @@ void	Server::mode(const t_commandParams &commandParams)
 						modeStatus = targetChannel->removeUserMode(targetUser, modes[i]);
 
 					if (modeStatus == MODE_CHANGED)
-						source->receiveMessage(getCommandResponse(source, "MODE",
+					{
+						const std::string	response = getCommandResponse(source, "MODE",
 							targetChannel->getName() + " " + sign + modes[i]
-							+ " " + targetUser->client->getNickname(), ""));
+							+ " " + targetUser->client->getNickname(), "");
+
+						source->receiveMessage(response);
+						source->broadcastMessageToChannel(targetChannel, response);
+					}
 					else if (modeStatus == MODE_INVALID)
 						errCommand(source, ERR_UNKNOWNMODE,
 							targetChannel->getName() + " " + sign + modes[i], "Unknown mode char");
@@ -932,8 +937,13 @@ void	Server::mode(const t_commandParams &commandParams)
 						modeStatus = targetChannel->removeChannelMode(modes[i]);
 
 					if (modeStatus == MODE_CHANGED)
-						source->receiveMessage(getCommandResponse(source, "MODE",
-							targetChannel->getName() + " " + sign + modes[i] + argument, ""));
+					{
+						const std::string	response = getCommandResponse(source, "MODE",
+							targetChannel->getName() + " " + sign + modes[i] + argument, "");
+
+						source->receiveMessage(response);
+						source->broadcastMessageToChannel(targetChannel, response);
+					}
 					else if (modeStatus == MODE_INVALID)
 						errCommand(source, ERR_UNKNOWNMODE,
 							targetChannel->getName() + " " + sign + modes[i], "Unknown mode char");
@@ -1249,9 +1259,9 @@ void	Server::names(const t_commandParams &commandParams)
 		{
 			// add info about role as prefix. No placeholder yet.
 			if (it != users.begin())
-				info += " " + it->client->getNickname();
+				info += " " + targetChannel->getUserPrefix(&*it) + it->client->getNickname();
 			else
-				info += it->client->getNickname();
+				info += targetChannel->getUserPrefix(&*it) + it->client->getNickname();
 		}
 
 		source->receiveMessage(getServerResponse(source, RPL_NAMREPLY,

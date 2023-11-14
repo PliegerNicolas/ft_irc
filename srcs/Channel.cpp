@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/13 23:38:31 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/14 02:00:21 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -428,7 +428,7 @@ int	Channel::getUserModesMask(const User *targetUser) const
 	return (targetUser->modesMask);
 }
 
-const std::string	Channel::getUserPrefix(User *targetUser) const
+const std::string	Channel::getUserPrefix(const User *targetUser) const
 {
 	std::string	prefix;
 
@@ -436,12 +436,12 @@ const std::string	Channel::getUserPrefix(User *targetUser) const
 		return (prefix);
 
 	if (areBitsSet(targetUser->client->getClientModesMask(), Client::OPERATOR)
-		|| isAtLeastOneBitSet(getUserModesMask(targetUser), OPERATOR | ADMIN | OWNER))
-		prefix += "@";
-	else if (areBitsSet(getUserModesMask(targetUser), Channel::VOICE))
-		prefix += "+";
+		|| isAtLeastOneBitSet(getUserModesMask(targetUser), OWNER | ADMIN | OPERATOR))
+		prefix = "@";
 	else if (areBitsSet(getUserModesMask(targetUser), HALF_OPERATOR))
-		prefix += "%";
+		prefix = "%";
+	else if (areBitsSet(getUserModesMask(targetUser), Channel::VOICE))
+		prefix = "+";
 
 	return (prefix);
 }
