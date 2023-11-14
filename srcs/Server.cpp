@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/14 02:08:12 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/14 12:28:50 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -601,7 +601,7 @@ void	Server::whois(const t_commandParams &commandParams)
 		{
 			std::string	info = "is using modes " + targetClient->getClientModes();
 
-			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+			source->receiveMessage(getServerResponse(source, RPL_WHOISMODES,
 				targetClient->getNickname(), info));
 		}
 
@@ -610,7 +610,7 @@ void	Server::whois(const t_commandParams &commandParams)
 		{
 			std::string	info = targetClient->getActiveChannel()->getName();
 
-			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+			source->receiveMessage(getServerResponse(source, RPL_WHOISMODES,
 				targetClient->getNickname(), info));
 		}
 	}
