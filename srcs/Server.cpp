@@ -601,7 +601,7 @@ void	Server::whois(const t_commandParams &commandParams)
 		{
 			std::string	info = "is using modes " + targetClient->getClientModes();
 
-			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+			source->receiveMessage(getServerResponse(source, RPL_WHOISMODES,
 				targetClient->getNickname(), info));
 		}
 
@@ -610,7 +610,7 @@ void	Server::whois(const t_commandParams &commandParams)
 		{
 			std::string	info = targetClient->getActiveChannel()->getName();
 
-			source->receiveMessage(getServerResponse(source, RPL_UMODEIS,
+			source->receiveMessage(getServerResponse(source, RPL_WHOISMODES,
 				targetClient->getNickname(), info));
 		}
 	}
