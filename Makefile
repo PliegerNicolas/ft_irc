@@ -6,7 +6,7 @@
 #    By: nicolas <marvin@42.fr>                     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/10/13 03:16:24 by nicolas           #+#    #+#              #
-#    Updated: 2023/10/29 11:15:00 by nicolas          ###   ########.fr        #
+#    Updated: 2023/11/15 17:44:58 by nplieger         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -81,7 +81,7 @@ ifeq (santhread, $(filter santhread,$(MAKECMDGOALS)))
 endif
 
 ifeq (optimize, $(filter optimize,$(MAKECMDGOALS)))
-	CFLAGS		+=			-O3 -flto=auto
+	CFLAGS		+=			-O3 -flto #-flto=auto
 endif
 
 #* ************************************************************************** *#
