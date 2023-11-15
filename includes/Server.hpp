@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/09 22:43:09 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 01:21:20 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,6 +160,7 @@ class	Server
 		void			motd(const t_commandParams &commandParams);
 		void			part(const t_commandParams &commandParams);
 		void			pass(const t_commandParams &commandParams);
+		void			ping(const t_commandParams &commandParams);
 
 		// Command utilities
 		bool			isCommand(const std::string &clientBuffer);
