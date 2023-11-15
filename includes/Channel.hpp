@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:30:59 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/14 18:22:07 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 11:32:02 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,6 +152,8 @@ class	Channel
 
 		static bool			isChannelMode(const char &mode);
 		static bool			isUserMode(const char &mode);
+
+		static bool			isValidName(const std::string &name);
 
 	protected:
 		/* Attributs */

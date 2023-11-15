@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:48:29 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 01:21:20 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/15 11:22:17 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@
 #define CLIENT_CONNECTED 1
 #define CLIENT_DISCONNECTED 0
 
-#define DELIMITER "\n" //"\r\n" for real IRC servers
+#define DELIMITER "\r\n"
 #define MSG_BUFFER_SIZE 512
 #define MAX_CONNECTION_RETRIES 3
 

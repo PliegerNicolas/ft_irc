@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 11:20:48 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 11:37:10 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -521,7 +521,7 @@ void	Server::join(const t_commandParams &commandParams)
 	Client				*source = commandParams.source;
 	const std::string	&channelName = commandParams.arguments[0];
 
-	if (channelName[0] != '#')
+	if (!Channel::isValidName(channelName))
 		errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 
 	Channel	*targetChannel = getChannel(channelName);
@@ -589,7 +589,7 @@ void	Server::whois(const t_commandParams &commandParams)
 
 	Client				*targetClient = getClient(targetName);
 
-	if (targetName[0] != '#' && targetClient)
+	if (!Channel::isValidName(targetName) && targetClient)
 	{
 		{
 			std::string	info = targetClient->getNickname();
@@ -815,7 +815,7 @@ void	Server::kick(const t_commandParams &commandParams)
 		const std::string	&channelName = commandParams.arguments[0];
 		const std::string	&nickname = commandParams.arguments[1];
 
-		if (channelName[0] != '#')
+		if (!Channel::isValidName(channelName))
 			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 		else if (!Client::isValidNickname(nickname))
 			errCommand(source, ERR_ERRONEUSNICKNAME, nickname, "Erroneous Nickname");
@@ -1004,7 +1004,7 @@ void	Server::topic(const t_commandParams &commandParams)
 	{
 		const std::string	&targetName = commandParams.arguments[0];
 
-		if (targetName[0] != '#')
+		if (!Channel::isValidName(targetName))
 			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
 
 		targetChannel = getChannel(targetName);
@@ -1066,7 +1066,7 @@ void	Server::invite(const t_commandParams &commandParams)
 
 		targetChannel = getChannel(targetChannelName);
 
-		if (targetChannelName[0] != '#' || !targetChannel)
+		if (!Channel::isValidName(targetChannelName) || !targetChannel)
 			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
 	}
 
@@ -1121,7 +1121,7 @@ void	Server::uninvite(const t_commandParams &commandParams)
 
 		targetChannel = getChannel(targetChannelName);
 
-		if (targetChannelName[0] != '#' || !targetChannel)
+		if (!Channel::isValidName(targetChannelName) || !targetChannel)
 			errCommand(source, ERR_NOSUCHCHANNEL, targetChannelName, "No such channel");
 	}
 
@@ -1160,7 +1160,8 @@ void	Server::who(const t_commandParams &commandParams)
 	std::string		targetName;
 	std::string		info;
 
-	if (areBitsSet(commandParams.mask, ARGUMENTS) && commandParams.arguments[0][0] != '#')
+	if (areBitsSet(commandParams.mask, ARGUMENTS)
+		&& !Channel::isValidName(commandParams.arguments[0]))
 	{
 		targetName = commandParams.arguments[0];
 		const Client		*targetClient = getClient(targetName);
@@ -1168,8 +1169,8 @@ void	Server::who(const t_commandParams &commandParams)
 		if (targetClient)
 		{
 			info = targetName;
-			info += " " + targetClient->getHostname();
 			info += " " + targetClient->getUsername();
+			info += " " + targetClient->getHostname();
 
 			source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, info,
 				targetClient->getRealname()));
@@ -1234,7 +1235,7 @@ void	Server::names(const t_commandParams &commandParams)
 	{
 		targetName = commandParams.arguments[0];
 
-		if (targetName[0] != '#')
+		if (!Channel::isValidName(targetName))
 			errCommand(source, ERR_NOSUCHCHANNEL, targetName, "No such channel");
 
 		targetChannel = getChannel(targetName);
@@ -1346,7 +1347,7 @@ void	Server::part(const t_commandParams &commandParams)
 	{
 		const std::string	&channelName = commandParams.arguments[0];
 
-		if (channelName[0] != '#')
+		if (!Channel::isValidName(channelName))
 			errCommand(source, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 
 		targetChannel = getChannel(channelName);

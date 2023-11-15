@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/15 10:58:04 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 11:37:44 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -636,4 +636,11 @@ std::string	Channel::userMaskToModes(const int &mask)
 	if (modes.empty())
 		return ("");
 	return ("+" + modes);
+}
+
+bool	Channel::isValidName(const std::string &name)
+{
+	if (!name.empty() && name[0] == '#' && name[1])
+		return (true);
+	return (false);
 }
