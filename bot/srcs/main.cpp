@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/12 13:41:33 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 17:26:08 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/15 01:19:08 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@ int			main(int ac, char **av)
 			sendJoke(server_socket, channel, jokes);
 		}
 	}
+	send_msg(server_socket, "QUIT");
 	close(server_socket);
 	return 0;
 }
