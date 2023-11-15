@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 11:37:10 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 12:00:39 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1169,8 +1169,10 @@ void	Server::who(const t_commandParams &commandParams)
 		if (targetClient)
 		{
 			info = targetName;
-			info += " " + targetClient->getUsername();
+			info += " " + targetClient->getPrefix() + targetClient->getUsername();
 			info += " " + targetClient->getHostname();
+			info += " " + _serverSockets.getHostname();
+			info += " " + targetClient->getClientModes();
 
 			source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, info,
 				targetClient->getRealname()));
@@ -1199,16 +1201,17 @@ void	Server::who(const t_commandParams &commandParams)
 
 			for (Channel::UsersConstIterator it = users.begin(); it != users.end(); ++it)
 			{
+				Client	*client = it->client;
+
 				info = targetName;
-				info += " " + it->client->getUsername();
-				info += " " + it->client->getHostname();
-				info += " " + it->client->getServername();
-				info += " " + it->client->getNickname();
-				// add info about role. Place holder is H.
-				info += " Hs@";
+				info += " " + client->getPrefix() + client->getUsername();
+				info += " " + client->getHostname();
+				info += " " + _serverSockets.getHostname();
+				info += " " + targetChannel->getUserPrefix(&*it) + client->getNickname();
+				info += " " + client->getClientModes();
 
 				source->receiveMessage(getServerResponse(source, RPL_WHOREPLY, info,
-					"0 " + it->client->getRealname()));
+					"0 " + client->getRealname()));
 			}
 		}
 	}
