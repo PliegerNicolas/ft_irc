@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 11:16:40 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 11:20:48 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1431,9 +1431,15 @@ void	Server::ping(const t_commandParams &commandParams)
 	else if (commandParams.arguments.size() > 1)
 		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
 
-	Client		*source = commandParams.source;
+	Client				*source = commandParams.source;
+	const std::string	&pongId = commandParams.arguments[0];
+
+	/*
 	std::string	pong = source->getHostname() + "\r\n: PONG " + source->getUsername() + "\r\n :" + commandParams.arguments[0] + "\r\n";
+
 	source->receiveMessage(pong);
+	*/
+	source->receiveMessage(getCommandResponse(source, "PONG", pongId, ""));
 }
 
 /* ************************************************************************** */
