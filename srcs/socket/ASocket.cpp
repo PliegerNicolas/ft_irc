@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 18:43:54 by nicolas           #+#    #+#             */
-/*   Updated: 2023/10/19 16:08:54 by nplieger         ###   ########.fr       */
+/*   Updated: 2023/11/15 10:58:37 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ASocket.hpp"
@@ -21,7 +21,7 @@ ASocket::ASocket(void):
 	{
 		std::cout << GRAY;
 		std::cout << "ASocket: Default constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	memset(&_hints, 0, sizeof(_hints));
@@ -35,7 +35,7 @@ ASocket::ASocket(const ASocket &other):
 	{
 		std::cout << GRAY;
 		std::cout << "ASocket: Copy constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 }
 
@@ -45,7 +45,7 @@ ASocket	&ASocket::operator=(const ASocket &other)
 	{
 		std::cout << GRAY;
 		std::cout << "ASocket: Assignment operator called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	if (this != &other)
@@ -63,7 +63,7 @@ ASocket::~ASocket(void)
 	{
 		std::cout << GRAY;
 		std::cout << "ASocket: Default destructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	if (_addrInfo)
@@ -129,68 +129,6 @@ struct addrinfo	*ASocket::addrInfoDeepCopy(const ASocket &other)
 	}
 	return (cpy);
 }
-/*
-const std::string	ASocket::getIP(const struct addrinfo &addrInfo) const
-{
-	char		ipString[INET6_ADDRSTRLEN];
-	memset(ipString, 0, sizeof(ipString));
-
-	void	*addr = NULL;
-
-	if (addrInfo.ai_family == AF_INET
-		&& addrInfo.ai_addrlen >= sizeof(struct sockaddr_in))
-	{
-		// IPv4
-		struct sockaddr_in	*ipv4 = reinterpret_cast<struct sockaddr_in*>(addrInfo.ai_addr);
-		addr = &(ipv4->sin_addr);
-	}
-	else if (addrInfo.ai_family == AF_INET6
-		&& addrInfo.ai_addrlen >= sizeof(struct sockaddr_in6))
-	{
-		//IPv6
-		struct sockaddr_in6 *ipv6 = reinterpret_cast<struct sockaddr_in6*>(addrInfo.ai_addr);
-		addr = &(ipv6->sin6_addr);
-	}
-
-	if (addr != NULL)
-	{
-		// retrieve IP address
-		inet_ntoa(ipString, *reinterpret_cast<struct in_addr*>(addr));
-	}
-
-	return (ipString);
-}
-
-const std::string	ASocket::getPort(const struct addrinfo &addrInfo) const
-{
-	std::string	portString;
-
-	void	*port = NULL;
-
-	if (addrInfo.ai_family == AF_INET
-		&& addrInfo.ai_addrlen >= sizeof(struct sockaddr_in))
-	{
-		struct sockaddr_in *ipv4 = reinterpret_cast<struct sockaddr_in*>(addrInfo.ai_addr);
-		port = &(ipv4->sin_port);
-	}
-	else if (addrInfo.ai_family == AF_INET6
-		&& addrInfo.ai_addrlen >= sizeof(struct sockaddr_in6))
-	{
-		struct sockaddr_in6 *ipv6 = reinterpret_cast<struct sockaddr_in6*>(addrInfo.ai_addr);
-		port = &(ipv6->sin6_port);
-	}
-
-	if (port != NULL)
-	{
-		uint16_t portValue = ntohs(*reinterpret_cast<uint16_t*>(portPtr));
-		std::stringstream ss;
-		ss << portValue;
-		portString = ss.str();
-	}
-
-	return (portString);
-}
-*/
 
 	/* Protected */
 	/* Private */

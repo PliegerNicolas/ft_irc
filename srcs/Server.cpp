@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 02:08:22 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/15 10:56:01 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig,
 	{
 		std::cout << GRAY;
 		std::cout << "Server: parameter constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	setCommands();
@@ -36,7 +36,7 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig,
 	{
 		const ServerSockets::Sockets	&sockets = _serverSockets.getSockets();
 
-		for (ServerSockets::SocketsConstIt it = sockets.begin(); it != sockets.end(); it++)
+		for (ServerSockets::SocketsConstIt it = sockets.begin(); it != sockets.end(); ++it)
 			_pollFds.push_back(generatePollFd(*it));
 	}
 	eventLoop();
@@ -54,7 +54,7 @@ Server::Server(const Server &other):
 	{
 		std::cout << GRAY;
 		std::cout << "Server: copy constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 }
 
@@ -64,7 +64,7 @@ Server	&Server::operator=(const Server &other)
 	{
 		std::cout << GRAY;
 		std::cout << "Server: assignment operator called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	if (this != &other)
@@ -87,7 +87,7 @@ Server::~Server(void)
 	{
 		std::cout << GRAY;
 		std::cout << "Server: default destructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	std::cout << BLUE << "Server is shutting down..." << WHITE << std::endl;
@@ -107,7 +107,7 @@ Server::Server(void):
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "Server: default constructor called.";
+		std::cout << "Server: default constructor called." << std::endl;
 		std::cout << WHITE;
 	}
 
@@ -117,7 +117,7 @@ Server::Server(void):
 	{
 		const ServerSockets::Sockets	&sockets = _serverSockets.getSockets();
 
-		for (ServerSockets::SocketsConstIt it = sockets.begin(); it != sockets.end(); it++)
+		for (ServerSockets::SocketsConstIt it = sockets.begin(); it != sockets.end(); ++it)
 			_pollFds.push_back(generatePollFd(*it));
 	}
 }
@@ -130,16 +130,15 @@ Server::Server(void):
 
 void	Server::deleteClients(void)
 {
-	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); it++)
-	{
+	for (Client::ClientsIterator it = _clients.begin(); it != _clients.end(); ++it)
 		delete *it;
-	}
+
 	_clients.clear();
 }
 
 void	Server::deleteChannels(void)
 {
-	for (Channel::ChannelsIterator it = _channels.begin(); it != _channels.end(); it++)
+	for (Channel::ChannelsIterator it = _channels.begin(); it != _channels.end(); ++it)
 		delete it->second;
 	_channels.clear();
 }
@@ -189,7 +188,7 @@ void	Server::eventLoop(void)
 
 void	Server::handleServerPollFds(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
-	for (; i < serverSockets.size(); i++)
+	for (; i < serverSockets.size(); ++i)
 	{
 		const ASocket::t_socket	&serverSocket = serverSockets[i];
 		struct pollfd			&pollFd = _pollFds[i];
@@ -208,7 +207,7 @@ void	Server::handleServerPollFds(const ServerSockets::Sockets &serverSockets, si
 
 void	Server::handleClientsPollFds(const ServerSockets::Sockets &serverSockets, size_t &i)
 {
-	for (; i < _pollFds.size(); i++)
+	for (; i < _pollFds.size(); ++i)
 	{
 		Client			*client = _clients[i - serverSockets.size()];
 		struct pollfd	&pollFd = _pollFds[i];
@@ -309,7 +308,7 @@ void	Server::handleClientDisconnections(const ServerSockets::Sockets &serverSock
 	Client					*source = *clientIt;
 	Channels				&joinedChannels = source->getJoinedChannels();
 
-	for (ChannelsIterator it = joinedChannels.begin(); it != joinedChannels.end(); it++)
+	for (ChannelsIterator it = joinedChannels.begin(); it != joinedChannels.end(); ++it)
 	{
 		Channel	*targetChannel = it->second;
 
@@ -706,16 +705,6 @@ void	Server::privmsg(const t_commandParams &commandParams)
 	}
 }
 
-// TODO: Implement
-// Sends a server notice to a client, channel or everywhere.
-
-// 404     ERR_CANNOTSENDTOCHAN
-                // // "<channel name> :Cannot send to channel
-        // - Sent to a user who is either (a) not on a channel
-        //   which is mode +n or (b) not a chanop (or mode +v) on
-        //   a channel which has mode +m set and is trying to send
-        //   a PRIVMSG message to that channel.
-
 void	Server::notice(const t_commandParams &commandParams)
 {
 	if (verifyServerPermissions(commandParams.source, VERIFIED | IDENTIFIED))
@@ -900,7 +889,7 @@ void	Server::mode(const t_commandParams &commandParams)
 				if (sign == '+' && std::distance(it, itEnd) < validatePresenceInString(modes, ""))
 					errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
-				for (size_t i = 0; i < modes.length(); i++)
+				for (size_t i = 0; i < modes.length(); ++i)
 				{
 					if (sign == '+')
 						modeStatus = targetChannel->addUserMode(targetUser, modes[i], "");
@@ -926,7 +915,7 @@ void	Server::mode(const t_commandParams &commandParams)
 				if (sign == '+' && std::distance(it, itEnd) < validatePresenceInString(modes, "kl"))
 					errCommand(source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
 
-				for (size_t i = 0; i < modes.length(); i++)
+				for (size_t i = 0; i < modes.length(); ++i)
 				{
 					std::string	argument;
 
@@ -974,7 +963,7 @@ void	Server::mode(const t_commandParams &commandParams)
 
 			int	modeStatus = MODE_UNCHANGED;
 
-			for (size_t i = 0; i < modes.length(); i++)
+			for (size_t i = 0; i < modes.length(); ++i)
 			{
 				if (sign == '+')
 					modeStatus = targetClient->addClientMode(modes[i], "");
@@ -1209,7 +1198,7 @@ void	Server::who(const t_commandParams &commandParams)
 		{
 			const Channel::Users	&users = targetChannel->getUsers();
 
-			for (Channel::UsersConstIterator it = users.begin(); it != users.end(); it++)
+			for (Channel::UsersConstIterator it = users.begin(); it != users.end(); ++it)
 			{
 				info = targetName;
 				info += " " + it->client->getUsername();
@@ -1265,7 +1254,7 @@ void	Server::names(const t_commandParams &commandParams)
 	{
 		const Channel::Users	&users = targetChannel->getUsers();
 
-		for (Channel::UsersConstIterator it = users.begin(); it != users.end(); it++)
+		for (Channel::UsersConstIterator it = users.begin(); it != users.end(); ++it)
 		{
 			// add info about role as prefix. No placeholder yet.
 			if (it != users.begin())
@@ -1299,7 +1288,7 @@ void	Server::list(const t_commandParams &commandParams) {
 		source->receiveMessage(getServerResponse(source, RPL_LISTSTART,
 			"Channel", "Users	Name"));
 
-		for (ChannelsIterator it = _channels.begin(); it != _channels.end(); it++)
+		for (ChannelsIterator it = _channels.begin(); it != _channels.end(); ++it)
 		{
 			const Channel		*targetChannel = it->second;
 			std::stringstream	ss;
@@ -1582,7 +1571,7 @@ Server::ArgumentsIterator	Server::parseMode(const t_commandParams &commandParams
 
 	if (areBitsSet(commandParams.mask, ARGUMENTS))
 	{
-		for (; modes.empty() && it != commandParams.arguments.end(); it++)
+		for (; modes.empty() && it != commandParams.arguments.end(); ++it)
 		{
 			const std::string	&arg = *it;
 

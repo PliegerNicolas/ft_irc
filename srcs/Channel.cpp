@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/15 09:43:17 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/15 10:58:04 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ Channel::Channel(const std::string &name):
 	{
 		std::cout << GRAY;
 		std::cout << "Channel: default constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 	std::cout << GREEN << "Channel " << BGREEN <<_name << GREEN << " has been created" << WHITE << std::endl;
 }
@@ -45,7 +45,7 @@ Channel::Channel(const Channel &other):
 	{
 		std::cout << GRAY;
 		std::cout << "Channel: copy constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 	std::cout << GREEN << "Channel " << BGREEN <<_name << GREEN << " has been created" << WHITE << std::endl;
 }
@@ -56,7 +56,7 @@ Channel	&Channel::operator=(const Channel &other)
 	{
 		std::cout << GRAY;
 		std::cout << "Channel: assignment operator called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	if (this != &other)
@@ -79,7 +79,7 @@ Channel::~Channel(void)
 	{
 		std::cout << GRAY;
 		std::cout << "Channel: default destructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	_users.clear();
@@ -99,7 +99,7 @@ Channel::Channel(void):
 	{
 		std::cout << GRAY;
 		std::cout << "Channel: default constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 }
 
@@ -121,7 +121,7 @@ void	Channel::removeUser(const Client* client)
 {
 	UsersIterator	it = _users.begin();
 
-	for (; it != _users.end() && it->client != client; it++);
+	for (; it != _users.end() && it->client != client; ++it);
 
 	if (it != _users.end())
 		_users.erase(it);
@@ -131,7 +131,7 @@ void	Channel::removeInvitation(Client *client)
 {
 	ClientsIterator	it = _invitedClients.begin();
 
-	for (; it != _invitedClients.end() && client != *it; it++);
+	for (; it != _invitedClients.end() && client != *it; ++it);
 
 	if (it != _invitedClients.end())
 		_invitedClients.erase(it);
@@ -155,7 +155,7 @@ bool	Channel::isInvited(Client *client)
 {
 	ClientsIterator	it = _invitedClients.begin();
 
-	for (; it != _invitedClients.end() && *it != client; it++);
+	for (; it != _invitedClients.end() && *it != client; ++it);
 
 	if (it != _invitedClients.end())
 		return (true);
@@ -357,7 +357,7 @@ Channel::User	*Channel::findFirstHighestPrivilege(void)
 		it++;
 	}
 
-	for (; it != _users.end(); it++)
+	for (; it != _users.end(); ++it)
 	{
 		if (it->modesMask > user->modesMask)
 			user = &(*it);
@@ -410,7 +410,7 @@ Channel::User	*Channel::getUser(const std::string &nickname)
 {
 	UsersIterator	it = _users.begin();
 
-	for (; it != _users.end() && it->client->getNickname() != nickname; it++);
+	for (; it != _users.end() && it->client->getNickname() != nickname; ++it);
 
 	if (it != _users.end())
 		return (&(*it));
@@ -592,7 +592,7 @@ std::string	Channel::channelMaskToModes(const int &mask)
 	std::string	modes;
 	const char	*channelModes = MODES_CHANNEL;
 
-	for (size_t shift = 0; shift < strlen(channelModes); shift++)
+	for (size_t shift = 0; shift < strlen(channelModes); ++shift)
 	{
 		if((mask >> shift) & 1)
 			modes += channelModes[shift];
@@ -627,7 +627,7 @@ std::string	Channel::userMaskToModes(const int &mask)
 	std::string	modes;
 	const char	*userModes = MODES_USER;
 
-	for (size_t shift = 0; shift < strlen(userModes); shift++)
+	for (size_t shift = 0; shift < strlen(userModes); ++shift)
 	{
 		if((mask >> shift) & 1)
 			modes += userModes[shift];

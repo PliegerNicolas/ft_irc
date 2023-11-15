@@ -41,11 +41,9 @@ size_t	findLastChar(const std::string &str, const size_t &strLen)
 
 void	capitalizeString(std::string &str)
 {
-	for (std::string::size_type i = 0; i < str.length(); i++)
-	{
+	for (std::string::size_type i = 0; i < str.length(); ++i)
 		if (islower(str[i]))
 			str[i] = toupper(str[i]);
-	}
 }
 
 std::string	getNextWord(std::string &str, const std::string &delimiter)
@@ -76,10 +74,10 @@ std::string	truncate(const std::string &str, const size_t &width)
 
 void	stripDuplicateChars(std::string &str)
 {
-	for (size_t i = 0; i < str.length(); i++)
+	for (size_t i = 0; i < str.length(); ++i)
 	{
 		size_t j = i + 1;
-		for (; j < str.length(); j++)
+		for (; j < str.length(); ++j)
 		{
 			if (str[i] == str[j])
 				str.erase(j);
@@ -91,9 +89,9 @@ long int	validatePresenceInString(const std::string &str, const std::string &cha
 {
 	long int	charPresenceValidations = 0;
 
-	for (size_t i = 0; i < charset.length(); i++)
+	for (size_t i = 0; i < charset.length(); ++i)
 	{
-		for (size_t j = 0; j < str.length(); j++)
+		for (size_t j = 0; j < str.length(); ++j)
 		{
 			if (charset[i] == str[j])
 			{

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 09:41:17 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/15 10:57:30 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ Client::Client(const ASocket::t_socket &serverSocket):
 	{
 		std::cout << GRAY;
 		std::cout << "Client: parameter constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 	std::cout << PURPLE << "A new client has connected to the server" << WHITE << std::endl;
 }
@@ -54,7 +54,7 @@ Client::Client(const Client &other):
 	{
 		std::cout << GRAY;
 		std::cout << "Client: copy constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 	std::cout << PURPLE << "A new client has connected to the server" << WHITE << std::endl;
 }
@@ -65,7 +65,7 @@ Client	&Client::operator=(const Client &other)
 	{
 		std::cout << GRAY;
 		std::cout << "Client: assignment operator called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	if (this != &other)
@@ -92,7 +92,7 @@ Client::~Client(void)
 	{
 		std::cout << GRAY;
 		std::cout << "Client: default destructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 
 	_activeChannel = NULL;
@@ -118,7 +118,7 @@ Client::Client(void):
 	{
 		std::cout << GRAY;
 		std::cout << "Client: default constructor called.";
-		std::cout << WHITE;
+		std::cout << WHITE << std::endl;
 	}
 }
 
@@ -162,7 +162,7 @@ void	Client::broadcastMessageToChannel(const Channel *channel,
 	std::string	response;
 	Channel::Users	users = channel->getUsers();
 
-	for (Channel::UsersIterator it = users.begin(); it != users.end(); it++)
+	for (Channel::UsersIterator it = users.begin(); it != users.end(); ++it)
 	{
 		if (this != it->client)
 			it->client->receiveMessage(message);
@@ -413,7 +413,7 @@ std::string	Client::clientMaskToModes(const int &mask)
 	std::string	modes;
 	const char	*clientModes = MODES_CLIENT;
 
-	for (size_t shift = 0; shift < strlen(clientModes); shift++)
+	for (size_t shift = 0; shift < strlen(clientModes); ++shift)
 	{
 		if((mask >> shift) & 1)
 			modes += clientModes[shift];
