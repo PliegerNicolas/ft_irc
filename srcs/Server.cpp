@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 09:35:15 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/15 02:08:22 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -380,6 +380,7 @@ void	Server::setCommands(void)
 	_commands["PART"] = &Server::part;
 	_commands["CAP"] = &Server::cap;
 	_commands["QUIT"] = &Server::quit;
+	_commands["PING"] = &Server::ping;
 }
 
 void	Server::executeCommand(Client *client, struct pollfd *pollFd,
@@ -472,7 +473,7 @@ void	Server::nick(const t_commandParams &commandParams)
 
 	source->receiveMessage(getServerResponse(source, RPL_WELCOME, "",
 		"You are now known as " + nickname));
-	//motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
+	motd(buildCommandParams(commandParams.source, commandParams.pollFd, Arguments(), ""));
 }
 
 void	Server::user(const t_commandParams &commandParams)
@@ -845,7 +846,9 @@ void	Server::kick(const t_commandParams &commandParams)
 
 	std::string		commandResponse;
 	Client			*targetClient = targetUser->client;
-	std::string	kickMsg = ":" + source->getNickname() + "!" + source->getUsername() + "@" + source->getHostname() + " KICK " + targetChannel->getName() + " " + targetClient->getNickname() + source->getNickname() + "\r\n";
+	std::string	kickMsg = ":" + source->getNickname() + "!" + source->getUsername() + "@" +
+					source->getHostname() + " KICK " + targetChannel->getName() + " " +
+					targetClient->getNickname() + source->getNickname() + "\r\n";
 
 	targetUser->client->quitChannel(targetChannel);
 
@@ -1430,6 +1433,20 @@ void	Server::pass(const t_commandParams &commandParams)
 	}
 	else
 		source->setServerPermissions(VERIFIED);
+}
+
+void	Server::ping(const t_commandParams &commandParams)
+{
+	if (areBitsNotSet(commandParams.mask, SOURCE))
+		return ;
+	else if (areBitsNotSet(commandParams.mask, SOURCE | ARGUMENTS))
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Not enough parameters");
+	else if (commandParams.arguments.size() > 1)
+		errCommand(commandParams.source, ERR_NEEDMOREPARAMS, "", "Too many parameters");
+
+	Client		*source = commandParams.source;
+	std::string	pong = source->getHostname() + "\r\n: PONG " + source->getUsername() + "\r\n :" + commandParams.arguments[0] + "\r\n";
+	source->receiveMessage(pong);
 }
 
 /* ************************************************************************** */

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/12 13:41:33 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 17:26:08 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/15 09:06:48 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,20 +51,23 @@ int			main(int ac, char **av)
 	std::string	password = static_cast<std::string>(av[2]);
 	std::string	channel = (av[3][0] == '#') ? static_cast<std::string>(av[3]) : "#" + static_cast<std::string>(av[3]);
 	std::string	nickname = (ac == 5) ? static_cast<std::string>(av[4]) : "bot";
+	std::string	msg;
 
 	nickname = login(server_socket, password, nickname, channel);
 	while (!botShutdown) {
-		std::string	msg = recv_msg(server_socket, 1);
+		msg = recv_msg(server_socket, 1);
 		if (msg.empty()) {
 			std::cout << "Disconnected (Remote host closed socket)" << std::endl;
 			close(server_socket);
 			return 1;
 		}
-		if (targeted(msg, nickname)) {
+		if (targeted(msg, nickname, channel)) {
 			std::cout << "Recieved: " << msg << std::endl;
 			sendJoke(server_socket, channel, jokes);
 		}
 	}
+	if (!msg.empty())
+		send_msg(server_socket, "QUIT");
 	close(server_socket);
 	return 0;
 }

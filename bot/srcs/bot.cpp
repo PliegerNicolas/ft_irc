@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 14:34:09 by hania             #+#    #+#             */
-/*   Updated: 2023/11/12 19:07:56 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/15 09:16:44 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,14 +58,15 @@ std::string	login(int sd, std::string pw, std::string nick, std::string channel)
 	return (nick);
 }
 
-bool		targeted(std::string msg, std::string nick) {
+bool		targeted(std::string msg, std::string nick, std::string channel) {
 	return ((msg.find("PRIVMSG " + nick + "\n") != std::string::npos
 		|| msg.find("PRIVMSG " + nick + " ") != std::string::npos
 		|| msg.find("PRIVMSG " + nick + delim) != std::string::npos
 		|| msg.find("@" + nick + "\n") != std::string::npos
 		|| msg.find("@" + nick + " ") != std::string::npos
 		|| msg.find("@" + nick + delim) != std::string::npos)
-		&& msg.find("NOTICE") == std::string::npos);
+		&& (msg.find("NOTICE") == std::string::npos &&
+		msg.find("353 " + nick + " = " + channel + " :@" + nick) == std::string::npos));
 }
 
 std::vector<std::string>	getJokes() {
