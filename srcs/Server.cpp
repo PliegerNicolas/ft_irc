@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 12:00:39 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 12:13:33 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1258,7 +1258,6 @@ void	Server::names(const t_commandParams &commandParams)
 
 		for (Channel::UsersConstIterator it = users.begin(); it != users.end(); ++it)
 		{
-			// add info about role as prefix. No placeholder yet.
 			if (it != users.begin())
 				info += " " + targetChannel->getUserPrefix(&*it) + it->client->getNickname();
 			else
