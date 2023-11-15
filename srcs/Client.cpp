@@ -34,6 +34,7 @@ Client::Client(const ASocket::t_socket &serverSocket):
 		std::cout << "Client: parameter constructor called.";
 		std::cout << WHITE << std::endl;
 	}
+	std::cout << PURPLE << "A new client has connected to the server" << WHITE << std::endl;
 }
 
 Client::Client(const Client &other):
@@ -55,6 +56,7 @@ Client::Client(const Client &other):
 		std::cout << "Client: copy constructor called.";
 		std::cout << WHITE << std::endl;
 	}
+	std::cout << PURPLE << "A new client has connected to the server" << WHITE << std::endl;
 }
 
 Client	&Client::operator=(const Client &other)
@@ -95,6 +97,7 @@ Client::~Client(void)
 
 	_activeChannel = NULL;
 	_joinedChannels.clear();
+	std::cout << BPURPLE << _nickname << PURPLE << " has left the server" << WHITE << std::endl;
 }
 	/* Protected */
 	/* Private */
