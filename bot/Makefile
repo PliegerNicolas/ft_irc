@@ -6,7 +6,7 @@
 #    By: hania <hania@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/11/12 13:41:38 by hania             #+#    #+#              #
-#    Updated: 2023/11/12 14:07:25 by nicolas          ###   ########.fr        #
+#    Updated: 2023/11/15 18:04:13 by nplieger         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -74,7 +74,7 @@ ifeq (santhread, $(filter santhread,$(MAKECMDGOALS)))
 endif
 
 ifeq (optimize, $(filter optimize,$(MAKECMDGOALS)))
-	CFLAGS		+=			-O3 -flto=auto
+	CFLAGS		+=			-O3
 endif
 
 #* ************************************************************************** *#
