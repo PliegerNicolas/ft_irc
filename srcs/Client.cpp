@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:32 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 23:35:37 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 09:41:17 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ Client::Client(const ASocket::t_socket &serverSocket):
 		std::cout << "Client: parameter constructor called.";
 		std::cout << WHITE;
 	}
+	std::cout << PURPLE << "A new client has connected to the server" << WHITE << std::endl;
 }
 
 Client::Client(const Client &other):
@@ -55,6 +56,7 @@ Client::Client(const Client &other):
 		std::cout << "Client: copy constructor called.";
 		std::cout << WHITE;
 	}
+	std::cout << PURPLE << "A new client has connected to the server" << WHITE << std::endl;
 }
 
 Client	&Client::operator=(const Client &other)
@@ -95,6 +97,7 @@ Client::~Client(void)
 
 	_activeChannel = NULL;
 	_joinedChannels.clear();
+	std::cout << BPURPLE << _nickname << PURPLE << " has left the server" << WHITE << std::endl;
 }
 	/* Protected */
 	/* Private */

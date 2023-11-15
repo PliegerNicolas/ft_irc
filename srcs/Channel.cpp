@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 14:50:37 by nplieger          #+#    #+#             */
-/*   Updated: 2023/11/14 18:31:04 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 09:43:17 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ Channel::Channel(const std::string &name):
 		std::cout << "Channel: default constructor called.";
 		std::cout << WHITE;
 	}
+	std::cout << GREEN << "Channel " << BGREEN <<_name << GREEN << " has been created" << WHITE << std::endl;
 }
 
 Channel::Channel(const Channel &other):
@@ -46,6 +47,7 @@ Channel::Channel(const Channel &other):
 		std::cout << "Channel: copy constructor called.";
 		std::cout << WHITE;
 	}
+	std::cout << GREEN << "Channel " << BGREEN <<_name << GREEN << " has been created" << WHITE << std::endl;
 }
 
 Channel	&Channel::operator=(const Channel &other)
@@ -82,6 +84,7 @@ Channel::~Channel(void)
 
 	_users.clear();
 	_invitedClients.clear();
+	std::cout << GREEN << "Channel " << BGREEN <<_name << GREEN << " has been deleted" << WHITE << std::endl;
 }
 	/* Protected */
 	/* Private */

@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 00:31:40 by hania            ###   ########.fr       */
+/*   Updated: 2023/11/15 09:35:15 by hania            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig,
 	}
 
 	setCommands();
+	std::cout << BLUE << "Server is now running..." << WHITE << std::endl;
 
 	{
 		const ServerSockets::Sockets	&sockets = _serverSockets.getSockets();
@@ -38,7 +39,6 @@ Server::Server(const ServerSockets::t_serverconfig &serverConfig,
 		for (ServerSockets::SocketsConstIt it = sockets.begin(); it != sockets.end(); it++)
 			_pollFds.push_back(generatePollFd(*it));
 	}
-
 	eventLoop();
 }
 
@@ -77,6 +77,7 @@ Server	&Server::operator=(const Server &other)
 		_password = other._password;
 	}
 
+	std::cout << BLUE << "Server is now running..." << WHITE << std::endl;
 	return (*this);
 }
 
@@ -89,6 +90,7 @@ Server::~Server(void)
 		std::cout << WHITE;
 	}
 
+	std::cout << BLUE << "Server is shutting down..." << WHITE << std::endl;
 	_commands.clear();
 	_pollFds.clear();
 	deleteClients();
@@ -110,7 +112,8 @@ Server::Server(void):
 	}
 
 	setCommands();
-
+	std::cout << BLUE << "Server is now running..." << WHITE << std::endl;
+	
 	{
 		const ServerSockets::Sockets	&sockets = _serverSockets.getSockets();
 
