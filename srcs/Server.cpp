@@ -6,7 +6,7 @@
 /*   By: hania <hania@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 11:49:23 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/15 10:56:01 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 11:16:40 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -833,11 +833,9 @@ void	Server::kick(const t_commandParams &commandParams)
 		errCommand(source, ERR_CHANOPRIVSNEEDED, targetChannel->getName(),
 			"Not enough privileges");
 
-	std::string		commandResponse;
 	Client			*targetClient = targetUser->client;
-	std::string	kickMsg = ":" + source->getNickname() + "!" + source->getUsername() + "@" +
-					source->getHostname() + " KICK " + targetChannel->getName() + " " +
-					targetClient->getNickname() + source->getNickname() + "\r\n";
+	std::string		kickMsg = getCommandResponse(source, "KICK", targetChannel->getName()
+		+ " " + targetClient->getNickname() + " " + source->getNickname(), "");
 
 	targetUser->client->quitChannel(targetChannel);
 
