@@ -6,7 +6,7 @@
 /*   By: nicolas <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 19:21:43 by nicolas           #+#    #+#             */
-/*   Updated: 2023/11/13 23:29:23 by nicolas          ###   ########.fr       */
+/*   Updated: 2023/11/15 10:46:07 by nicolas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "socket/ClientSocket.hpp"
@@ -20,7 +20,7 @@ ClientSocket::ClientSocket(void):
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: default constructor called.";
+		std::cout << "ClientSocket: default constructor called." << std::endl;
 		std::cout << WHITE;
 	}
 }
@@ -31,7 +31,7 @@ ClientSocket::ClientSocket(const ASocket::t_socket &serverSocket):
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: parameter constructor called.";
+		std::cout << "ClientSocket: parameter constructor called." << std::endl;
 		std::cout << WHITE;
 	}
 
@@ -48,7 +48,7 @@ ClientSocket::ClientSocket(const ClientSocket &other):
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: copy constructor called.";
+		std::cout << "ClientSocket: copy constructor called." << std::endl;
 		std::cout << WHITE;
 	}
 }
@@ -58,7 +58,7 @@ ClientSocket	&ClientSocket::operator=(const ClientSocket &other)
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: assignment operator called.";
+		std::cout << "ClientSocket: assignment operator called." << std::endl;
 		std::cout << WHITE;
 	}
 
@@ -76,7 +76,7 @@ ClientSocket::~ClientSocket(void)
 	if (DEBUG)
 	{
 		std::cout << GRAY;
-		std::cout << "ClientSocket: default destructor called.";
+		std::cout << "ClientSocket: default destructor called." << std::endl;
 		std::cout << WHITE;
 	}
 
@@ -104,7 +104,7 @@ void	ClientSocket::setSocketOptions(void)
 	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_QUICKACK, 1);
 	socketOptions[i++] = ASocket::buildSocketOption(IPPROTO_TCP, TCP_NODELAY, 1);
 
-	for (i = 0; i < SERVOPTSIZE; i++)
+	for (i = 0; i < SERVOPTSIZE; ++i)
 	{
 		if (setsockopt(_socket.fd, socketOptions[i].level, socketOptions[i].option,
 			&socketOptions[i].value, sizeof(socketOptions[i].value)) < 0)
