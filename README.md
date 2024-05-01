@@ -2,6 +2,8 @@
 
 IRC stands for Internet Chat Relay.Our project is creating our own IRC server acessible by an actual IRC client. Internet is ruled by solid standards protocols that allow connected computers to interact with each other. Let's discover this.
 
+/!\ If you're a 42 student, do not copy this project. It would be detrimental to your studies. In it's current form it contains some discreet errors.
+
 ## Subject
 
 We musn't develope a client nor handle server-to-server communication and use C++98.
